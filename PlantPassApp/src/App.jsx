@@ -49,6 +49,7 @@ export default function App() {
         flexDirection: 'column',
         backgroundColor: 'white',
         paddingTop: '20px',
+        paddingBottom: '20px'
       }}
     >
       <AppHeader />

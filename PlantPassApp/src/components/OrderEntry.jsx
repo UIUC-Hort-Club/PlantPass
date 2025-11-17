@@ -49,7 +49,12 @@ function OrderEntry({ api, product_listings }) {
       alert(`Internal Error: Item with SKU "${scannedProduct?.SKU}" not found, but should have been found...`);
     }
   };
-  
+
+  const getQuantity = (sku) => {
+    return quantities[sku] || 0; // return 0 if SKU not found
+  };
+
+
   const handleNewOrder = () => {
     window.location.reload(); // simple refresh for now
   };
@@ -207,6 +212,8 @@ function OrderEntry({ api, product_listings }) {
         onClose={() => setScannerOpen(false)}
         onScan={handleScan}
         products={products}
+        getQuantity={getQuantity}
+        overwrite={overwrite}
       />
     </Container>
   );

@@ -13,15 +13,15 @@ import {
 import { Html5Qrcode } from 'html5-qrcode';
 import SearchOffIcon from '@mui/icons-material/SearchOff';
 import SavedSearchIcon from '@mui/icons-material/SavedSearch';
+import { v4 as uuidv4 } from 'uuid';
 
-export default function Scanner({ opened, onClose, onScan, products }) {
+export default function Scanner({ opened, onClose, onScan, products, getQuantity, overwrite }) {
   const [matchedProduct, setMatchedProduct] = useState(null);
   const [cameras, setCameras] = useState([]);
   const [selectedCamera, setSelectedCamera] = useState(null);
-
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMsg, setSnackbarMsg] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState('info');
+  
+  const [snackbars, setSnackbars] = useState([]);
+  const [foundSKUs, setFoundSKUs] = useState(new Set());
 
   const scannerContainerRef = useRef(null);
   const scannerInstanceRef = useRef(null);
@@ -37,7 +37,6 @@ export default function Scanner({ opened, onClose, onScan, products }) {
         const backCam =
           devices.find((d) => d.label.toLowerCase().includes('back'))?.id ||
           devices[0]?.id;
-
         setSelectedCamera(backCam);
       })
       .catch((err) => console.error('Camera fetch error:', err));
@@ -60,15 +59,23 @@ export default function Scanner({ opened, onClose, onScan, products }) {
 
         if (product) {
           setMatchedProduct(product);
-          setSnackbarMsg(`Found (${product.SKU}) ${product.Item}`);
-          setSnackbarSeverity('success');
-          setSnackbarOpen(true);
+
+          // Only show Found snackbar if SKU hasn't been found yet
+          if (!foundSKUs.has(product.SKU)) {
+            setSnackbars((prev) => [
+              ...prev,
+              { id: uuidv4(), message: `Found (${product.SKU}) ${product.Item}`, severity: 'success' },
+            ]);
+            setFoundSKUs((prev) => new Set(prev).add(product.SKU));
+          }
+
         } else {
-          // No match → show warning
           setMatchedProduct(null);
-          setSnackbarMsg(`SKU: ${decodedText} Not Found`);
-          setSnackbarSeverity('warning');
-          setSnackbarOpen(true);
+          // Show Not Found message always
+          setSnackbars((prev) => [
+            ...prev,
+            { id: uuidv4(), message: `SKU: ${decodedText} Not Found`, severity: 'warning' },
+          ]);
         }
       },
       (err) => console.log('scan error', err)
@@ -85,7 +92,7 @@ export default function Scanner({ opened, onClose, onScan, products }) {
           scannerInstanceRef.current = null;
         });
     };
-  }, [opened, selectedCamera, products]);
+  }, [opened, selectedCamera, products, foundSKUs]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -95,6 +102,30 @@ export default function Scanner({ opened, onClose, onScan, products }) {
     return () => clearTimeout(timer);
   }, [opened]);
 
+  const handleAddItem = () => {
+    if (!matchedProduct) return;
+
+    // Compute what the new quantity will be
+    const newQuantity = overwrite ? 1 : (getQuantity(matchedProduct.SKU) || 0) + 1;
+
+    // Call parent callback to update state
+    onScan(matchedProduct);
+
+    // Show snackbar with the accurate quantity
+    setSnackbars((prev) => [
+      ...prev,
+      {
+        id: uuidv4(),
+        message: `Added Item: ${matchedProduct.Item} (Qty: ${newQuantity})`,
+        severity: 'info',
+      },
+    ]);
+  };
+
+  const handleCloseSnackbar = (id) => {
+    setSnackbars((prev) => prev.filter((s) => s.id !== id));
+  };
+
   return (
     <>
       <Dialog open={opened} onClose={onClose} fullWidth maxWidth="sm" keepMounted>
@@ -102,7 +133,6 @@ export default function Scanner({ opened, onClose, onScan, products }) {
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Typography variant="h6">Scan Item</Typography>
-
             {!matchedProduct ? (
               <SearchOffIcon sx={{ color: 'text.disabled', fontSize: 28 }} />
             ) : (
@@ -148,7 +178,7 @@ export default function Scanner({ opened, onClose, onScan, products }) {
           {matchedProduct && (
             <Box sx={{ mt: 2, textAlign: 'center' }}>
               <Typography variant="body1">
-                Item: <strong>{matchedProduct.Item} ({matchedProduct.SKU})</strong> <br />
+                Item: <strong>{matchedProduct.Item} ({matchedProduct.SKU})</strong>
               </Typography>
             </Box>
           )}
@@ -159,14 +189,8 @@ export default function Scanner({ opened, onClose, onScan, products }) {
             <Button
               variant="contained"
               color="primary"
-              onClick={() => {
-                onScan(matchedProduct); // existing callback
-                // Show snackbar for added item
-                setSnackbarMsg(`Added Item: ${matchedProduct.Item} (${matchedProduct.SKU})`);
-                setSnackbarSeverity('info');
-                setSnackbarOpen(true);
-              }}
-              size='small'
+              onClick={handleAddItem}
+              size="small"
             >
               Add Item
             </Button>
@@ -177,21 +201,25 @@ export default function Scanner({ opened, onClose, onScan, products }) {
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar for feedback */}
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={4000}
-        onClose={() => setSnackbarOpen(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert
-          onClose={() => setSnackbarOpen(false)}
-          severity={snackbarSeverity}
-          sx={{ width: '100%' }}
+      {/* Stacked Snackbars */}
+      {snackbars.map((s, index) => (
+        <Snackbar
+          key={s.id}
+          open
+          autoHideDuration={4000}
+          onClose={() => handleCloseSnackbar(s.id)}
+          anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
+          sx={{ mb: `${index * 56}px` }} // stack each snackbar
         >
-          {snackbarMsg}
-        </Alert>
-      </Snackbar>
+          <Alert
+            onClose={() => handleCloseSnackbar(s.id)}
+            severity={s.severity}
+            sx={{ width: '100%' }}
+          >
+            {s.message}
+          </Alert>
+        </Snackbar>
+      ))}
     </>
   );
 }
