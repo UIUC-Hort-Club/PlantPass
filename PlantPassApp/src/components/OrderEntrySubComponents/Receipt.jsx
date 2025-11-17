@@ -16,7 +16,7 @@ function Receipt({ totals }) {
   const [discounts, setDiscounts] = useState([]);
 
   useEffect(() => {
-    fetch('/data/discounts.json')
+    fetch(`${import.meta.env.BASE_URL}data/discounts.json`)
       .then((res) => res.json())
       .then((data) => setDiscounts(data))
       .catch((err) => console.error('Error loading discounts.json:', err));
@@ -25,17 +25,18 @@ function Receipt({ totals }) {
   return (
     <Container sx={{ mt: 3 }} style={{ paddingLeft: '0px', paddingRight: '0px' }}>
       <Box
+      // justifyContent={}
         sx={{
           border: '2px solid #d3d3d3',
           borderRadius: 2,
           padding: 2,
         }}
       >
-        <Typography variant="h6" gutterBottom>
+        <Typography variant="h6" gutterBottom color={'black'} align='center'>
           Transaction Receipt
         </Typography>
 
-        <Typography variant="body1" sx={{ mb: 1 }}>
+        <Typography variant="body1" sx={{ mb: 1 }} color={'black'} align='right'>
           Subtotal: ${totals.subtotal}
         </Typography>
 
@@ -59,7 +60,7 @@ function Receipt({ totals }) {
         </TableContainer>
 
         {/* Grand Total */}
-        <Typography variant="body1" sx={{ mt: 2, fontWeight: 700 }}>
+        <Typography variant="body1" sx={{ mt: 2, fontWeight: 700 }} color={'black'} align='right'>
           Grand Total: ${totals.grandTotal}
         </Typography>
       </Box>

@@ -16,8 +16,8 @@ import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import Receipt from './OrderEntrySubComponents/Receipt';
 import Scanner from './Scanner';
 
-function OrderEntry({ api }) {
-  const [stockItems, setStockItems] = useState([]);
+function OrderEntry({ api, product_listings }) {
+  const [products, setProducts] = useState([]);
   const [quantities, setQuantities] = useState({});
   const [subtotals, setSubtotals] = useState({});
   const [totals, setTotals] = useState({
@@ -28,35 +28,37 @@ function OrderEntry({ api }) {
   const [showNotification, setShowNotification] = useState(false);
   const [overwrite, setOverwrite] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
-  const [scannedSKU, setScannedSKU] = useState(null);
 
-  const handleScan = (decodedText) => {
-    const item = stockItems.find((i) => i.SKU === decodedText);
-    if (item) {
+  const handleScan = (scannedProduct) => {
+    if (scannedProduct) {
+      const sku = scannedProduct.SKU;
+
       setQuantities((prev) => ({
         ...prev,
-        [decodedText]: overwrite ? 1 : (prev[decodedText] || 0) + 1,
+        [sku]: overwrite ? 1 : (prev[sku] || 0) + 1,
       }));
+
       setSubtotals((prev) => ({
         ...prev,
-        [decodedText]: ((item.Price * ((overwrite ? 1 : (quantities[decodedText] || 0) + 1))).toFixed(2)),
+        [sku]: (
+          scannedProduct.Price *
+          (overwrite ? 1 : ((quantities[sku] || 0) + 1))
+        ).toFixed(2),
       }));
-      setScannedSKU(decodedText);
     } else {
-      alert(`Item with SKU "${decodedText}" not found.`);
+      alert(`Internal Error: Item with SKU "${scannedProduct?.SKU}" not found, but should have been found...`);
     }
-    setScannerOpen(false);
   };
-
+  
   const handleNewOrder = () => {
     window.location.reload(); // simple refresh for now
   };
 
   useEffect(() => {
-    fetch('/data/stock.json')
+    fetch(product_listings)
       .then((res) => res.json())
       .then((data) => {
-        setStockItems(data);
+        setProducts(data);
         const initialQuantities = {};
         const initialSubtotals = {};
         data.forEach((item) => {
@@ -70,7 +72,7 @@ function OrderEntry({ api }) {
   }, []);
 
   const handleQuantityChange = (e, sku) => {
-    const item = stockItems.find((i) => i.SKU === sku);
+    const item = products.find((i) => i.SKU === sku);
     const numericValue = parseFloat(e.target.value) || 0;
     const subtotal = (numericValue * item.Price).toFixed(2);
 
@@ -82,7 +84,7 @@ function OrderEntry({ api }) {
     let subtotal = 0;
     let totalItems = 0;
 
-    stockItems.forEach((item) => {
+    products.forEach((item) => {
       const qty = parseFloat(quantities[item.SKU]) || 0;
       subtotal += qty * item.Price;
       totalItems += qty;
@@ -140,7 +142,7 @@ function OrderEntry({ api }) {
 
       {/* Items Table Component */}
       <ItemsTable
-        stockItems={stockItems}
+        stockItems={products}
         quantities={quantities}
         subtotals={subtotals}
         onQuantityChange={handleQuantityChange}
@@ -152,6 +154,7 @@ function OrderEntry({ api }) {
             variant="outlined"
             startIcon={<QrCodeScannerIcon />}
             onClick={() => setScannerOpen(true)}
+            size='small'
           >
             Scan
           </Button>
@@ -167,9 +170,10 @@ function OrderEntry({ api }) {
               }
               label="Overwrite Prev"
               sx={{ color: 'red' }}
+              size='small'
             />
-            <Button variant="contained" color="primary" onClick={calculateTotal}>
-              Enter Order
+            <Button variant="contained" color="primary" onClick={calculateTotal} size='small'>
+              Enter
             </Button>
           </Stack>
         </Stack>
@@ -179,7 +183,7 @@ function OrderEntry({ api }) {
       <Receipt totals={totals} />
 
       <Stack direction="row" justifyContent="flex-end" alignItems="center" sx={{ mt: 2 }}>
-        <Button variant="contained" color="success" onClick={handleNewOrder}>
+        <Button variant="contained" color="success" onClick={handleNewOrder} size='small'>
           New Order
         </Button>
       </Stack>
@@ -202,6 +206,7 @@ function OrderEntry({ api }) {
         opened={scannerOpen}
         onClose={() => setScannerOpen(false)}
         onScan={handleScan}
+        products={products}
       />
     </Container>
   );

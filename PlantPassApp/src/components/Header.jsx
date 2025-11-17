@@ -16,11 +16,11 @@ export default function Header() {
         padding: '20px',
       }}
     >
-      <Stack alignItems="center" justifyContent="flex-start" spacing={1}>
-        <Typography variant="h3" fontWeight={500} sx={{ color: textColor, margin: 0 }}>
+      <Stack alignItems="center" justifyContent="flex-start" spacing={0}>
+        <Typography variant="h4" fontWeight={500} sx={{ color: textColor, margin: 0 }}>
           PlantPass
         </Typography>
-        <Typography variant="h5" fontWeight={300} sx={{ color: textColor, margin: 0 }}>
+        <Typography variant="h7" fontWeight={300} sx={{ color: textColor, margin: 0 }}>
           Spring Plant Fair 2026
         </Typography>
       </Stack>
