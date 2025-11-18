@@ -14,6 +14,7 @@ import CalculateIcon from '@mui/icons-material/Calculate';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import AppHeader from './components/Header';
 import OrderEntry from './components/OrderEntry';
+import OrderLookup from './components/OrderLookup';
 
 const DISCOUNTS_SOURCE = `${import.meta.env.BASE_URL}data/discounts.json`
 const PRODUCTS_SOURCE = `${import.meta.env.BASE_URL}data/products.json`
@@ -121,6 +122,15 @@ export default function App() {
             }}
           />
           <Tab
+            label={<Typography variant="body2">Lookup</Typography>}
+            icon={<ListAltIcon fontSize="small" />}
+            iconPosition="start"
+            sx={{
+              '&.Mui-selected': { outline: 'none', border: 'none' },
+              '&:focus': { outline: 'none', border: 'none' },
+            }}
+          />
+          <Tab
             label={<Typography variant="body2">Tracking</Typography>}
             icon={<ListAltIcon fontSize="small" />}
             iconPosition="start"
@@ -137,6 +147,11 @@ export default function App() {
           />
         </TabPanel>
         <TabPanel value={tabIndex} index={1}>
+          <Typography variant="body1" sx={{ mt: 2, color: "black"}}>
+            <OrderLookup/>
+          </Typography>
+        </TabPanel>
+        <TabPanel value={tabIndex} index={2}>
           <Typography variant="body1" sx={{ mt: 2, color: "black"}}>
             Order tracking panel coming soon.
           </Typography>

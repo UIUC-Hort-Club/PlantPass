@@ -10,9 +10,10 @@ import {
   TableHead,
   TableRow,
   Paper,
+  Stack,
 } from '@mui/material';
 
-function Receipt({ totals }) {
+function Receipt({ totals, transactionId }) {
   const [discounts, setDiscounts] = useState([]);
 
   useEffect(() => {
@@ -25,18 +26,17 @@ function Receipt({ totals }) {
   return (
     <Container sx={{ mt: 3 }} style={{ paddingLeft: '0px', paddingRight: '0px' }}>
       <Box
-      // justifyContent={}
         sx={{
           border: '2px solid #d3d3d3',
           borderRadius: 2,
           padding: 2,
         }}
       >
-        <Typography variant="h6" gutterBottom color={'black'} align='center'>
+        <Typography variant="h6" gutterBottom color={'black'} align="center">
           Transaction Receipt
         </Typography>
 
-        <Typography variant="body1" sx={{ mb: 1 }} color={'black'} align='right'>
+        <Typography variant="body1" sx={{ mb: 1 }} color={'black'} align="right">
           Subtotal: ${totals.subtotal}
         </Typography>
 
@@ -59,10 +59,21 @@ function Receipt({ totals }) {
           </Table>
         </TableContainer>
 
-        {/* Grand Total */}
-        <Typography variant="body1" sx={{ mt: 2, fontWeight: 700 }} color={'black'} align='right'>
-          Grand Total: ${totals.grandTotal}
-        </Typography>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ marginBottom: '10px' }}>
+          {/* Transaction ID */}
+          {transactionId ? (
+            <Typography variant="body1" sx={{ mt: 2, fontWeight: 700 }} color="black">
+              ID: {transactionId}
+            </Typography>
+          ) : (
+            <Box sx={{ mt: 2, minHeight: '24px' }} />
+          )}
+
+          {/* Grand Total */}
+          <Typography variant="body1" sx={{ mt: 2, fontWeight: 700 }} color="black" align="right">
+            Grand Total: ${totals.grandTotal}
+          </Typography>
+        </Stack>
       </Box>
     </Container>
   );

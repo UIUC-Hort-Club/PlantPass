@@ -9,6 +9,7 @@ import {
   Box,
   FormControlLabel,
   Checkbox,
+  TextField,
 } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
 import ItemsTable from './OrderEntrySubComponents/ItemsTable';
@@ -26,24 +27,35 @@ function OrderEntry({ api, product_listings }) {
     grandTotal: 0,
   });
   const [showNotification, setShowNotification] = useState(false);
-  const [overwrite, setOverwrite] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [currentTransactionID, setCurrentTransactionID] = useState("");
+
+  function generateTransactionId() {
+    const timestamp = Date.now().toString();
+    let hash = 0;
+    for (let i = 0; i < timestamp.length; i++) {
+      const char = timestamp.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash |= 0;
+    }
+    return Math.abs(hash).toString(36).toUpperCase();
+  }
+
 
   const handleScan = (scannedProduct) => {
     if (scannedProduct) {
       const sku = scannedProduct.SKU;
 
+      const newQuantity = (quantities[sku] || 0) + 1;
+
       setQuantities((prev) => ({
         ...prev,
-        [sku]: overwrite ? 1 : (prev[sku] || 0) + 1,
+        [sku]: newQuantity,
       }));
 
       setSubtotals((prev) => ({
         ...prev,
-        [sku]: (
-          scannedProduct.Price *
-          (overwrite ? 1 : ((quantities[sku] || 0) + 1))
-        ).toFixed(2),
+        [sku]: (scannedProduct.Price * newQuantity).toFixed(2),
       }));
     } else {
       alert(`Internal Error: Item with SKU "${scannedProduct?.SKU}" not found, but should have been found...`);
@@ -103,6 +115,8 @@ function OrderEntry({ api, product_listings }) {
       grandTotal: Math.floor(grandTotal).toFixed(2),
     });
 
+    setCurrentTransactionID(generateTransactionId());
+
     const postData = {
       delete_: false,
       transaction_id: uuidv4(),
@@ -144,7 +158,6 @@ function OrderEntry({ api, product_listings }) {
 
   return (
     <Container maxWidth="md">
-
       {/* Items Table Component */}
       <ItemsTable
         stockItems={products}
@@ -164,28 +177,17 @@ function OrderEntry({ api, product_listings }) {
             Scan
           </Button>
 
-          <Stack direction="row" spacing={2} alignItems="center">
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={overwrite}
-                  onChange={(e) => setOverwrite(e.target.checked)}
-                  sx={{ color: 'red' }}
-                />
-              }
-              label="Overwrite Prev"
-              sx={{ color: 'red' }}
-              size='small'
-            />
-            <Button variant="contained" color="primary" onClick={calculateTotal} size='small'>
-              Enter
-            </Button>
-          </Stack>
+          <Button variant="contained" color="primary" onClick={calculateTotal} size='small'>
+            Enter
+          </Button>
         </Stack>
       </Box>
 
       {/* Receipt Component */}
-      <Receipt totals={totals} />
+      <Receipt
+        totals={totals}
+        transactionId={currentTransactionID}
+      />
 
       <Stack direction="row" justifyContent="flex-end" alignItems="center" sx={{ mt: 2 }}>
         <Button variant="contained" color="success" onClick={handleNewOrder} size='small'>
@@ -213,7 +215,6 @@ function OrderEntry({ api, product_listings }) {
         onScan={handleScan}
         products={products}
         getQuantity={getQuantity}
-        overwrite={overwrite}
       />
     </Container>
   );

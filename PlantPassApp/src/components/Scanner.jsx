@@ -15,7 +15,7 @@ import SearchOffIcon from '@mui/icons-material/SearchOff';
 import SavedSearchIcon from '@mui/icons-material/SavedSearch';
 import { v4 as uuidv4 } from 'uuid';
 
-export default function Scanner({ opened, onClose, onScan, products, getQuantity, overwrite }) {
+export default function Scanner({ opened, onClose, onScan, products, getQuantity }) {
   const [matchedProduct, setMatchedProduct] = useState(null);
   const [cameras, setCameras] = useState([]);
   const [selectedCamera, setSelectedCamera] = useState(null);
@@ -106,8 +106,8 @@ export default function Scanner({ opened, onClose, onScan, products, getQuantity
     if (!matchedProduct) return;
 
     // Compute what the new quantity will be
-    const newQuantity = overwrite ? 1 : (getQuantity(matchedProduct.SKU) || 0) + 1;
-
+    const newQuantity = (getQuantity(matchedProduct.SKU) || 0) + 1;
+    
     // Call parent callback to update state
     onScan(matchedProduct);
 
