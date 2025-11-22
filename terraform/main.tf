@@ -19,6 +19,45 @@ resource "aws_s3_bucket_versioning" "frontend_versioning" {
 }
 
 # -------------------------
+# lambda Function
+# -------------------------
+resource "aws_iam_role" "lambda_exec" {
+  name = "transaction_handler_lambda_role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "lambda.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
+  role       = aws_iam_role.lambda_exec.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_lambda_function" "transaction_handler" {
+  function_name = "TransactionHandler"
+  filename      = "${path.module}/../lambda_package.zip"
+  handler       = "lambda_handler.lambda_handler"
+  runtime       = "python3.11"
+  role          = aws_iam_role.lambda_exec.arn
+}
+
+resource "aws_lambda_function_url" "transaction_handler_url" {
+  function_name      = aws_lambda_function.transaction_handler.function_name
+  authorization_type = "NONE"
+}
+
+output "lambda_function_url" {
+  value = aws_lambda_function_url.transaction_handler_url.function_url
+}
+
+# -------------------------
 # CloudFront OAI
 # -------------------------
 resource "aws_cloudfront_origin_access_identity" "oai" {
