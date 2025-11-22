@@ -7,6 +7,10 @@ provider "aws" {
 # -------------------------
 resource "aws_s3_bucket" "frontend" {
   bucket = "plantpass-frontend"
+
+  tags = {
+    application = "plantpass"
+  }
 }
 
 # Enable versioning in a separate resource
@@ -16,10 +20,14 @@ resource "aws_s3_bucket_versioning" "frontend_versioning" {
   versioning_configuration {
     status = "Enabled"
   }
+
+  tags = {
+    application = "plantpass"
+  }
 }
 
 # -------------------------
-# lambda Function
+# Lambda Function
 # -------------------------
 resource "aws_iam_role" "lambda_exec" {
   name = "transaction_handler_lambda_role"
@@ -33,6 +41,10 @@ resource "aws_iam_role" "lambda_exec" {
       }
     }]
   })
+
+  tags = {
+    application = "plantpass"
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
@@ -46,11 +58,19 @@ resource "aws_lambda_function" "transaction_handler" {
   handler       = "lambda_handler.lambda_handler"
   runtime       = "python3.11"
   role          = aws_iam_role.lambda_exec.arn
+
+  tags = {
+    application = "plantpass"
+  }
 }
 
 resource "aws_lambda_function_url" "transaction_handler_url" {
   function_name      = aws_lambda_function.transaction_handler.function_name
   authorization_type = "NONE"
+
+  tags = {
+    application = "plantpass"
+  }
 }
 
 output "lambda_function_url" {
@@ -62,6 +82,10 @@ output "lambda_function_url" {
 # -------------------------
 resource "aws_cloudfront_origin_access_identity" "oai" {
   comment = "OAI for PlantPass frontend"
+
+  tags = {
+    application = "plantpass"
+  }
 }
 
 # -------------------------
@@ -124,6 +148,10 @@ resource "aws_cloudfront_distribution" "frontend" {
 
   viewer_certificate {
     cloudfront_default_certificate = true
+  }
+
+  tags = {
+    application = "plantpass"
   }
 }
 
