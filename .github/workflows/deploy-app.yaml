@@ -46,9 +46,9 @@ jobs:
         id: tf-output
         working-directory: terraform
         run: |
-          BUCKET_NAME=$(terraform output -raw frontend_bucket_name)
-          echo "bucket_name=$BUCKET_NAME" >> $GITHUB_OUTPUT
+          echo "bucket_name=$(terraform output -raw frontend_bucket_name)" >> $GITHUB_OUTPUT
 
       - name: Sync to S3
         run: |
           aws s3 sync PlantPassApp/dist/ s3://${{ steps.tf-output.outputs.bucket_name }} --delete
+
