@@ -54,3 +54,10 @@ jobs:
       - name: Deploy frontend to S3
         run: |
           aws s3 sync ./PlantPassApp/dist/ s3://${{ steps.bucket.outputs.name }} --delete
+    
+  deploy-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Step 1
+        run: |
+          echo "Perform Backend Deploy Steps Here!"
