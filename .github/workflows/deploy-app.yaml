@@ -58,6 +58,14 @@ jobs:
           terraform apply -auto-approve -input=false -lock-timeout=60s \
             -var "lambda_zip_path=lambda_package.zip"
 
+      - name: Get frontend bucket name
+        working-directory: ./terraform
+        id: bucket
+        run: |
+          BUCKET=$(terraform output frontend_bucket_name)
+          echo "Bucket is: $BUCKET"
+          echo "name=$BUCKET" >> $GITHUB_OUTPUT
+
   deploy-frontend:
     runs-on: ubuntu-latest
     needs: deploy-infra
