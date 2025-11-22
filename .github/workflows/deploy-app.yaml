@@ -47,8 +47,8 @@ jobs:
         id: bucket
         run: |
           BUCKET=$(terraform output -raw frontend_bucket_name 2>/dev/null | sed 's/::.*//')
-          echo "$BUCKET"
-          echo "name=$BUCKET" >> $GITHUB_OUTPUT
+          echo "Bucket is: $BUCKET"
+          printf "name=%s\n" "$BUCKET" >> $GITHUB_OUTPUT
 
       - name: Deploy frontend to S3
         run: |
