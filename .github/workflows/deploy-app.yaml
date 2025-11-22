@@ -44,9 +44,12 @@ jobs:
 
       - name: Get bucket name
         id: bucket
+        env:
+          TF_CLI_ARGS_output: "-no-color"
         run: |
-          echo "name=$(terraform output -raw frontend_bucket_name)" >> $GITHUB_OUTPUT
-          echo "The bucket name is: ${{ steps.terraform_output_step.outputs.my_value }}"
+          BUCKET=$(terraform output -raw frontend_bucket_name)
+          echo "Bucket is: '$BUCKET'"
+          echo "name=$BUCKET" >> $GITHUB_OUTPUT
 
       - name: Deploy frontend to S3
         run: |
