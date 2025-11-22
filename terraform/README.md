@@ -40,3 +40,11 @@ aws s3 sync ../PlantPassApp/dist/ s3://$BUCKET_NAME --delete
 
 7. Verify deployment
 Access the S3 bucket website or CloudFront distribution URL to confirm the frontend is live.
+
+## Destroying Resources
+
+The following command will delete all the infrastructure that was created by the Terraform configuration. This effectively undoes what `terraform apply` did
+
+```bash
+terraform destroy
+```

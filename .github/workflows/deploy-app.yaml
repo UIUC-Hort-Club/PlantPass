@@ -46,7 +46,7 @@ jobs:
         working-directory: ./terraform
         id: bucket
         run: |
-          BUCKET=$(terraform output -raw frontend_bucket_name 2>/dev/null | sed 's/::.*//')
+          BUCKET=$(terraform output -raw frontend_bucket_name | head -n1 | tr -d '[:space:]')
           echo "Bucket is: $BUCKET"
           printf "name=%s\n" "$BUCKET" >> $GITHUB_OUTPUT
 
