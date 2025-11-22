@@ -87,4 +87,4 @@ jobs:
 
       - name: Deploy frontend to S3
         run: |
-          aws s3 sync ./PlantPassApp/dist/ s3://${{ needs.deploy-infra.outputs.frontend_bucket }} --delete
+          aws s3 sync ./PlantPassApp/dist/ s3://${{ needs.deploy-infra.outputs.name }} --delete
