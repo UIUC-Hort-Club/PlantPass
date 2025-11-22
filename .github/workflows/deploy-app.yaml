@@ -44,7 +44,9 @@ jobs:
 
       - name: Get bucket name
         id: bucket
-        run: echo "name=$(terraform output -raw frontend_bucket_name)" >> $GITHUB_OUTPUT
+        run: |
+          echo "name=$(terraform output -raw frontend_bucket_name)" >> $GITHUB_OUTPUT
+          echo "The bucket name is: ${{ steps.terraform_output_step.outputs.my_value }}"
 
       - name: Deploy frontend to S3
         run: |
