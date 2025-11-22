@@ -35,6 +35,7 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.6.2
+          terraform_wrapper: false
 
       - name: Terraform Init & Apply
         working-directory: ./terraform
@@ -46,9 +47,9 @@ jobs:
         working-directory: ./terraform
         id: bucket
         run: |
-          BUCKET=$(terraform output -raw frontend_bucket_name | head -n1 | tr -d '[:space:]')
+          BUCKET=$(terraform output frontend_bucket_name)
           echo "Bucket is: $BUCKET"
-          printf "name=%s\n" "$BUCKET" >> $GITHUB_OUTPUT
+          echo "name=$BUCKET" >> $GITHUB_OUTPUT
 
       - name: Deploy frontend to S3
         run: |
