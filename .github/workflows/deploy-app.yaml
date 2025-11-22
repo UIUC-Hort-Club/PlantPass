@@ -27,9 +27,9 @@ jobs:
         id: package
         run: |
           cd TransactionHandler
-          zip -r ../lambda_package.zip .
+          zip -r ../terraform/lambda_package.zip .
           cd ..
-          echo "zip_path=lambda_package.zip" >> $GITHUB_OUTPUT
+          echo "zip_path=terraform/lambda_package.zip" >> $GITHUB_OUTPUT
 
   deploy-infra:
     runs-on: ubuntu-latest
