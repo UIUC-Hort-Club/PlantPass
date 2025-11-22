@@ -51,4 +51,5 @@ output "lambda_function_url" {
 variable "lambda_zip_path" {
   type        = string
   description = "Path to Lambda ZIP relative to Terraform working directory"
+  default     = "lambda_handler.zip"
 }
