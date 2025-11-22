@@ -50,7 +50,7 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
 
 resource "aws_lambda_function" "transaction_handler" {
   function_name = "TransactionHandler"
-  filename      = "${path.module}/../lambda_package.zip"
+  filename      = var.lambda_zip_path
   handler       = "lambda_handler.lambda_handler"
   runtime       = "python3.11"
   role          = aws_iam_role.lambda_exec.arn
@@ -154,4 +154,9 @@ output "frontend_bucket_name" {
 output "cloudfront_domain_name" {
   value       = aws_cloudfront_distribution.frontend.domain_name
   description = "The CloudFront distribution domain name"
+}
+
+variable "lambda_zip_path" {
+  type        = string
+  description = "Path to Lambda ZIP relative to Terraform working directory"
 }
