@@ -7,7 +7,7 @@ This assumes you have completed [developer setup](docs/DEVELOPER_SETUP.md)
 
 1. Build the Frontend
 ```bash
-cd ../PlantPassApp
+cd ../src/PlantPassApp
 npm install
 npm run build
 ```
@@ -35,7 +35,7 @@ terraform apply
 6. Sync Frontend to S3 Bucket
 ```bash
 BUCKET_NAME=$(terraform output -raw frontend_bucket_name)
-aws s3 sync ../PlantPassApp/dist/ s3://$BUCKET_NAME --delete
+aws s3 sync ../src/PlantPassApp/dist/ s3://$BUCKET_NAME --delete
 ```
 
 7. Verify deployment

@@ -26,8 +26,8 @@ jobs:
       - name: Package Lambda
         id: package
         run: |
-          cd TransactionHandler
-          zip -r ../terraform/lambda_package.zip .
+          cd src/TransactionHandler
+          zip -r ../../terraform/lambda_package.zip .
           cd ..
           echo "zip_path=terraform/lambda_package.zip" >> $GITHUB_OUTPUT
 
@@ -89,11 +89,11 @@ jobs:
 
       - name: Build Frontend
         run: |
-          cd PlantPassApp
+          cd src/PlantPassApp
           npm install
           npm run build
           cd ..
 
       - name: Deploy frontend to S3
         run: |
-          aws s3 sync ./PlantPassApp/dist/ s3://${{ needs.deploy-infra.outputs.name }} --delete
+          aws s3 sync ./src/PlantPassApp/dist/ s3://${{ needs.deploy-infra.outputs.name }} --delete
