@@ -42,11 +42,12 @@ jobs:
           terraform init -input=false
           terraform apply -auto-approve -input=false -lock-timeout=60s
 
-      - name: Get S3 Bucket Name
+      - name: Sync frontend to S3
         working-directory: terraform
         run: |
-          echo "bucket_name=$(terraform output -raw frontend_bucket_name)" >> $GITHUB_ENV
+          # Get the bucket name from Terraform output
+          BUCKET_NAME=$(terraform output -raw frontend_bucket_name)
+          
+          # Sync the built frontend folder to the bucket
+          aws s3 sync ../PlantPassApp/dist/ s3://$BUCKET_NAME --delete
 
-      - name: Sync to S3
-        run: |
-          aws s3 sync PlantPassApp/dist/ s3://${{ env.bucket_name }} --delete
