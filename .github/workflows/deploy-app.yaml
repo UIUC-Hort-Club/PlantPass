@@ -29,7 +29,7 @@ jobs:
           cd src/TransactionHandler
           zip -r ../../terraform/lambda_package.zip .
           cd ..
-          echo "zip_path=terraform/lambda_package.zip" >> $GITHUB_OUTPUT
+          echo "zip_path=lambda_package.zip" >> $GITHUB_OUTPUT
 
   deploy-infra:
     runs-on: ubuntu-latest
@@ -56,7 +56,7 @@ jobs:
         run: |
           terraform init -input=false
           terraform apply -auto-approve -input=false -lock-timeout=60s \
-            -var "lambda_zip_path=lambda_package.zip"
+            -var "lambda_zip_path=${{ needs.prepare-lambda.outputs.lambda_zip_path }}"
 
       - name: Get frontend bucket name
         working-directory: ./terraform
