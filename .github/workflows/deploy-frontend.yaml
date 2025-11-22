@@ -31,6 +31,16 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
+      - name: Terraform Init & Apply
+        run: |
+          cd terraform
+          terraform init
+          terraform apply -auto-approve
+
+      - name: Get S3 Bucket Name
+        id: tf-output
+        run: echo "BUCKET_NAME=$(terraform output -raw frontend_bucket_name)" >> $GITHUB_ENV
+
       - name: Sync to S3
         run: |
-          aws s3 sync PlantPassApp/dist/ s3://plantpass-frontend --delete
+          aws s3 sync ../PlantPassApp/dist/ s3://$BUCKET_NAME --delete
