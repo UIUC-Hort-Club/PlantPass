@@ -1,6 +1,6 @@
 # S3 Bucket
 resource "aws_s3_bucket" "frontend" {
-  bucket = "plantpass-frontend"
+  bucket = "uiuc-hort-club-plantpass-app-frontend"
 }
 
 # CloudFront Distribution
