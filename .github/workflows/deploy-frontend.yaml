@@ -39,8 +39,8 @@ jobs:
       - name: Terraform Init & Apply
         run: |
           cd terraform
-          terraform init
-          terraform apply -auto-approve
+          terraform init -input=false
+          terraform apply -auto-approve -input=false -lock-timeout=60s
 
       - name: Get S3 Bucket Name
         id: tf-output

@@ -43,3 +43,12 @@ resource "aws_cloudfront_distribution" "frontend" {
     cloudfront_default_certificate = true
   }
 }
+
+# Terraform Backend
+terraform {
+  backend "s3" {
+    bucket = "plantpass-terraform-state"      # your state bucket
+    key    = "frontend/terraform.tfstate"     # path in the bucket for this project
+    region = "us-east-1"
+  }
+}
