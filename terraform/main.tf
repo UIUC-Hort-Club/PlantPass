@@ -3,6 +3,11 @@ resource "aws_s3_bucket" "frontend" {
   bucket = "plantpass-frontend"
 }
 
+output "frontend_bucket_name" {
+  value       = aws_s3_bucket.frontend.bucket
+  description = "The S3 bucket for the frontend"
+}
+
 # CloudFront Distribution
 resource "aws_cloudfront_distribution" "frontend" {
   enabled             = true
