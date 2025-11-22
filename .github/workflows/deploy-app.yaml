@@ -37,18 +37,15 @@ jobs:
           terraform_version: 1.6.2
 
       - name: Terraform Init & Apply
+        working-directory: terraform
         run: |
-          cd terraform
           terraform init -input=false
           terraform apply -auto-approve -input=false -lock-timeout=60s
 
       - name: Get S3 Bucket Name
-        id: tf-output
         working-directory: terraform
         run: |
-          echo "bucket_name<<EOF" >> $GITHUB_ENV
-          terraform output -raw frontend_bucket_name >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          echo "bucket_name=$(terraform output -raw frontend_bucket_name)" >> $GITHUB_ENV
 
       - name: Sync to S3
         run: |
