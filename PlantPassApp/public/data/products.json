@@ -1,0 +1,42 @@
+[
+  {
+    "SKU": "PP001",
+    "Item": "Purple Coneflower",
+    "Price": 4.50
+  },
+  {
+    "SKU": "PP002",
+    "Item": "Black-Eyed Susan",
+    "Price": 3.75
+  },
+  {
+    "SKU": "PP003",
+    "Item": "Lavender",
+    "Price": 5.25
+  },
+  {
+    "SKU": "PP004",
+    "Item": "Bee Balm",
+    "Price": 4.00
+  },
+  {
+    "SKU": "PP005",
+    "Item": "Hosta",
+    "Price": 6.00
+  },
+  {
+    "SKU": "PP006",
+    "Item": "Daylily",
+    "Price": 4.25
+  },
+  {
+    "SKU": "PP007",
+    "Item": "Sedum",
+    "Price": 3.50
+  },
+  {
+    "SKU": "PP008",
+    "Item": "Coreopsis",
+    "Price": 4.75
+  }
+]
