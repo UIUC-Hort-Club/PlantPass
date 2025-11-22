@@ -44,8 +44,6 @@ jobs:
 
       - name: Get S3 Bucket Name
         id: tf-output
-        run: echo "BUCKET_NAME=$(terraform output -raw frontend_bucket_name)" >> $GITHUB_ENV
-
-      - name: Sync to S3
         run: |
-          aws s3 sync ../PlantPassApp/dist/ s3://$BUCKET_NAME --delete
+          BUCKET_NAME=$(terraform output -raw frontend_bucket_name 2>/dev/null)
+          echo "BUCKET_NAME=$BUCKET_NAME" >> $GITHUB_ENV
