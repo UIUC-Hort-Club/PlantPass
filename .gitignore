@@ -32,3 +32,6 @@ crash.log
 
 # Override for CLI configuration (optional, contains credentials)
 terraform.rc
+
+# Lambda build
+*.zip

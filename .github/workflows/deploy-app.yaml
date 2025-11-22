@@ -56,7 +56,7 @@ jobs:
         run: |
           terraform init -input=false
           terraform apply -auto-approve -input=false -lock-timeout=60s \
-            -var "lambda_zip_path=${{ needs.prepare-lambda.outputs.lambda_zip_path }}"
+            -var "lambda_zip_path=lambda_package.zip"
 
   deploy-frontend:
     runs-on: ubuntu-latest
