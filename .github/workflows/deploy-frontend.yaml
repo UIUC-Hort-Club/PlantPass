@@ -1,4 +1,4 @@
-name: Deploy Frontend
+name: Deploy PlantPassApp
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - staging
 
 jobs:
-  deploy:
+  deploy-frontend:
     runs-on: ubuntu-latest
 
     steps:
