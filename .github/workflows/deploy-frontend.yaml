@@ -44,8 +44,13 @@ jobs:
 
       - name: Get S3 Bucket Name
         id: tf-output
+        working-directory: terraform
         run: |
-          BUCKET_NAME=$(terraform output -raw frontend_bucket_name 2>/dev/null)
+          BUCKET_NAME=$(terraform output -raw frontend_bucket_name || echo "")
+          if [ -z "$BUCKET_NAME" ]; then
+            echo "Terraform output 'frontend_bucket_name' not found"
+            exit 1
+          fi
           echo "BUCKET_NAME=$BUCKET_NAME" >> $GITHUB_ENV
 
       - name: Sync to S3
