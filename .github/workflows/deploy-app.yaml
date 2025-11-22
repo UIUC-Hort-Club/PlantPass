@@ -45,11 +45,5 @@ jobs:
       - name: Sync frontend to S3
         working-directory: terraform
         run: |
-          # Get the bucket name from Terraform output
-          BUCKET_NAME=$(terraform output -raw frontend_bucket_name)
-
-          echo $BUCKET_NAME
-          
-          # Sync the built frontend folder to the bucket
-          aws s3 sync ../PlantPassApp/dist/ s3://$BUCKET_NAME --delete
+          aws s3 sync ../PlantPassApp/dist/ s3://$(terraform output -raw frontend_bucket_name) --delete
 
