@@ -45,13 +45,11 @@ jobs:
       - name: Get frontend bucket name
         working-directory: ./terraform
         id: bucket
-        env:
-          TF_CLI_ARGS_output: "-no-color"
         run: |
-          BUCKET=$(terraform output -raw frontend_bucket_name | tr -d '\n' | tr -d '\r')
-          echo "Bucket is: '$BUCKET'"
+          BUCKET=$(terraform output -raw frontend_bucket_name 2>/dev/null)
+          echo "$BUCKET"
           echo "name=$BUCKET" >> $GITHUB_OUTPUT
 
       - name: Deploy frontend to S3
         run: |
-          aws s3 sync ../PlantPassApp/dist/ s3://${{ steps.bucket.outputs.name }} --delete
+          aws s3 sync ./PlantPassApp/dist/ s3://${{ steps.bucket.outputs.name }} --delete
