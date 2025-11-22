@@ -52,8 +52,8 @@ resource "aws_cloudfront_distribution" "frontend" {
 # Terraform Backend
 terraform {
   backend "s3" {
-    bucket = "plantpass-terraform-state"      # your state bucket
-    key    = "frontend/terraform.tfstate"     # path in the bucket for this project
+    bucket = "plantpass-terraform-state"
+    key    = "frontend/terraform.tfstate"
     region = "us-east-1"
   }
 }

@@ -37,12 +37,13 @@ jobs:
           terraform_version: 1.6.2
 
       - name: Terraform Init & Apply
-        working-directory: terraform
+        working-directory: ./terraform
         run: |
           terraform init -input=false
           terraform apply -auto-approve -input=false -lock-timeout=60s
 
       - name: Get frontend bucket name
+        working-directory: ./terraform
         id: bucket
         env:
           TF_CLI_ARGS_output: "-no-color"
