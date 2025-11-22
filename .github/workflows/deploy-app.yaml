@@ -42,12 +42,12 @@ jobs:
           terraform init -input=false
           terraform apply -auto-approve -input=false -lock-timeout=60s
 
-      - name: Get bucket name
+      - name: Get frontend bucket name
         id: bucket
         env:
           TF_CLI_ARGS_output: "-no-color"
         run: |
-          BUCKET=$(terraform output -raw frontend_bucket_name)
+          BUCKET=$(terraform output -raw frontend_bucket_name | tr -d '\n' | tr -d '\r')
           echo "Bucket is: '$BUCKET'"
           echo "name=$BUCKET" >> $GITHUB_OUTPUT
 
