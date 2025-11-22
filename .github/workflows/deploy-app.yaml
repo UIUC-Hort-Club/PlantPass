@@ -21,18 +21,16 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Package Lambda
+      - name: Package Lambda Function
         run: |
           cd src/TransactionHandler
           zip -r ../../terraform/lambda_package.zip .
-          cd ..
 
       - name: Upload Lambda ZIP
         uses: actions/upload-artifact@v4
         with:
           name: lambda-package
           path: terraform/lambda_package.zip
-
 
   deploy-infra:
     runs-on: ubuntu-latest
