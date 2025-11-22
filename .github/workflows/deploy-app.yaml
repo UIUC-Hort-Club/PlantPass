@@ -10,8 +10,30 @@ on:
       - staging
 
 jobs:
+  prepare-lambda:
+    runs-on: ubuntu-latest
+    outputs:
+      lambda_zip_path: ${{ steps.package.outputs.zip_path }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Package Lambda
+        id: package
+        run: |
+          cd TransactionHandler
+          zip -r ../lambda_package.zip .
+          cd ..
+          echo "zip_path=lambda_package.zip" >> $GITHUB_OUTPUT
+
   deploy-infra:
     runs-on: ubuntu-latest
+    needs: prepare-lambda
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -34,20 +56,8 @@ jobs:
         run: |
           terraform init -input=false
           terraform apply -auto-approve -input=false -lock-timeout=60s
-
-      - name: Output frontend bucket
-        working-directory: ./terraform
-        id: bucket
-        run: |
-          BUCKET=$(terraform output -raw frontend_bucket_name)
-          echo "name=$BUCKET" >> $GITHUB_OUTPUT
-
-      - name: Output Lambda info
-        working-directory: ./terraform
-        id: lambda
-        run: |
-          LAMBDA_ARN=$(terraform output -raw transaction_handler_lambda_arn)
-          echo "arn=$LAMBDA_ARN" >> $GITHUB_OUTPUT
+        env:
+          LAMBDA_ZIP_PATH: ${{ needs.prepare-lambda.outputs.lambda_zip_path }}
 
   deploy-frontend:
     runs-on: ubuntu-latest
@@ -70,28 +80,4 @@ jobs:
 
       - name: Deploy frontend to S3
         run: |
-          aws s3 sync ./PlantPassApp/dist/ s3://${{ needs.deploy-infra.outputs.name }} --delete
-
-  deploy-lambda:
-    runs-on: ubuntu-latest
-    needs: deploy-infra
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
-
-      - name: Package Lambda
-        run: |
-          cd TransactionHandler
-          zip -r ../lambda_package.zip .
-          cd ..
-
-      - name: Update Lambda code
-        run: |
-          aws lambda update-function-code \
-            --function-name TransactionHandler \
-            --zip-file fileb://lambda_package.zip
+          aws s3 sync ./PlantPassApp/dist/ s3://${{ needs.deploy-infra.outputs.frontend_bucket }} --delete
