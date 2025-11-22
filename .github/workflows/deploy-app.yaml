@@ -46,7 +46,9 @@ jobs:
         id: tf-output
         working-directory: terraform
         run: |
-          echo "bucket_name=$(terraform output -raw frontend_bucket_name)" >> $GITHUB_OUTPUT
+          echo "bucket_name<<EOF" >> $GITHUB_ENV
+          terraform output -raw frontend_bucket_name >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Sync to S3
         run: |
