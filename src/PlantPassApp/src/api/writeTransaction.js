@@ -1,4 +1,4 @@
-export const API_URL = "https://y5kg6dk6p3.execute-api.us-east-1.amazonaws.com/";
+import { API_URL } from "./config";
 
 export async function writeTransaction(transactionData) {
   try {

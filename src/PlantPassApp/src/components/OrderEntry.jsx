@@ -16,8 +16,9 @@ import ItemsTable from './OrderEntrySubComponents/ItemsTable';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import Receipt from './OrderEntrySubComponents/Receipt';
 import Scanner from './Scanner';
+import { writeTransaction } from '../api/writeTransaction';
 
-function OrderEntry({ api, product_listings }) {
+function OrderEntry({ product_listings }) {
   const [products, setProducts] = useState([]);
   const [quantities, setQuantities] = useState({});
   const [subtotals, setSubtotals] = useState({});
@@ -125,18 +126,12 @@ function OrderEntry({ api, product_listings }) {
       order_total: Math.floor(grandTotal),
     };
 
-    fetch(api, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(postData),
-    })
+    writeTransaction(postData)
       .then(() => {
-        console.log('Data sent successfully:', postData);
         setShowNotification(true);
       })
-      .catch((error) => {
-        console.error('Error sending data:', error);
+      .catch((err) => {
+        console.error('Error writing transaction:', err);
       });
   };
 
