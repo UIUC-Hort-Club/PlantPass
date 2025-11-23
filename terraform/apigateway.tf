@@ -4,6 +4,9 @@
 resource "aws_apigatewayv2_api" "frontend_api" {
   name          = "PlantPassAPI"
   protocol_type = "HTTP"
+  tags = {
+    application = "plantpass"
+  }
 }
 
 resource "aws_apigatewayv2_integration" "lambda_integration" {
@@ -23,6 +26,9 @@ resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_apigatewayv2_api.frontend_api.id
   name        = "$default"
   auto_deploy = true
+  tags = {
+    application = "plantpass"
+  }
 }
 
 output "api_endpoint" {

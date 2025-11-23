@@ -58,7 +58,7 @@ variable "lambda_zip_path" {
 resource "aws_lambda_permission" "apigw" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.transaction_handler_url.function_name
+  function_name = aws_lambda_function.transaction_handler.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.frontend_api.execution_arn}/*/*"
 }
