@@ -127,8 +127,9 @@ function OrderEntry({ product_listings }) {
     };
 
     writeTransaction(postData)
-      .then(() => {
+      .then((data) => {
         setShowNotification(true);
+        console.log('Transaction successfully written:', data);
       })
       .catch((err) => {
         console.error('Error writing transaction:', err);
