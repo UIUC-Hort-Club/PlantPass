@@ -11,6 +11,10 @@ def lambda_handler(event, context):
             save_transaction(body)
             return {
                 "statusCode": 200,
+                "headers": {
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "GET,POST,OPTIONS"
+                },
                 "body": json.dumps({"message": "Transaction recorded"})
             }
 
@@ -23,6 +27,10 @@ def lambda_handler(event, context):
             transaction = get_transaction(transaction_id)
             return {
                 "statusCode": 200,
+                "headers": {
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "GET,POST,OPTIONS"
+                },
                 "body": json.dumps(transaction)
             }
 
@@ -32,6 +40,10 @@ def lambda_handler(event, context):
             total = compute_total(customer_id)
             return {
                 "statusCode": 200,
+                "headers": {
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "GET,POST,OPTIONS"
+                },
                 "body": json.dumps({"total": total})
             }
 

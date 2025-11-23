@@ -53,3 +53,12 @@ variable "lambda_zip_path" {
   description = "Path to Lambda ZIP relative to Terraform working directory"
   default     = "lambda_package.zip"
 }
+
+# Grant API Gateway permission to invoke the Lambda function
+resource "aws_lambda_permission" "apigw" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.my_lambda.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.frontend_api.execution_arn}/*/*"
+}

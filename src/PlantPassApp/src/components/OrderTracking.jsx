@@ -1,13 +1,12 @@
 import { Table } from '@mantine/core';
 import { useEffect, useState } from 'react';
-import { fetchTransactions } from '../utils/sheetsApi';
 
 export default function TransactionTable() {
   const [rows, setRows] = useState([]);
 
-  useEffect(() => {
-    fetchTransactions().then(setRows);
-  }, []);
+  // useEffect(() => {
+  //   fetchTransactions().then(setRows);
+  // }, []);
 
   return (
     <Table>
