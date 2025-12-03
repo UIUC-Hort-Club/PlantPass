@@ -51,6 +51,9 @@ resource "aws_lambda_function" "transaction_handler" {
     aws_cloudwatch_log_group.transaction_handler_logs
   ]
 
+  # Add source_code_hash to detect changes in the ZIP
+  source_code_hash = filebase64sha256(var.lambda_zip_path)
+
   tags = {
     application = "plantpass"
   }

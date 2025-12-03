@@ -4,7 +4,7 @@ from database_interface import save_transaction, get_transaction, compute_total
 
 # Configure logging
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)  # You can use DEBUG, INFO, WARNING, ERROR
+logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
     logger.info(f"Received event: {json.dumps(event)}")  # Log the raw event
