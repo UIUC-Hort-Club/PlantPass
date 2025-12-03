@@ -1,37 +1,50 @@
 import json
+import logging
 from database_interface import save_transaction, get_transaction, compute_total
 
+# Configure logging
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)  # You can use DEBUG, INFO, WARNING, ERROR
+
 def lambda_handler(event, context):
+    logger.info(f"Received event: {json.dumps(event)}")  # Log the raw event
+
     try:
         body = json.loads(event.get("body", "{}"))
-        route_key = event.get("routeKey", "")  # <-- use this instead of "path"
+        route_key = event.get("routeKey", "")
+        logger.info(f"Route key: {route_key}, Body: {body}")
 
         # ---- Write transaction ----
         if route_key == "POST /write":
             save_transaction(body)
+            logger.info("Transaction saved successfully")
             return response(200, {"message": "Transaction recorded"})
 
         # ---- Read transaction ----
         elif route_key == "POST /read":
             transaction_id = body.get("transactionId")
             if not transaction_id:
+                logger.warning("transactionId missing in /read request")
                 return response(400, {"message": "transactionId required"})
             
             transaction = get_transaction(transaction_id)
+            logger.info(f"Transaction retrieved: {transaction}")
             return response(200, transaction)
 
         # ---- Compute total ----
         elif route_key == "POST /total":
             customer_id = body.get("customerId")  # optional
             total = compute_total(customer_id)
+            logger.info(f"Total computed: {total}")
             return response(200, {"total": total})
 
         # ---- Unknown route ----
         else:
+            logger.warning(f"Unknown route: {route_key}")
             return response(404, {"message": "Route not found"})
 
     except Exception as e:
-        print(f"Error: {e}")
+        logger.error(f"Error processing request: {e}", exc_info=True)
         return response(500, {"message": str(e)})
 
 def response(status_code, body):
