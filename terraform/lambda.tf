@@ -25,6 +25,18 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
 }
 
 # -------------------------
+# CloudWatch Log Group
+# -------------------------
+resource "aws_cloudwatch_log_group" "transaction_handler_logs" {
+  name = "/aws/lambda/TransactionHandler"
+  retention_in_days = 14
+
+  tags = {
+    application = "plantpass"
+  }
+}
+
+# -------------------------
 # Lambda Function
 # -------------------------
 resource "aws_lambda_function" "transaction_handler" {
@@ -33,6 +45,11 @@ resource "aws_lambda_function" "transaction_handler" {
   handler       = "lambda_handler.lambda_handler"
   runtime       = "python3.11"
   role          = aws_iam_role.lambda_exec.arn
+
+  # Ensure log group exists before Lambda deploys
+  depends_on = [
+    aws_cloudwatch_log_group.transaction_handler_logs
+  ]
 
   tags = {
     application = "plantpass"
@@ -61,31 +78,4 @@ resource "aws_lambda_permission" "apigw" {
   function_name = aws_lambda_function.transaction_handler.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.frontend_api.execution_arn}/*/*"
-}
-
-# Add CloudWatch Log Group for Lambda function logs
-resource "aws_cloudwatch_log_group" "transaction_handler_logs" {
-  name              = "/aws/lambda/${aws_lambda_function.transaction_handler.function_name}"
-  retention_in_days = 14
-
-  tags = {
-    application = "plantpass"
-  }
-}
-
-# Ensure Lambda function depends on the log group creation
-resource "aws_lambda_function" "transaction_handler" {
-  function_name = "TransactionHandler"
-  filename      = var.lambda_zip_path
-  handler       = "lambda_handler.lambda_handler"
-  runtime       = "python3.11"
-  role          = aws_iam_role.lambda_exec.arn
-
-  depends_on = [
-    aws_cloudwatch_log_group.transaction_handler_logs
-  ]
-
-  tags = {
-    application = "plantpass"
-  }
 }
