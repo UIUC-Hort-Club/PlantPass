@@ -3,7 +3,7 @@ name: Deploy PlantPassApp
 on:
   push:
     branches:
-      - staging
+      - master
 
 jobs:
   prepare-lambda:
