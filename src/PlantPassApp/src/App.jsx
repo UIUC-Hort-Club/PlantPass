@@ -15,6 +15,7 @@ import ListAltIcon from '@mui/icons-material/ListAlt';
 import AppHeader from './components/Header';
 import OrderEntry from './components/OrderEntry';
 import OrderLookup from './components/OrderLookup';
+import OrderTracking from './components/OrderTracking';
 
 const DISCOUNTS_SOURCE = `${import.meta.env.BASE_URL}data/discounts.json`
 const PRODUCTS_SOURCE = `${import.meta.env.BASE_URL}data/products.json`
@@ -42,20 +43,18 @@ export default function App() {
   }, [isMobile]);
 
   return (
-    <Container
+    <Box
       sx={{
         minHeight: '100vh',
-        minWidth: '100vw',
+        width: '100%',
+        maxWidth: 800,
+        mx: 'auto',
         display: 'flex',
         flexDirection: 'column',
         backgroundColor: 'white',
-        paddingTop: '20px',
-        paddingBottom: '20px'
+        py: 2
       }}
     >
-      <AppHeader />
-      <Box sx={{ height: '1rem' }} />
-
       {/* Development Snackbar */}
       <Snackbar
         open={snackbarOpen}
@@ -94,69 +93,85 @@ export default function App() {
         </Alert>
       </Snackbar>
 
-      {/* Tabs and Panels */}
       <Box sx={{ border: '2px solid #D3D3D3', borderRadius: '12px' }}>
-        <Tabs
-          value={tabIndex}
-          onChange={(e, newValue) => setTabIndex(newValue)}
-          aria-label="PlantPass tabs"
-          variant="scrollable"
-          scrollButtons="auto"
-          TabIndicatorProps={{ sx: { display: 'none' } }}
+        {/* Header + Tabs row */}
+        <Box
           sx={{
             display: 'flex',
-            justifyContent: 'center',
-            '& .MuiTabs-scroller': {
-              display: 'flex',
-              justifyContent: 'center',
-            },
+            alignItems: 'center',
+            borderBottom: '1px solid #D3D3D3',
           }}
         >
-          <Tab
-            label={<Typography variant="body2">Entry</Typography>}
-            icon={<CalculateIcon fontSize="small" />}
-            iconPosition="start"
-            sx={{
-              '&.Mui-selected': { outline: 'none', border: 'none' },
-              '&:focus': { outline: 'none', border: 'none' },
-            }}
-          />
-          <Tab
-            label={<Typography variant="body2">Lookup</Typography>}
-            icon={<ListAltIcon fontSize="small" />}
-            iconPosition="start"
-            sx={{
-              '&.Mui-selected': { outline: 'none', border: 'none' },
-              '&:focus': { outline: 'none', border: 'none' },
-            }}
-          />
-          <Tab
-            label={<Typography variant="body2">Tracking</Typography>}
-            icon={<ListAltIcon fontSize="small" />}
-            iconPosition="start"
-            sx={{
-              '&.Mui-selected': { outline: 'none', border: 'none' },
-              '&:focus': { outline: 'none', border: 'none' },
-            }}
-          />
-        </Tabs>
+          {/* Left: App Bar */}
+          <Box sx={{ flexShrink: 0, paddingLeft: 2 }}>
+            <AppHeader />
+          </Box>
 
+          {/* Right: Tabs */}
+          <Tabs
+            value={tabIndex}
+            onChange={(e, newValue) => setTabIndex(newValue)}
+            aria-label="PlantPass tabs"
+            variant="scrollable"
+            scrollButtons="auto"
+            TabIndicatorProps={{ sx: { display: 'none' } }}
+            sx={{
+              flexGrow: 1,
+              justifyContent: 'center',
+              '& .MuiTabs-scroller': {
+                display: 'flex',
+                justifyContent: 'center',
+              },
+            }}
+          >
+            <Tab
+              label={<Typography variant="body2">Entry</Typography>}
+              icon={<CalculateIcon fontSize="small" />}
+              iconPosition="start"
+              sx={{
+                '&.Mui-selected': { outline: 'none', border: 'none' },
+                '&:focus': { outline: 'none', border: 'none' },
+              }}
+            />
+            <Tab
+              label={<Typography variant="body2">Lookup</Typography>}
+              icon={<ListAltIcon fontSize="small" />}
+              iconPosition="start"
+              sx={{
+                '&.Mui-selected': { outline: 'none', border: 'none' },
+                '&:focus': { outline: 'none', border: 'none' },
+              }}
+            />
+            <Tab
+              label={<Typography variant="body2">Tracking</Typography>}
+              icon={<ListAltIcon fontSize="small" />}
+              iconPosition="start"
+              sx={{
+                '&.Mui-selected': { outline: 'none', border: 'none' },
+                '&:focus': { outline: 'none', border: 'none' },
+              }}
+            />
+          </Tabs>
+        </Box>
+
+        {/* Panels */}
         <TabPanel value={tabIndex} index={0}>
-          <OrderEntry
-            product_listings={PRODUCTS_SOURCE}
-          />
+          <OrderEntry product_listings={PRODUCTS_SOURCE} />
         </TabPanel>
+
         <TabPanel value={tabIndex} index={1}>
-          <Typography variant="body1" sx={{ mt: 2, color: "black"}}>
-            <OrderLookup/>
+          <Typography variant="body1" sx={{ mt: 2, color: 'black' }}>
+            <OrderLookup />
           </Typography>
         </TabPanel>
+
         <TabPanel value={tabIndex} index={2}>
-          <Typography variant="body1" sx={{ mt: 2, color: "black"}}>
-            Order tracking panel coming soon.
+          <Typography variant="body1" sx={{ mt: 2, color: 'black' }}>
+            <OrderTracking />
           </Typography>
         </TabPanel>
       </Box>
-    </Container>
+
+    </Box>
   );
 }

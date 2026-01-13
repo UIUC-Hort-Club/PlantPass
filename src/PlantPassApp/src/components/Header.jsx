@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, Stack, Typography, useTheme } from '@mui/material';
+import { Container, Stack, Typography, useTheme, Box } from '@mui/material';
 
 export default function Header() {
   const theme = useTheme();
@@ -12,16 +12,34 @@ export default function Header() {
     <Container
       sx={{
         backgroundColor,
-        borderRadius: '12px',
-        padding: '20px',
+        borderRadius: '8px',
+        padding: '8px 16px',
       }}
     >
-      <Stack alignItems="center" justifyContent="flex-start" spacing={0}>
-        <Typography variant="h4" fontWeight={500} sx={{ color: textColor, margin: 0 }}>
-          PlantPass
-        </Typography>
-        <Typography variant="h7" fontWeight={300} sx={{ color: textColor, margin: 0 }}>
-          Spring Plant Fair 2026
+      <Stack
+        direction="row"
+        alignItems="center"
+        spacing={1.5}
+      >
+        {/* Logo */}
+        <Box
+          component="img"
+          src="hort_club_logo.png"   // update path as needed
+          alt="PlantPass logo"
+          sx={{
+            height: 32,
+            width: 32,
+            objectFit: 'contain',
+          }}
+        />
+
+        {/* Title */}
+        <Typography
+          variant="h6"
+          fontWeight={700}
+          sx={{ color: textColor, margin: 0 }}
+        >
+          UIUC Hort Club PlantPass
         </Typography>
       </Stack>
     </Container>
