@@ -12,3 +12,12 @@ variable "terraform_state_bucket" {
   type    = string
   default = "plantpass-terraform-state"
 }
+
+variable "domain_name" {
+  type = string
+}
+
+variable "alternate_names" {
+  type    = list(string)
+  default = []
+}
