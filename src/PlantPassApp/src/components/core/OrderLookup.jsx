@@ -13,8 +13,8 @@ import {
   Select,
   MenuItem,
 } from '@mui/material';
-import ItemsTable from './OrderEntrySubComponents/ItemsTable';
-import Receipt from './OrderEntrySubComponents/Receipt';
+import ItemsTable from './SubComponents/ItemsTable';
+import Receipt from './SubComponents/Receipt';
 // import { getTransaction } from '../api/getTransaction';
 // import { updateTransaction } from '../api/updateTransaction';
 // import { deleteTransaction } from '../api/deleteTransaction';
