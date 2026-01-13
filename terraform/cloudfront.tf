@@ -14,9 +14,9 @@ resource "aws_cloudfront_distribution" "frontend" {
   comment             = "PlantPass React frontend"
 
   # -------------------------
-  # Add your custom domain aliases
+  # No custom domains yet
   # -------------------------
-  aliases = concat([var.domain_name], var.alternate_names)
+  aliases = []
 
   origin {
     domain_name = aws_s3_bucket.frontend.bucket_regional_domain_name
@@ -48,12 +48,10 @@ resource "aws_cloudfront_distribution" "frontend" {
   }
 
   # -------------------------
-  # Replace default cert with ACM cert
+  # Use CloudFront default certificate
   # -------------------------
   viewer_certificate {
-    # acm_certificate_arn      = aws_acm_certificate_validation.cert.certificate_arn
-    ssl_support_method       = "sni-only"
-    minimum_protocol_version = "TLSv1.2_2021"
+    cloudfront_default_certificate = true
   }
 
   tags = {
