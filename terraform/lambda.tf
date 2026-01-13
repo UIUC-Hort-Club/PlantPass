@@ -25,6 +25,18 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
 }
 
 # -------------------------
+# CloudWatch Log Group
+# -------------------------
+resource "aws_cloudwatch_log_group" "transaction_handler_logs" {
+  name = "/aws/lambda/TransactionHandler"
+  retention_in_days = 14
+
+  tags = {
+    application = "plantpass"
+  }
+}
+
+# -------------------------
 # Lambda Function
 # -------------------------
 resource "aws_lambda_function" "transaction_handler" {
@@ -33,6 +45,14 @@ resource "aws_lambda_function" "transaction_handler" {
   handler       = "lambda_handler.lambda_handler"
   runtime       = "python3.11"
   role          = aws_iam_role.lambda_exec.arn
+
+  # Ensure log group exists before Lambda deploys
+  depends_on = [
+    aws_cloudwatch_log_group.transaction_handler_logs
+  ]
+
+  # Add source_code_hash to detect changes in the ZIP
+  source_code_hash = filebase64sha256(var.lambda_zip_path)
 
   tags = {
     application = "plantpass"
@@ -52,4 +72,13 @@ variable "lambda_zip_path" {
   type        = string
   description = "Path to Lambda ZIP relative to Terraform working directory"
   default     = "lambda_package.zip"
+}
+
+# Grant API Gateway permission to invoke the Lambda function
+resource "aws_lambda_permission" "apigw" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.transaction_handler.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.frontend_api.execution_arn}/*/*"
 }

@@ -3,6 +3,7 @@
 This document includes the steps to get fully set up as a contributor: installing dependencies, configuring AWS access, running Terraform, and deploying code
 
 ## Clone Repository
+** THis needs to be ssh
 ```bash
 git clone https://github.com/UIUC-Hort-Club/PlantPass.git
 cd PlantPass

@@ -1,44 +1,59 @@
 import json
+import logging
 from database_interface import save_transaction, get_transaction, compute_total
 
+# Configure logging
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
 def lambda_handler(event, context):
+    logger.info(f"Received event: {json.dumps(event)}")  # Log the raw event
+
     try:
         body = json.loads(event.get("body", "{}"))
-        route = event.get("path", "")
+        route_key = event.get("routeKey", "")
+        logger.info(f"Route key: {route_key}, Body: {body}")
 
         # ---- Write transaction ----
-        if route == "/write":
+        if route_key == "POST /write":
             save_transaction(body)
-            return {
-                "statusCode": 200,
-                "body": json.dumps({"message": "Transaction recorded"})
-            }
+            logger.info("Transaction saved successfully")
+            return response(200, {"message": "Transaction recorded"})
 
         # ---- Read transaction ----
-        elif route == "/read":
+        elif route_key == "POST /read":
             transaction_id = body.get("transactionId")
             if not transaction_id:
-                return {"statusCode": 400, "body": json.dumps({"message": "transactionId required"})}
+                logger.warning("transactionId missing in /read request")
+                return response(400, {"message": "transactionId required"})
             
             transaction = get_transaction(transaction_id)
-            return {
-                "statusCode": 200,
-                "body": json.dumps(transaction)
-            }
+            logger.info(f"Transaction retrieved: {transaction}")
+            return response(200, transaction)
 
         # ---- Compute total ----
-        elif route == "/total":
+        elif route_key == "POST /total":
             customer_id = body.get("customerId")  # optional
             total = compute_total(customer_id)
-            return {
-                "statusCode": 200,
-                "body": json.dumps({"total": total})
-            }
+            logger.info(f"Total computed: {total}")
+            return response(200, {"total": total})
 
         # ---- Unknown route ----
         else:
-            return {"statusCode": 404, "body": json.dumps({"message": "Route not found"})}
+            logger.warning(f"Unknown route: {route_key}")
+            return response(404, {"message": "Route not found"})
 
     except Exception as e:
-        print(f"Error: {e}")
-        return {"statusCode": 500, "body": json.dumps({"message": str(e)})}
+        logger.error(f"Error processing request: {e}", exc_info=True)
+        return response(500, {"message": str(e)})
+
+def response(status_code, body):
+    return {
+        "statusCode": status_code,
+        "headers": {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type"
+        },
+        "body": json.dumps(body)
+    }
