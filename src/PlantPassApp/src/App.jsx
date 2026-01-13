@@ -28,8 +28,8 @@ export default function App() {
   const [tabIndex, setTabIndex] = useState(0);
   const [snackbarOpen, setSnackbarOpen] = useState(true);
   const [mobileWarningOpen, setMobileWarningOpen] = useState(false);
-
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -99,17 +99,13 @@ export default function App() {
       </Snackbar>
 
       {/* AppBar with logo, title + hamburger menu */}
-      <AppBar
-        position="static"
-        elevation={0}
-        sx={{ borderRadius: 1, mb: 2 }}
-      >
+      <AppBar position="static" elevation={0} sx={{ borderRadius: 1, mb: 2 }}>
         <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {/* Logo */}
             <Box
               component="img"
-              src="hort_club_logo.png" // update path as needed
+              src="hort_club_logo.png"
               alt="PlantPass Logo"
               sx={{
                 height: 32,
@@ -124,12 +120,7 @@ export default function App() {
           </Box>
 
           {/* Hamburger Menu */}
-          <IconButton
-            edge="end"
-            color="inherit"
-            aria-label="menu"
-            onClick={handleMenuOpen}
-          >
+          <IconButton edge="end" color="inherit" aria-label="menu" onClick={handleMenuOpen}>
             <MenuIcon />
           </IconButton>
 
