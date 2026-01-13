@@ -12,11 +12,11 @@ import {
   TextField,
 } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
-import ItemsTable from './OrderEntrySubComponents/ItemsTable';
+import ItemsTable from './SubComponents/ItemsTable';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
-import Receipt from './OrderEntrySubComponents/Receipt';
-import Scanner from './Scanner';
-import { writeTransaction } from '../api/writeTransaction';
+import Receipt from './SubComponents/Receipt';
+import Scanner from './SubComponents/Scanner';
+import { writeTransaction } from '../../api/writeTransaction';
 
 function OrderEntry({ product_listings }) {
   const [products, setProducts] = useState([]);
