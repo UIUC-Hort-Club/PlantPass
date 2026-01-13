@@ -1,31 +1,27 @@
 import React, { useState } from 'react';
 import {
-  Container,
-  Tabs,
-  Tab,
   Box,
+  AppBar,
+  Toolbar,
   Typography,
+  IconButton,
+  Menu,
+  MenuItem,
   Snackbar,
   Alert,
-  useMediaQuery,
   useTheme,
+  useMediaQuery,
 } from '@mui/material';
-import CalculateIcon from '@mui/icons-material/Calculate';
-import ListAltIcon from '@mui/icons-material/ListAlt';
-import AppHeader from './components/Header';
+import MenuIcon from '@mui/icons-material/Menu';
 import OrderEntry from './components/OrderEntry';
 import OrderLookup from './components/OrderLookup';
 import OrderTracking from './components/OrderTracking';
 
-const DISCOUNTS_SOURCE = `${import.meta.env.BASE_URL}data/discounts.json`
-const PRODUCTS_SOURCE = `${import.meta.env.BASE_URL}data/products.json`
+const DISCOUNTS_SOURCE = `${import.meta.env.BASE_URL}data/discounts.json`;
+const PRODUCTS_SOURCE = `${import.meta.env.BASE_URL}data/products.json`;
 
 function TabPanel({ children, value, index }) {
-  return (
-    <div hidden={value !== index}>
-      {value === index && <Box sx={{ pt: 2 }}>{children}</Box>}
-    </div>
-  );
+  return <div hidden={value !== index}>{value === index && <Box sx={{ pt: 2 }}>{children}</Box>}</div>;
 }
 
 export default function App() {
@@ -33,6 +29,7 @@ export default function App() {
   const [snackbarOpen, setSnackbarOpen] = useState(true);
   const [mobileWarningOpen, setMobileWarningOpen] = useState(false);
 
+  const [menuAnchorEl, setMenuAnchorEl] = useState(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -41,6 +38,14 @@ export default function App() {
       setMobileWarningOpen(true);
     }
   }, [isMobile]);
+
+  const handleMenuOpen = (event) => setMenuAnchorEl(event.currentTarget);
+  const handleMenuClose = () => setMenuAnchorEl(null);
+
+  const handleMenuItemClick = (index) => {
+    setTabIndex(index);
+    handleMenuClose();
+  };
 
   return (
     <Box
@@ -52,7 +57,7 @@ export default function App() {
         display: 'flex',
         flexDirection: 'column',
         backgroundColor: 'white',
-        py: 2
+        py: 2,
       }}
     >
       {/* Development Snackbar */}
@@ -93,85 +98,67 @@ export default function App() {
         </Alert>
       </Snackbar>
 
-      <Box sx={{ border: '2px solid #D3D3D3', borderRadius: '12px' }}>
-        {/* Header + Tabs row */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            borderBottom: '1px solid #D3D3D3',
-          }}
-        >
-          {/* Left: App Bar */}
-          <Box sx={{ flexShrink: 0, paddingLeft: 2 }}>
-            <AppHeader />
+      {/* AppBar with logo, title + hamburger menu */}
+      <AppBar
+        position="static"
+        elevation={0}
+        sx={{ borderRadius: 1, mb: 2 }}
+      >
+        <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {/* Logo */}
+            <Box
+              component="img"
+              src="hort_club_logo.png" // update path as needed
+              alt="PlantPass Logo"
+              sx={{
+                height: 32,
+                width: 32,
+                objectFit: 'contain',
+              }}
+            />
+            {/* App Title */}
+            <Typography variant="h6" fontWeight={600} component="div">
+              UIUC Hort Club PlantPass
+            </Typography>
           </Box>
 
-          {/* Right: Tabs */}
-          <Tabs
-            value={tabIndex}
-            onChange={(e, newValue) => setTabIndex(newValue)}
-            aria-label="PlantPass tabs"
-            variant="scrollable"
-            scrollButtons="auto"
-            TabIndicatorProps={{ sx: { display: 'none' } }}
-            sx={{
-              flexGrow: 1,
-              justifyContent: 'center',
-              '& .MuiTabs-scroller': {
-                display: 'flex',
-                justifyContent: 'center',
-              },
-            }}
+          {/* Hamburger Menu */}
+          <IconButton
+            edge="end"
+            color="inherit"
+            aria-label="menu"
+            onClick={handleMenuOpen}
           >
-            <Tab
-              label={<Typography variant="body2">Entry</Typography>}
-              icon={<CalculateIcon fontSize="small" />}
-              iconPosition="start"
-              sx={{
-                '&.Mui-selected': { outline: 'none', border: 'none' },
-                '&:focus': { outline: 'none', border: 'none' },
-              }}
-            />
-            <Tab
-              label={<Typography variant="body2">Lookup</Typography>}
-              icon={<ListAltIcon fontSize="small" />}
-              iconPosition="start"
-              sx={{
-                '&.Mui-selected': { outline: 'none', border: 'none' },
-                '&:focus': { outline: 'none', border: 'none' },
-              }}
-            />
-            <Tab
-              label={<Typography variant="body2">Tracking</Typography>}
-              icon={<ListAltIcon fontSize="small" />}
-              iconPosition="start"
-              sx={{
-                '&.Mui-selected': { outline: 'none', border: 'none' },
-                '&:focus': { outline: 'none', border: 'none' },
-              }}
-            />
-          </Tabs>
-        </Box>
+            <MenuIcon />
+          </IconButton>
 
-        {/* Panels */}
-        <TabPanel value={tabIndex} index={0}>
-          <OrderEntry product_listings={PRODUCTS_SOURCE} />
-        </TabPanel>
+          <Menu
+            anchorEl={menuAnchorEl}
+            open={Boolean(menuAnchorEl)}
+            onClose={handleMenuClose}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+          >
+            <MenuItem onClick={() => handleMenuItemClick(0)}>Entry</MenuItem>
+            <MenuItem onClick={() => handleMenuItemClick(1)}>Lookup</MenuItem>
+            <MenuItem onClick={() => handleMenuItemClick(2)}>Tracking</MenuItem>
+          </Menu>
+        </Toolbar>
+      </AppBar>
 
-        <TabPanel value={tabIndex} index={1}>
-          <Typography variant="body1" sx={{ mt: 2, color: 'black' }}>
-            <OrderLookup />
-          </Typography>
-        </TabPanel>
+      {/* Panels */}
+      <TabPanel value={tabIndex} index={0}>
+        <OrderEntry product_listings={PRODUCTS_SOURCE} />
+      </TabPanel>
 
-        <TabPanel value={tabIndex} index={2}>
-          <Typography variant="body1" sx={{ mt: 2, color: 'black' }}>
-            <OrderTracking />
-          </Typography>
-        </TabPanel>
-      </Box>
+      <TabPanel value={tabIndex} index={1}>
+        <OrderLookup />
+      </TabPanel>
 
+      <TabPanel value={tabIndex} index={2}>
+        <OrderTracking />
+      </TabPanel>
     </Box>
   );
 }
