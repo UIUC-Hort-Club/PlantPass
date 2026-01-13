@@ -26,18 +26,10 @@ function TabPanel({ children, value, index }) {
 
 export default function App() {
   const [tabIndex, setTabIndex] = useState(0);
-  const [snackbarOpen, setSnackbarOpen] = useState(true);
-  const [mobileWarningOpen, setMobileWarningOpen] = useState(false);
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
-  React.useEffect(() => {
-    if (!isMobile) {
-      setMobileWarningOpen(true);
-    }
-  }, [isMobile]);
 
   const handleMenuOpen = (event) => setMenuAnchorEl(event.currentTarget);
   const handleMenuClose = () => setMenuAnchorEl(null);
@@ -60,46 +52,8 @@ export default function App() {
         py: 2,
       }}
     >
-      {/* Development Snackbar */}
-      <Snackbar
-        open={snackbarOpen}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-        onClose={() => setSnackbarOpen(false)}
-        autoHideDuration={6000}
-        sx={{
-          '& .MuiSnackbarContent-root': {
-            width: { xs: '90%', sm: '70%', md: '50%' },
-            justifyContent: 'center',
-            textAlign: 'center',
-          },
-        }}
-      >
-        <Alert severity="info" variant="filled" onClose={() => setSnackbarOpen(false)}>
-          This app is in active development.
-        </Alert>
-      </Snackbar>
-
-      {/* Mobile Optimization Warning */}
-      <Snackbar
-        open={mobileWarningOpen}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        onClose={() => setMobileWarningOpen(false)}
-        autoHideDuration={8000}
-        sx={{
-          '& .MuiSnackbarContent-root': {
-            width: { xs: '90%', sm: '70%', md: '50%' },
-            justifyContent: 'center',
-            textAlign: 'center',
-          },
-        }}
-      >
-        <Alert severity="warning" variant="filled" onClose={() => setMobileWarningOpen(false)}>
-          This app is optimized for mobile view. Desktop layout may be limited.
-        </Alert>
-      </Snackbar>
-
       {/* AppBar with logo, title + hamburger menu */}
-      <AppBar position="static" elevation={0} sx={{ borderRadius: 1, mb: 2 }}>
+      <AppBar position="static" elevation={0} sx={{ mb: 2 }}>
         <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {/* Logo */}
