@@ -1,7 +1,11 @@
 import React from 'react';
-import { Box, Typography, Paper, Stack, Button } from '@mui/material';
+import { Box, Typography, Paper } from '@mui/material';
 
-export default function AdminConsole() {
+function AdminTabPanel({ value, index, children }) {
+  return value === index ? <Box sx={{ mt: 2 }}>{children}</Box> : null;
+}
+
+export default function AdminConsole({ tabIndex }) {
   return (
     <Box sx={{ mt: 2 }}>
       <Paper sx={{ p: 3 }}>
@@ -10,17 +14,20 @@ export default function AdminConsole() {
         </Typography>
 
         <Typography variant="body2" color="text.secondary" gutterBottom>
-          Manage prices, discounts, and system tools.
+          You are now in the admin console and have elevated privileges.
         </Typography>
 
-        <Stack spacing={2} mt={3}>
-          <Button variant="outlined">Edit Product Prices</Button>
-          <Button variant="outlined">Edit Discounts</Button>
-          <Button variant="outlined">Clear Transactions</Button>
-          <Button variant="outlined" color="error">
-            Reset System
-          </Button>
-        </Stack>
+        <AdminTabPanel value={tabIndex} index={0}>
+          <Typography>📊 Analytics Dashboard</Typography>
+        </AdminTabPanel>
+
+        <AdminTabPanel value={tabIndex} index={1}>
+          <Typography>🛠 Edit Products</Typography>
+        </AdminTabPanel>
+
+        <AdminTabPanel value={tabIndex} index={2}>
+          <Typography>🏷 Edit Discounts</Typography>
+        </AdminTabPanel>
       </Paper>
     </Box>
   );

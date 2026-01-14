@@ -31,7 +31,7 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
-function OrderTracking() {
+function SalesAnalytics() {
   const [orders, setOrders] = useState([]);
   const [metrics, setMetrics] = useState({
     totalRevenue: 0,
@@ -219,4 +219,4 @@ function OrderTracking() {
   );
 }
 
-export default OrderTracking;
+export default SalesAnalytics;
