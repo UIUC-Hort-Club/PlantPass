@@ -6,9 +6,9 @@ resource "aws_apigatewayv2_api" "frontend_api" {
   protocol_type = "HTTP"
 
   cors_configuration {
-    allow_origins = ["*"]  # or your CloudFront domain
+    allow_origins = ["*"]
     allow_methods = ["GET", "POST", "OPTIONS"]
-    allow_headers = ["content-type", "authorization"]  # allow auth header for JWT
+    allow_headers = ["content-type", "authorization"]
   }
 
   tags = {

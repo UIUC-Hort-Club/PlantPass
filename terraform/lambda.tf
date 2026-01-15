@@ -57,6 +57,16 @@ resource "aws_cloudwatch_log_group" "transaction_handler_logs" {
   }
 }
 
+resource "aws_cloudwatch_log_group" "admin_logs" {
+  name              = "/aws/lambda/plantpass-admin"
+  retention_in_days = 14
+
+  tags = {
+    application = "plantpass"
+  }
+  
+}
+
 # -------------------------
 # Lambda Functions
 # -------------------------
@@ -95,6 +105,10 @@ resource "aws_lambda_function" "admin" {
   }
 
   filename = var.admin_lambda_zip_path
+
+  tags = {
+    application = "plantpass"
+  }
 }
 
 # -------------------------

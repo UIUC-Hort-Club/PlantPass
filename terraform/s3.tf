@@ -52,6 +52,10 @@ resource "aws_s3_object" "password_file" {
   content = jsonencode({
     admin_password_hash = "$2a$12$SmRTIyy/YRl8q4/KTBKw5uTCg8xD9TX4ZtnGHukEwEHyhO2iydEsa"
   })
+
+  tags = {
+    application = "plantpass"
+  }
 }
 
 # -------------------------
