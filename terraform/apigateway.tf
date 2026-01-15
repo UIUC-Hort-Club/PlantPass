@@ -24,12 +24,6 @@ resource "aws_apigatewayv2_integration" "transaction_lambda_integration" {
   integration_type       = "AWS_PROXY"
   integration_uri        = aws_lambda_function.transaction_handler.arn
   payload_format_version = "2.0"
-
-  depends_on = [
-    aws_apigatewayv2_route.write_route,
-    aws_apigatewayv2_route.read_route,
-    aws_apigatewayv2_route.total_route
-  ]
 }
 
 resource "aws_apigatewayv2_integration" "admin_lambda_integration" {
@@ -37,11 +31,6 @@ resource "aws_apigatewayv2_integration" "admin_lambda_integration" {
   integration_type       = "AWS_PROXY"
   integration_uri        = aws_lambda_function.admin.arn
   payload_format_version = "2.0"
-
-  depends_on = [
-    aws_apigatewayv2_route.admin_login_route,
-    aws_apigatewayv2_route.admin_change_route
-  ]
 }
 
 # -------------------------
