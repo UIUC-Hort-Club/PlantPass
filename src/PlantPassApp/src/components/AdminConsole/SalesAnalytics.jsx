@@ -114,8 +114,8 @@ function SalesAnalytics() {
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       {/* Header with Refresh */}
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-        <Typography variant="h4">Sales Flow Console</Typography>
-        <Button variant="contained" color="primary" onClick={generateDummyData}>
+        <Typography variant="h6">Sales Flow Console</Typography>
+        <Button variant="contained" color="primary" size="small" onClick={generateDummyData}>
           Refresh
         </Button>
       </Stack>
@@ -156,20 +156,6 @@ function SalesAnalytics() {
         </Grid>
       </Grid>
 
-      {/* Top items */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6">Top-Selling Items</Typography>
-          <ul>
-            {metrics.topItems.map((i, idx) => (
-              <li key={idx}>
-                {i.name}: {i.qty} units
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
-
       {/* Revenue chart */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
@@ -206,14 +192,61 @@ function SalesAnalytics() {
               ))}
           </TableBody>
         </Table>
-        <TablePagination
-          rowsPerPageOptions={[rowsPerPage]}
-          component="div"
-          count={orders.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-        />
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            px: 2,
+          }}
+        >
+          <Stack direction="row" spacing={2} alignItems="center">
+            {/* Export button (far left) */}
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => {
+                console.log('Export data');
+                // hook CSV / JSON export here
+              }}
+            >
+              Export Data
+            </Button>
+
+            {/* Clear records button */}
+            <Button
+              variant="outlined"
+              size="small"
+              sx={{
+                fontWeight: 200,
+                color: 'error.dark',
+                borderColor: 'error.light',
+                backgroundColor: 'rgba(211, 47, 47, 0.08)', // light red base
+                borderWidth: 2,
+                '&:hover': {
+                  backgroundColor: 'error.main',
+                  color: 'white',
+                  borderColor: 'error.main',
+                },
+              }}
+              onClick={() => {
+                console.log('Clear records');
+              }}
+            >
+              Clear Records
+            </Button>
+          </Stack>
+
+          {/* Pagination (right) */}
+          <TablePagination
+            rowsPerPageOptions={[rowsPerPage]}
+            component="div"
+            count={orders.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+          />
+        </Box>
       </TableContainer>
     </Container>
   );

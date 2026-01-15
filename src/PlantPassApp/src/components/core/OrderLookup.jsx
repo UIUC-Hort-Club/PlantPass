@@ -165,6 +165,7 @@ function OrderLookup({ product_listings }) {
       };
       // await completeTransaction(payload);
       setShowNotification(true);
+      // Reset state for new order lookup
     } catch (err) {
       console.error(err);
       setError('Failed to complete order.');
@@ -174,7 +175,7 @@ function OrderLookup({ product_listings }) {
   return (
     <Container maxWidth="md">
       {/* Lookup Header */}
-      <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+      <Stack direction="row" spacing={2} alignItems="center" justifyContent="right" sx={{ mb: 2 }}>
         <TextField
           label="Order ID"
           size="small"

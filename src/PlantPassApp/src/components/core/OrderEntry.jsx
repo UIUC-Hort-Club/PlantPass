@@ -11,6 +11,7 @@ import {
   Checkbox,
   TextField,
 } from '@mui/material';
+import { InputAdornment } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
 import ItemsTable from './SubComponents/ItemsTable';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
@@ -27,6 +28,7 @@ function OrderEntry({ product_listings }) {
     discount: 0,
     grandTotal: 0,
   });
+  const [voucher, setVoucher] = useState(0);
   const [showNotification, setShowNotification] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [currentTransactionID, setCurrentTransactionID] = useState("");
@@ -69,7 +71,7 @@ function OrderEntry({ product_listings }) {
 
 
   const handleNewOrder = () => {
-    window.location.reload(); // simple refresh for now
+    window.location.reload();
   };
 
   useEffect(() => {
@@ -98,59 +100,14 @@ function OrderEntry({ product_listings }) {
     setSubtotals((prev) => ({ ...prev, [sku]: subtotal }));
   };
 
-  const calculateTotal = () => {
-    let subtotal = 0;
-    let totalItems = 0;
-
-    products.forEach((item) => {
-      const qty = parseFloat(quantities[item.SKU]) || 0;
-      subtotal += qty * item.Price;
-      totalItems += qty;
-    });
-
-    const grandTotal = subtotal;
-
-    setTotals({
-      subtotal: subtotal.toFixed(2),
-      discount: 0.00,
-      grandTotal: Math.floor(grandTotal).toFixed(2),
-    });
-
-    setCurrentTransactionID(generateTransactionId());
-
-    const postData = {
-      delete_: false,
-      transaction_id: uuidv4(),
-      timestamp: new Date().toISOString(),
-      quantity: totalItems,
-      order_total: Math.floor(grandTotal),
-    };
-
-    writeTransaction(postData)
-      .then((data) => {
-        setShowNotification(true);
-        console.log('Transaction successfully written:', data);
-      })
-      .catch((err) => {
-        console.error('Error writing transaction:', err);
-      });
+  const handleEnterOrder = () => {
+    // Package the items+quantities and club voucher into a transaction object
+    // Send object to backend via API call
+    // Response from backend will be success/failure, and if success, will include the transaction ID and totals for receipt
+    // Including the discount data and club voucher (should be same as what was sent)
+    // Use the returned data to populate the receipt component, and show success notification
+    // The returned ID will be given to the customer as their receipt number, and used at cashier for order retrieval when they go to pay
   };
-
-  // const handleNewOrder = () => {
-  //   const resetQuantities = {};
-  //   const resetSubtotals = {};
-  //   stockItems.forEach((item) => {
-  //     resetQuantities[item.SKU] = 0;
-  //     resetSubtotals[item.SKU] = '0.00';
-  //   });
-  //   setQuantities(resetQuantities);
-  //   setSubtotals(resetSubtotals);
-  //   setTotals({
-  //     subtotal: 0,
-  //     discount: 0,
-  //     grandTotal: 0,
-  //   });
-  // };
 
   return (
     <Container maxWidth="md">
@@ -168,14 +125,43 @@ function OrderEntry({ product_listings }) {
             variant="outlined"
             startIcon={<QrCodeScannerIcon />}
             onClick={() => setScannerOpen(true)}
-            size='small'
+            size="small"
           >
             Scan
           </Button>
 
-          <Button variant="contained" color="primary" onClick={calculateTotal} size='small'>
-            Enter
-          </Button>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <TextField
+              label="Voucher"
+              type="number"
+              size="small"
+              value={voucher}
+              onChange={(e) =>
+                setVoucher(Math.max(0, Math.floor(Number(e.target.value) || 0)))
+              }
+              inputProps={{
+                min: 0,
+                step: 1,
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Typography fontWeight={700}>$</Typography>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ width: 120 }}
+            />
+
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleEnterOrder}
+              size="small"
+            >
+              Enter
+            </Button>
+          </Stack>
         </Stack>
       </Box>
 

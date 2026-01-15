@@ -11,6 +11,7 @@ import {
   TableRow,
   Paper,
   Stack,
+  Tab,
 } from '@mui/material';
 
 function Receipt({ totals, transactionId }) {
@@ -55,6 +56,11 @@ function Receipt({ totals, transactionId }) {
                   <TableCell>-${totals.discount}</TableCell>
                 </TableRow>
               ))}
+
+              <TableRow>
+                <TableCell>Club Voucher</TableCell>
+                <TableCell>-$0</TableCell>
+              </TableRow>
             </TableBody>
           </Table>
         </TableContainer>
