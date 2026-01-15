@@ -104,23 +104,19 @@ function OrderEntry({ product_listings }) {
     // Send object to backend via API call
     writeTransaction(transaction)
       .then((response) => {
-        if (response.success) {
-          const responseData = response.transaction;
-          console.log('Transaction recorded successfully:', responseData);
-          setCurrentTransactionID(responseData.purchase_id);
-          setTotals({
-            subtotal: responseData.receipt.subtotal,
-            discount: responseData.receipt.discount,
-            grandTotal: responseData.receipt.total,
-          });
-          setShowNotification(true);
-        } else {
-          alert('Failed to record transaction. Please try again.');
-        }
+        const responseData = response.transaction;
+        console.log('Transaction recorded successfully:', responseData);
+        setCurrentTransactionID(responseData.purchase_id);
+        setTotals({
+          subtotal: responseData.receipt.subtotal,
+          discount: responseData.receipt.discount,
+          grandTotal: responseData.receipt.total,
+        });
+        setShowNotification(true);
       })
       .catch((error) => {
         console.error('Error recording transaction:', error);
-        alert('An error occurred while recording the transaction. Please try again.');
+        alert('An error occurred while recording the transaction...');
       });
     // Response from backend will be success/failure, and if success, will include the transaction ID and totals for receipt
     // Including the discount data and club voucher (should be same as what was sent)
