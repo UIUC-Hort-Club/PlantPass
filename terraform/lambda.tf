@@ -110,12 +110,6 @@ output "lambda_function_url" {
   description = "Optional URL for the Transaction Lambda"
 }
 
-variable "lambda_zip_path" {
-  type        = string
-  description = "Path to Transaction Lambda ZIP relative to Terraform working directory"
-  default     = "transactionshandler_lambda_package.zip"
-}
-
 # -------------------------
 # Lambda Permissions for API Gateway
 # -------------------------
