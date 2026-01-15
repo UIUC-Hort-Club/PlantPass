@@ -114,6 +114,7 @@ function OrderEntry({ product_listings }) {
           grandTotal: responseData.receipt.total,
         });
         setShowNotification(true);
+        setTransactionIDDialogOpen(true);
       })
       .catch((error) => {
         console.error('Error recording transaction:', error);

@@ -34,7 +34,7 @@ export default function ShowTransactionID({
       maxWidth="xs"
       fullWidth
     >
-      <Box component="form" onSubmit={handleSubmit}>
+      <Box>
         <DialogTitle sx={{ pr: 5 }}>
           Transaction ID
           <IconButton
