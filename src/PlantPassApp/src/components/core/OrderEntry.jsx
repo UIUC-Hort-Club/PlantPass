@@ -15,6 +15,7 @@ import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import Receipt from './SubComponents/Receipt';
 import Scanner from './SubComponents/Scanner';
 import { writeTransaction } from '../../api/writeTransaction';
+import ShowTransactionID from './SubComponents/ShowTransactionID';
 
 function OrderEntry({ product_listings }) {
   const [products, setProducts] = useState([]);
@@ -29,6 +30,7 @@ function OrderEntry({ product_listings }) {
   const [showNotification, setShowNotification] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [currentTransactionID, setCurrentTransactionID] = useState("");
+  const [transactionIDDialogOpen, setTransactionIDDialogOpen] = useState(false);
 
   const handleScan = (scannedProduct) => {
     if (scannedProduct) {
@@ -87,7 +89,6 @@ function OrderEntry({ product_listings }) {
   };
 
   const handleEnterOrder = () => {
-    // Package the items+quantities and club voucher into a transaction object
     const transaction = {
       timestamp: Date.now(),
       items: Object.entries(quantities).map(([sku, quantity]) => {
@@ -101,7 +102,7 @@ function OrderEntry({ product_listings }) {
       }),
       voucher: voucher,
     };
-    // Send object to backend via API call
+
     writeTransaction(transaction)
       .then((response) => {
         const responseData = response.transaction;
@@ -118,10 +119,6 @@ function OrderEntry({ product_listings }) {
         console.error('Error recording transaction:', error);
         alert('An error occurred while recording the transaction...');
       });
-    // Response from backend will be success/failure, and if success, will include the transaction ID and totals for receipt
-    // Including the discount data and club voucher (should be same as what was sent)
-    // Use the returned data to populate the receipt component, and show success notification
-    // The returned ID will be given to the customer as their receipt number, and used at cashier for order retrieval when they go to pay
   };
 
   return (
@@ -212,6 +209,13 @@ function OrderEntry({ product_listings }) {
         onScan={handleScan}
         products={products}
         getQuantity={getQuantity}
+      />
+
+      {/* Show Transaction ID Dialog */}
+      <ShowTransactionID
+        open={transactionIDDialogOpen}
+        onClose={() => setTransactionIDDialogOpen(false)}
+        transactionID={currentTransactionID}
       />
     </Container>
   );
