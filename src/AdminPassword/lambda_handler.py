@@ -6,15 +6,19 @@ import bcrypt
 import jwt
 import datetime
 
+# Configure logging
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
 s3 = boto3.client("s3")
 bucket = os.environ["PASSWORD_BUCKET"]
 key = os.environ["PASSWORD_KEY"]
 JWT_SECRET = os.environ["JWT_SECRET"]
 
 def get_password_hash():
-    logging.info("Fetching admin password hash from S3")
-    logging.info(f"Bucket: {bucket}, Key: {key}")
-    
+    logger.info("Fetching admin password hash from S3")
+    logger.info(f"Bucket: {bucket}, Key: {key}")
+
     obj = s3.get_object(Bucket=bucket, Key=key)
     data = json.loads(obj["Body"].read())
     return data["admin_password_hash"].encode()
@@ -27,13 +31,13 @@ def set_password_hash(new_hash):
     )
 
 def lambda_handler(event, context):
+    logger.info(f"Received event: {json.dumps(event)}")
+
     route = event.get("path")
     body = json.loads(event.get("body", "{}"))
 
-    logging.info(f"Received request for route: {route}")
-
     if route == "/login":
-        logging.info(f"Received login attempt with password: {password} (REMOVE FOR PROD)")
+        logger.info(f"Received login attempt with password: {password} (REMOVE FOR PROD)")
 
         pw_hash = get_password_hash()
         password = body.get("password", "")
