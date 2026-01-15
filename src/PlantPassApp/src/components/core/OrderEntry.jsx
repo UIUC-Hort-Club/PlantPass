@@ -106,6 +106,7 @@ function OrderEntry({ product_listings }) {
       .then((response) => {
         if (response.success) {
           const responseData = response.transaction;
+          console.log('Transaction recorded successfully:', responseData);
           setCurrentTransactionID(responseData.purchase_id);
           setTotals({
             subtotal: responseData.receipt.subtotal,

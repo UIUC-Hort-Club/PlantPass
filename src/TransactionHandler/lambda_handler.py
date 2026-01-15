@@ -19,6 +19,7 @@ def lambda_handler(event, context):
             logger.info("Processing /write request")
             try:
                 full_transaction = save_transaction(body)
+                logger.info(f"Transaction saved successfully: {full_transaction}")
             except Exception as e:
                 logger.error(f"Error saving transaction: {e}", exc_info=True)
                 return response(500, {"message": "Failed to save transaction"})

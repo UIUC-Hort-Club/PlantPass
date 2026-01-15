@@ -35,7 +35,7 @@ export async function writeTransaction(transactionData) {
     }
 
     const data = await response.json();
-    return data; // { message: "Transaction recorded" }
+    return data;
 
   } catch (err) {
     console.error("Error writing transaction:", err);
