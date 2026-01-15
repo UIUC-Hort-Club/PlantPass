@@ -1,9 +1,4 @@
-'''
-Implement the Database Operations Here
-'''
-
-from TransactionHandler.utils import generate_random_id, validate_transaction_id
-
+from utils import generate_random_id, validate_transaction_id
 
 def save_transaction(transaction):
     """
