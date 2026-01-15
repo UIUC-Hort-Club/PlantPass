@@ -56,14 +56,14 @@ export default function ShowTransactionID({
 					</Typography>
 
 					{/* Optionally send an email receipt to the customer with this transaction ID and order details */}
-					<TextField
+					{/* <TextField
 						label="Customer Email (optional)"
 						type="email"
 						size='small'
 						helperText="Enter customer's email to send them a receipt with this transaction ID and order details"
 						fullWidth
 						sx={{ mt: 3 }}
-					/>
+					/> */}
         </DialogContent>
 
         <DialogActions sx={{ px: 3, pb: 3 }}>
