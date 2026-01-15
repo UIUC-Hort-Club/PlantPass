@@ -24,11 +24,10 @@ jobs:
         run: |
           mkdir -p layers/auth-deps/python
           docker run --rm \
+            --entrypoint /bin/bash \
             -v "$PWD/layers/auth-deps":/var/task \
             public.ecr.aws/lambda/python:3.11 \
-            bash -c "
-              pip install bcrypt PyJWT -t python/
-            "
+            -c "pip install bcrypt PyJWT -t python/"
 
       - name: Package auth Lambda Layer
         run: |
