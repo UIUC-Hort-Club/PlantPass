@@ -32,6 +32,10 @@ export default function AdminConsole({ tabIndex }) {
         <AdminTabPanel value={tabIndex} index={2}>
           <Typography>🏷 Edit Discounts</Typography>
         </AdminTabPanel>
+
+        <AdminTabPanel value={tabIndex} index={3}>
+          <Typography>👥 Reset Password</Typography>
+        </AdminTabPanel>
       </Paper>
     </Box>
   );
