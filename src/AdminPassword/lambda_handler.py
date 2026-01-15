@@ -14,7 +14,7 @@ JWT_SECRET = os.environ["JWT_SECRET"]
 def get_password_hash():
     logging.info("Fetching admin password hash from S3")
     logging.info(f"Bucket: {bucket}, Key: {key}")
-
+    
     obj = s3.get_object(Bucket=bucket, Key=key)
     data = json.loads(obj["Body"].read())
     return data["admin_password_hash"].encode()
@@ -30,7 +30,9 @@ def lambda_handler(event, context):
     route = event.get("path")
     body = json.loads(event.get("body", "{}"))
 
-    if route == "/admin/login":
+    logging.info(f"Received request for route: {route}")
+
+    if route == "/login":
         logging.info(f"Received login attempt with password: {password} (REMOVE FOR PROD)")
 
         pw_hash = get_password_hash()
