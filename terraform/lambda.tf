@@ -80,8 +80,7 @@ resource "aws_lambda_function" "transaction_handler" {
 
 # Admin Lambda
 resource "aws_lambda_function" "admin" {
-  function_name = "PlantPassAdmin"
-  filename      = "lambda.zip"  # build your package with dependencies
+  function_name = "plantpass-admin"
   handler       = "admin.lambda_handler"
   runtime       = "python3.11"
   role          = aws_iam_role.lambda_exec.arn
@@ -91,13 +90,11 @@ resource "aws_lambda_function" "admin" {
     variables = {
       PASSWORD_BUCKET = aws_s3_bucket.admin_password.bucket
       PASSWORD_KEY    = "password.json"
-      JWT_SECRET      = "super-secret-key"  # optionally use Secrets Manager
+      JWT_SECRET      = "super-secret-key"
     }
   }
 
-  tags = {
-    application = "plantpass"
-  }
+  filename = var.admin_lambda_zip_path
 }
 
 # -------------------------

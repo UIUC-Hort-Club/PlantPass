@@ -21,3 +21,13 @@ variable "alternate_names" {
   type    = list(string)
   default = []
 }
+
+variable "lambda_zip_path" {
+  type        = string
+  description = "Path to TransactionHandler Lambda ZIP relative to Terraform working directory"
+}
+
+variable "admin_lambda_zip_path" {
+  type        = string
+  description = "Path to AdminPassword Lambda ZIP relative to Terraform working directory"
+}
