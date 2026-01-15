@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import boto3
 import bcrypt
@@ -29,6 +30,9 @@ def lambda_handler(event, context):
     if route == "/login":
         pw_hash = get_password_hash()
         password = body.get("password", "")
+
+        logging.info(f"Received login attempt with password: {password}")  # Debug log
+
         if bcrypt.checkpw(password.encode(), pw_hash):
             token = jwt.encode(
                 {"exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)},
