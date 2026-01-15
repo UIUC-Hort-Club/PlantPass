@@ -22,16 +22,16 @@ import {
    ========================= */
 import MenuIcon from '@mui/icons-material/Menu';
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
-import HomeIcon from '@mui/icons-material/Home';
+import PublicIcon from '@mui/icons-material/Public';
 
 /* =========================
    Application components
    ========================= */
 import OrderEntry from './components/core/OrderEntry';
 import OrderLookup from './components/core/OrderLookup';
-import OrderTracking from './components/core/OrderTracking';
 import AdminConsole from './components/AdminConsole/AdminConsole';
 import AdminPasswordModal from './components/AdminConsole/AdminPasswordModal';
+import NavigationMenu from './components/Navigation/NavigationMenu';
 
 /* =========================
    Static data sources
@@ -67,6 +67,7 @@ export default function App() {
      Admin state
      ========================= */
   const [isAdmin, setIsAdmin] = useState(false);
+  const [adminTabIndex, setAdminTabIndex] = useState(0);
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [adminError, setAdminError] = useState('');
 
@@ -77,8 +78,11 @@ export default function App() {
   const handleMenuClose = () => setMenuAnchorEl(null);
 
   const handleMenuItemClick = (index) => {
-    setTabIndex(index);
-    handleMenuClose();
+    if (isAdmin) {
+      setAdminTabIndex(index);
+    } else {
+      setTabIndex(index);
+    }
   };
 
   /* =========================
@@ -101,6 +105,7 @@ export default function App() {
   const handleHomeClick = () => {
     setIsAdmin(false);
     setTabIndex(0);
+    setAdminTabIndex(0);
   };
 
   return (
@@ -137,36 +142,28 @@ export default function App() {
           {/* Header actions */}
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             {!isAdmin ? (
-              <>
-                <IconButton color="inherit" onClick={handleAdminClick}>
-                  <SupervisorAccountIcon />
-                </IconButton>
-
-                <IconButton edge="end" color="inherit" onClick={handleMenuOpen}>
-                  <MenuIcon />
-                </IconButton>
-              </>
+              <IconButton color="inherit" onClick={handleAdminClick}>
+                <SupervisorAccountIcon />
+              </IconButton>
             ) : (
               <IconButton color="inherit" onClick={handleHomeClick}>
-                <HomeIcon />
+                <PublicIcon />
               </IconButton>
             )}
+
+            <IconButton edge="end" color="inherit" onClick={handleMenuOpen}>
+              <MenuIcon />
+            </IconButton>
           </Box>
 
           {/* Navigation menu */}
-          {!isAdmin && (
-            <Menu
-              anchorEl={menuAnchorEl}
-              open={Boolean(menuAnchorEl)}
-              onClose={handleMenuClose}
-              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-              transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-            >
-              <MenuItem onClick={() => handleMenuItemClick(0)}>Entry</MenuItem>
-              <MenuItem onClick={() => handleMenuItemClick(1)}>Lookup</MenuItem>
-              <MenuItem onClick={() => handleMenuItemClick(2)}>Tracking</MenuItem>
-            </Menu>
-          )}
+          <NavigationMenu
+            anchorEl={menuAnchorEl}
+            open={Boolean(menuAnchorEl)}
+            onClose={handleMenuClose}
+            isAdmin={isAdmin}
+            onNavigate={handleMenuItemClick}
+          />
         </Toolbar>
       </AppBar>
 
@@ -182,13 +179,9 @@ export default function App() {
           <TabPanel value={tabIndex} index={1}>
             <OrderLookup />
           </TabPanel>
-
-          <TabPanel value={tabIndex} index={2}>
-            <OrderTracking />
-          </TabPanel>
         </>
       ) : (
-        <AdminConsole />
+        <AdminConsole tabIndex={adminTabIndex} />
       )}
 
       {/* =========================
