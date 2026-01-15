@@ -73,12 +73,11 @@ resource "aws_cloudwatch_log_group" "admin_logs" {
 # Transaction Lambda
 resource "aws_lambda_function" "transaction_handler" {
   function_name = "TransactionHandler"
-  filename      = var.lambda_zip_path
+  filename      = var.transaction_lambda_zip_path
   handler       = "lambda_handler.lambda_handler"
   runtime       = "python3.11"
   role          = aws_iam_role.lambda_exec.arn
-  source_code_hash = filebase64sha256(var.lambda_zip_path)
-
+  source_code_hash = filebase64sha256(var.transaction_lambda_zip_path)
   depends_on = [
     aws_cloudwatch_log_group.transaction_handler_logs
   ]
@@ -91,10 +90,12 @@ resource "aws_lambda_function" "transaction_handler" {
 # Admin Lambda
 resource "aws_lambda_function" "admin" {
   function_name = "plantpass-admin"
-  handler       = "admin.lambda_handler"
+  filename      = var.admin_lambda_zip_path
+  handler       = "lambda_handler.lambda_handler"
   runtime       = "python3.11"
   role          = aws_iam_role.lambda_exec.arn
   timeout       = 10
+  source_code_hash = filebase64sha256(var.admin_lambda_zip_path)
 
   environment {
     variables = {
@@ -104,7 +105,9 @@ resource "aws_lambda_function" "admin" {
     }
   }
 
-  filename = var.admin_lambda_zip_path
+  depends_on = [ 
+    aws_cloudwatch_log_group.admin_logs
+  ]
 
   tags = {
     application = "plantpass"

@@ -22,7 +22,7 @@ variable "alternate_names" {
   default = []
 }
 
-variable "lambda_zip_path" {
+variable "transaction_lambda_zip_path" {
   type        = string
   description = "Path to TransactionHandler Lambda ZIP relative to Terraform working directory"
 }

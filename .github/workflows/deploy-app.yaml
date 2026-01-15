@@ -71,7 +71,7 @@ jobs:
         run: |
           terraform init -input=false
           terraform apply -auto-approve -input=false -lock-timeout=60s \
-            -var "lambda_zip_path=transactionshandler_lambda_package.zip" \
+            -var "transaction_lambda_zip_path=transactionshandler_lambda_package.zip" \
             -var "admin_lambda_zip_path=adminpassword_lambda_package.zip"
 
       - name: Get frontend bucket name
