@@ -31,3 +31,7 @@ variable "admin_lambda_zip_path" {
   type        = string
   description = "Path to AdminPassword Lambda ZIP relative to Terraform working directory"
 }
+
+variable "auth_layer_zip_path" {
+  type = string
+}

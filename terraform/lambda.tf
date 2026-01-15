@@ -97,6 +97,10 @@ resource "aws_lambda_function" "admin" {
   timeout       = 10
   source_code_hash = filebase64sha256(var.admin_lambda_zip_path)
 
+  layers = [ 
+    aws_lambda_layer_version.auth_deps.arn
+  ]
+
   environment {
     variables = {
       PASSWORD_BUCKET = aws_s3_bucket.admin_password.bucket
@@ -146,4 +150,13 @@ resource "aws_lambda_permission" "apigw_admin" {
   function_name = aws_lambda_function.admin.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.frontend_api.execution_arn}/*/*"
+}
+
+# -------------------------
+# Lambda Layers for Dependencies
+# -------------------------
+resource "aws_lambda_layer_version" "auth_deps" {
+  layer_name          = "plantpass-auth-deps"
+  filename            = var.auth_layer_zip_path
+  compatible_runtimes = ["python3.11"]
 }

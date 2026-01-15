@@ -20,6 +20,21 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Build auth Lambda Layer (bcrypt + PyJWT)
+        run: |
+          mkdir -p layers/auth-deps/python
+          docker run --rm \
+            -v "$PWD/layers/auth-deps":/var/task \
+            public.ecr.aws/lambda/python:3.11 \
+            bash -c "
+              pip install bcrypt PyJWT -t python/
+            "
+
+      - name: Package auth Lambda Layer
+        run: |
+          cd layers/auth-deps
+          zip -r ../../terraform/auth_layer.zip python
+
       - name: Package Transaction Lambda
         run: |
           cd src/TransactionHandler
@@ -37,6 +52,7 @@ jobs:
           path: |
             terraform/transactionshandler_lambda_package.zip
             terraform/adminpassword_lambda_package.zip
+            terraform/auth_layer.zip
 
   deploy-infra:
     runs-on: ubuntu-latest
@@ -72,7 +88,9 @@ jobs:
           terraform init -input=false
           terraform apply -auto-approve -input=false -lock-timeout=60s \
             -var "transaction_lambda_zip_path=transactionshandler_lambda_package.zip" \
-            -var "admin_lambda_zip_path=adminpassword_lambda_package.zip"
+            -var "admin_lambda_zip_path=adminpassword_lambda_package.zip" \
+            -var "auth_layer_zip_path=auth_layer.zip"
+
 
       - name: Get frontend bucket name
         id: bucket
