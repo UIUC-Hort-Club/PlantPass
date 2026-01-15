@@ -31,7 +31,7 @@ export default function AdminPasswordModal({
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault(); // ⬅️ CRITICAL
+    e.preventDefault();
     onSubmit(password);
     setPassword('');
   };
@@ -44,7 +44,6 @@ export default function AdminPasswordModal({
       maxWidth="xs"
       fullWidth
     >
-      {/* FORM WRAPPER */}
       <Box component="form" onSubmit={handleSubmit}>
         <DialogTitle sx={{ pr: 5 }}>
           Admin Access
