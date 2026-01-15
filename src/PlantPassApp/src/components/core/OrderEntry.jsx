@@ -7,12 +7,9 @@ import {
   Alert,
   Stack,
   Box,
-  FormControlLabel,
-  Checkbox,
   TextField,
 } from '@mui/material';
 import { InputAdornment } from '@mui/material';
-import { v4 as uuidv4 } from 'uuid';
 import ItemsTable from './SubComponents/ItemsTable';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import Receipt from './SubComponents/Receipt';
@@ -32,18 +29,6 @@ function OrderEntry({ product_listings }) {
   const [showNotification, setShowNotification] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [currentTransactionID, setCurrentTransactionID] = useState("");
-
-  function generateTransactionId() {
-    const timestamp = Date.now().toString();
-    let hash = 0;
-    for (let i = 0; i < timestamp.length; i++) {
-      const char = timestamp.charCodeAt(i);
-      hash = (hash << 5) - hash + char;
-      hash |= 0;
-    }
-    return Math.abs(hash).toString(36).toUpperCase();
-  }
-
 
   const handleScan = (scannedProduct) => {
     if (scannedProduct) {
@@ -69,11 +54,11 @@ function OrderEntry({ product_listings }) {
     return quantities[sku] || 0; // return 0 if SKU not found
   };
 
-
   const handleNewOrder = () => {
     window.location.reload();
   };
 
+  // @Todo: Fetch the product listings from the backend instead of loading from a local JSON file, and handle errors if fetch fails (e.g. show error message and disable order entry)
   useEffect(() => {
     fetch(product_listings)
       .then((res) => res.json())
@@ -87,6 +72,7 @@ function OrderEntry({ product_listings }) {
         });
         setQuantities(initialQuantities);
         setSubtotals(initialSubtotals);
+        setVoucher(0);
       })
       .catch((err) => console.error('Error loading stock.json:', err));
   }, []);
@@ -102,7 +88,36 @@ function OrderEntry({ product_listings }) {
 
   const handleEnterOrder = () => {
     // Package the items+quantities and club voucher into a transaction object
+    const transaction = {
+      timestamp: Date.now(),
+      items: Object.entries(quantities).map(([sku, quantity]) => {
+        const product = products.find((p) => p.SKU === sku);
+        return {
+          SKU: sku,
+          quantity: quantity,
+        };
+      }),
+      voucher: voucher,
+    };
     // Send object to backend via API call
+    writeTransaction(transaction)
+      .then((response) => {
+        if (response.success) {
+          setCurrentTransactionID(response.transactionId);
+          setTotals({
+            subtotal: response.subtotal,
+            discount: response.discount,
+            grandTotal: response.grandTotal,
+          });
+          setShowNotification(true);
+        } else {
+          alert('Failed to record transaction. Please try again.');
+        }
+      })
+      .catch((error) => {
+        console.error('Error recording transaction:', error);
+        alert('An error occurred while recording the transaction. Please try again.');
+      });
     // Response from backend will be success/failure, and if success, will include the transaction ID and totals for receipt
     // Including the discount data and club voucher (should be same as what was sent)
     // Use the returned data to populate the receipt component, and show success notification
