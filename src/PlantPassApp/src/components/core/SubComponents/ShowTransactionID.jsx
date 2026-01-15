@@ -46,9 +46,24 @@ export default function ShowTransactionID({
         </DialogTitle>
 
         <DialogContent>
-          <Typography variant="body2" sx={{ mb: 2 }}>
-            Please provide this transaction ID to the customer. They will need to give this ID to the cashier in order to retrieve their order and pay.
-          </Typography>
+					<Typography variant="body2" sx={{ mb: 2 }}>
+						Please provide this transaction ID to the customer. They will need to give this ID to the cashier in order to retrieve their order and pay.
+					</Typography>
+
+					{/* Display the transaction ID */}
+					<Typography variant="h6" sx={{ mt: 2, fontWeight: 'bold', wordBreak: 'break-all' }}>
+						{transactionID || "Loading..."}
+					</Typography>
+
+					{/* Optionally send an email receipt to the customer with this transaction ID and order details */}
+					<TextField
+						label="Customer Email (optional)"
+						type="email"
+						size='small'
+						helperText="Enter customer's email to send them a receipt with this transaction ID and order details"
+						fullWidth
+						sx={{ mt: 3 }}
+					/>
         </DialogContent>
 
         <DialogActions sx={{ px: 3, pb: 3 }}>
