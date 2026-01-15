@@ -94,7 +94,9 @@ function OrderEntry({ product_listings }) {
         const product = products.find((p) => p.SKU === sku);
         return {
           SKU: sku,
+          item: product.Name,
           quantity: quantity,
+          price_ea: product.Price,
         };
       }),
       voucher: voucher,

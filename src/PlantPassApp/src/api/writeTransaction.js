@@ -12,7 +12,8 @@ import { API_URL } from "./config";
  *   "timestamp": 0,
  *   "items": [
  *    {
-*           "item": "Plant A",
+ *          "SKU": "SKU123",
+ *          "item": "Plant A",
  *          "quantity": 2,
  *          "price_ea": 10.00
  *    },

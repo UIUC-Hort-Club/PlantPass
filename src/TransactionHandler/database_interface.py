@@ -10,6 +10,7 @@ def save_transaction(transaction):
         "timestamp": 0,
         "items": [
         {
+            "SKU": "SKU123",
             "item": "Plant A",
             "quantity": 2,
             "price_ea": 10.00
@@ -31,6 +32,7 @@ def save_transaction(transaction):
         "purchase_id": "string",
         "items": [
             {
+            "SKU": "SKU123",
             "item": "item name",
             "quantity": 0,
             "price_ea": 0.0

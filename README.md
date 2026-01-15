@@ -19,6 +19,7 @@
             "purchase_id": "string",
             "items": [
                 {
+                "SKU": "SKU123",
                 "item": "item name",
                 "quantity": 0,
                 "price_ea": 0.0
