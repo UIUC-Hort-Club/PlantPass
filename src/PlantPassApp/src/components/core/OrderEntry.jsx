@@ -105,11 +105,11 @@ function OrderEntry({ product_listings }) {
     writeTransaction(transaction)
       .then((response) => {
         if (response.success) {
-          setCurrentTransactionID(response.transactionId);
+          setCurrentTransactionID(response.purchase_id);
           setTotals({
-            subtotal: response.subtotal,
-            discount: response.discount,
-            grandTotal: response.grandTotal,
+            subtotal: response.receipt.subtotal,
+            discount: response.receipt.discount,
+            grandTotal: response.receipt.total,
           });
           setShowNotification(true);
         } else {
