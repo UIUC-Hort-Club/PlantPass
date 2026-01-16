@@ -45,6 +45,13 @@
 
 - Frontend (May need backend functionality)
     - Implement discount and product modifications
-    - Admin password change
+    - Admin password change (DONE)
+    - Admin reset password ("I forgot my password")
     - Email receipt
     - Generate QR codes for scanning feature (Download pdf)
+
+### Password authentication
+
+Admins may change the password at will, but if the password is forgotten, this may be used to reset it.
+
+Override Password (for reset): `uiuchortclub2026springplantfair`

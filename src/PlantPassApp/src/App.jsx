@@ -9,10 +9,6 @@ import {
   Toolbar,
   Typography,
   IconButton,
-  Menu,
-  MenuItem,
-  Snackbar,
-  Alert,
   useTheme,
   useMediaQuery,
 } from '@mui/material';
@@ -23,6 +19,11 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 import PublicIcon from '@mui/icons-material/Public';
+
+/* =========================
+   API utilities
+   ========================= */
+import { authenticateAdmin } from './api/passwordAuthentication';
 
 /* =========================
    Application components
@@ -93,13 +94,16 @@ export default function App() {
   };
 
   const handleAdminPasswordSubmit = (password) => {
-    if (password !== 'marig01d') {
-      setAdminError('Password incorrect');
-      return;
-    }
-    setIsAdmin(true);
-    setAdminModalOpen(false);
-    setAdminError('');
+    return authenticateAdmin(password)  // <-- return promise so modal can handle loading state
+      .then(() => {
+        setIsAdmin(true);
+        setAdminModalOpen(false);
+        setAdminError('');
+      })
+      .catch((error) => {
+        setAdminError('Password incorrect');
+        throw error; // re-throw so modal can catch it if needed
+      });
   };
 
   const handleHomeClick = () => {

@@ -11,6 +11,7 @@ import {
   useTheme,
   useMediaQuery,
   Box,
+  LinearProgress,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 
@@ -21,6 +22,7 @@ export default function AdminPasswordModal({
   error,
 }) {
   const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
@@ -30,10 +32,18 @@ export default function AdminPasswordModal({
     onClose();
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault(); // ⬅️ CRITICAL
-    onSubmit(password);
-    setPassword('');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+
+    try {
+      await onSubmit(password);     // wait for result
+      setPassword('');              // clear input only if successful
+    } catch (err) {
+      console.error("Admin authentication error:", err);
+    } finally {
+      setSubmitting(false);         // hide progress bar after result
+    }
   };
 
   return (
@@ -44,7 +54,6 @@ export default function AdminPasswordModal({
       maxWidth="xs"
       fullWidth
     >
-      {/* FORM WRAPPER */}
       <Box component="form" onSubmit={handleSubmit}>
         <DialogTitle sx={{ pr: 5 }}>
           Admin Access
@@ -71,23 +80,29 @@ export default function AdminPasswordModal({
             error={Boolean(error)}
             helperText={error}
             onChange={(e) => setPassword(e.target.value)}
+            disabled={submitting}
           />
         </DialogContent>
 
         <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button onClick={handleClose} variant="outlined">
+          <Button
+            onClick={handleClose}
+            variant="outlined"
+            disabled={submitting}
+          >
             Cancel
           </Button>
 
-          {/* SUBMIT BUTTON */}
           <Button
             type="submit"
             variant="contained"
-            disabled={!password}
+            disabled={submitting}
           >
             Enter
           </Button>
         </DialogActions>
+
+        {submitting && <LinearProgress />}
       </Box>
     </Dialog>
   );

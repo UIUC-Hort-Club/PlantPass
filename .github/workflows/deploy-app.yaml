@@ -20,22 +20,44 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Package Lambda Function
+      - name: Build auth Lambda Layer (bcrypt + PyJWT)
         run: |
-          cd src/TransactionHandler
-          zip -r ../../terraform/lambda_package.zip .
+          mkdir -p layers/auth-deps/python
+          docker run --rm \
+            --entrypoint /bin/bash \
+            -v "$PWD/layers/auth-deps":/var/task \
+            public.ecr.aws/lambda/python:3.11 \
+            -c "pip install bcrypt PyJWT -t python/"
 
-      - name: Upload Lambda ZIP
+      - name: Package auth Lambda Layer
+        run: |
+          cd layers/auth-deps
+          zip -r ../../terraform/auth_layer.zip python
+
+      - name: Package Transaction Lambda
+        run: |
+          cd src/lambda/TransactionHandler
+          zip -r ../../../terraform/transactionshandler_lambda_package.zip .
+
+      - name: Package Admin Lambda
+        run: |
+          cd src/lambda/AdminPassword
+          zip -r ../../../terraform/adminpassword_lambda_package.zip .
+
+      - name: Upload Lambda ZIPs
         uses: actions/upload-artifact@v4
         with:
-          name: lambda-package
-          path: terraform/lambda_package.zip
+          name: lambda-packages
+          path: |
+            terraform/transactionshandler_lambda_package.zip
+            terraform/adminpassword_lambda_package.zip
+            terraform/auth_layer.zip
 
   deploy-infra:
     runs-on: ubuntu-latest
     needs: prepare-lambda
     outputs:
-      name: ${{ steps.bucket.outputs.name }}
+      frontend_bucket_name: ${{ steps.bucket.outputs.frontend_bucket_name }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -53,10 +75,10 @@ jobs:
           terraform_version: 1.6.2
           terraform_wrapper: false
 
-      - name: Download Lambda ZIP
+      - name: Download Lambda ZIPs
         uses: actions/download-artifact@v4
         with:
-          name: lambda-package
+          name: lambda-packages
           path: terraform
 
       - name: Terraform Init & Apply
@@ -64,15 +86,17 @@ jobs:
         run: |
           terraform init -input=false
           terraform apply -auto-approve -input=false -lock-timeout=60s \
-            -var "lambda_zip_path=lambda_package.zip"
+            -var "transaction_lambda_zip_path=transactionshandler_lambda_package.zip" \
+            -var "admin_lambda_zip_path=adminpassword_lambda_package.zip" \
+            -var "auth_layer_zip_path=auth_layer.zip" \
+            -var "reset_token_hash=${{ secrets.RESET_TOKEN_HASH }}"
 
       - name: Get frontend bucket name
         id: bucket
         working-directory: ./terraform
         run: |
           BUCKET=$(terraform output frontend_bucket_name | tr -d '"')
-          echo "name=$BUCKET" >> $GITHUB_OUTPUT
-
+          echo "frontend_bucket_name=$BUCKET" >> $GITHUB_OUTPUT
 
   deploy-frontend:
     runs-on: ubuntu-latest
@@ -101,4 +125,4 @@ jobs:
 
       - name: Deploy frontend to S3
         run: |
-          aws s3 sync ./src/PlantPassApp/dist/ s3://${{ needs.deploy-infra.outputs.name }} --delete
+          aws s3 sync ./src/PlantPassApp/dist/ s3://${{ needs.deploy-infra.outputs.frontend_bucket_name }} --delete
