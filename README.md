@@ -3,20 +3,20 @@
 ## Todo for MVP
 - Backend Database
     - Purchase Transactions (CRUD): Should have all data related to a transaction
-    - Discounts (CRUD): Should have discount name and percent off
-    - Products (CRUD): Should have the product name, SKU, and price
+    - Discounts (CRUD): Should have discount name and percent off - See lambda handler
+    - Products (CRUD): Should have the product name, SKU, and price - See lambda handler
 
 - Backend Functions
-    - Transactions will come in as just items+quantities and club voucher. Backend logic should compute discount and create database entry. (Should log the discount and product data used as it maybe subject to change during the event)
-    - Query analytics data from the purchases table
-    - Endpoint to generate a .csv of all transactions
+    - Transactions will come in as just items+quantities and club voucher. Backend logic should compute discount and create database entry. (Should log the discount and product data used as it maybe subject to change during the event) (IN PROGRESS)
+    - Query analytics data from the purchases table (See /transaction/sales-analytics endpoint)
+    - Endpoint to generate a .csv of all transactions (BACKLOG)
 
 - Frontend (May need backend functionality)
-    - Implement discount and product modifications
+    - Implement discount and product modifications (IN PROGRESS)
     - Admin password change (DONE)
-    - Admin reset password ("I forgot my password")
-    - Email receipt
-    - Generate QR codes for scanning feature (Download pdf)
+    - Admin reset password ("I forgot my password") (WIP)
+    - Email receipt (BACKLOG)
+    - Generate QR codes for scanning feature (Download pdf) (BACKLOG)
 
 ### API Endpoints to Implement
 Admin Password - Allows management of admin authentication
