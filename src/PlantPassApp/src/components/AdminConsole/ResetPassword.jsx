@@ -13,14 +13,19 @@ function ResetPassword() {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-
   const [notificationMessage, setNotificationMessage] = useState({ type: '', text: '' });
 
-  function handleSubmit() {
+  const [submitting, setSubmitting] = useState(false);
+
+  function handleSubmit(e) {
+    e.preventDefault();
+
     if (newPassword !== confirmPassword) {
       setNotificationMessage({ type: 'error', text: 'New passwords do not match' });
       return;
     }
+
+    setSubmitting(true);
 
     changePassword(oldPassword, newPassword)
       .then(() => {
@@ -30,19 +35,22 @@ function ResetPassword() {
         setConfirmPassword('');
       })
       .catch((err) => {
-        setNotificationMessage({ type: 'error', text: err.message || 'Failed to update password. Perhaps your old password is incorrect?' });
-      });
+        setNotificationMessage({ type: 'error', text: err.message || 'Failed to update password.' });
+      })
+      .finally(() => setSubmitting(false));
   }
 
   function handleChange(e) {
     const { name, value } = e.target;
+    setNotificationMessage({ type: '', text: '' }); // clear message on typing
+
     if (name === 'oldPassword') setOldPassword(value);
     else if (name === 'newPassword') setNewPassword(value);
     else if (name === 'confirmPassword') setConfirmPassword(value);
   }
 
   return (
-    <Box>
+    <Box component="form" onSubmit={handleSubmit}>
       <Typography variant="h6">Reset Password</Typography> 
 
       <Stack spacing={2} sx={{ mt: 2, maxWidth: 400 }}>
@@ -79,7 +87,11 @@ function ResetPassword() {
           onChange={handleChange}
         />
 
-        <Button variant="contained" color="primary" sx={{ mt: 2 }} onClick={handleSubmit}>
+        <Button
+          type="submit"
+          variant="contained"
+          disabled={submitting}
+        >
           Update Password
         </Button>
 

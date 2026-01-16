@@ -36,7 +36,6 @@ export async function authenticateAdmin(password) {
 // -------------------------
 export async function changePassword(oldPassword, newPassword) {
   try {
-    // Get token from localStorage
     const token = localStorage.getItem("admin_token");
     if (!token) throw new Error("Admin not authenticated");
 
@@ -44,16 +43,19 @@ export async function changePassword(oldPassword, newPassword) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`, // send JWT
+        "Authorization": `Bearer ${token}`,
       },
       body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      throw new Error("Password change failed");
+      const error = new Error(data.error || response.statusText);
+      error.status = response.status;
+      throw error;
     }
 
-    const data = await response.json();
     return data;
   } catch (error) {
     console.error("Change password error:", error);
