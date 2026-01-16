@@ -128,7 +128,37 @@ def delete_transaction(transaction_id):
     """
     pass  # Replace with DB delete logic
 
-# TODO @joe: Scope out the sales analytics that would be useful to compute
+# TODO @maahum: Implement the analytics computation logic for this function.
+#
+# The return should look like the following:
+# {
+#     "total_sales": 0.0,
+#     "total_orders": 0,
+#     "total_units_sold": 0,
+#     "average_items_per_order": 0.0,
+#     "average_order_value": 0.0,
+#     "sales_over_time": {  
+#         (See note(1) below...)
+#     },
+#     "transactions": {
+#         (See note(2) below...) 
+#     }
+# }
+# 
+# Note(1): For sales_over_time, group transactions into fixed 30-minute time blocks
+#          aligned to clock boundaries (HH:00–HH:29, HH:30–HH:59), using UTC timestamps
+#          internally.
+#
+#          Buckets should span from the earliest to the latest transaction timestamp and
+#          include empty blocks with zero sales.
+#
+#          For each block, return the total sales amount within that block.
+#          Format the final output timestamps for display only (e.g.
+#          {"01-10-2026 10:00 AM": 100.00}).
+#
+# Note(2): For transactions, return a list of all transactions. Each transaction object
+#          should have high level transaction data such as purchase_id, total_quantity,
+#          timestamp, grand_total, etc.
 def compute_sales_analytics():
     """
     Compute sales analytics such as total sales, average order value, etc.
