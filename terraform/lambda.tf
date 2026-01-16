@@ -64,7 +64,24 @@ resource "aws_cloudwatch_log_group" "admin_logs" {
   tags = {
     application = "plantpass"
   }
-  
+}
+
+resource "aws_cloudwatch_log_group" "products_handler_logs" {
+  name              = "/aws/lambda/ProductsHandler"
+  retention_in_days = 14
+
+  tags = {
+    application = "plantpass"
+  }
+}
+
+resource "aws_cloudwatch_log_group" "discounts_handler_logs" {
+  name              = "/aws/lambda/DiscountsHandler"
+  retention_in_days = 14
+
+  tags = {
+    application = "plantpass"
+  }
 }
 
 # -------------------------
@@ -122,17 +139,38 @@ resource "aws_lambda_function" "admin" {
   }
 }
 
-# -------------------------
-# Lambda Function URL (optional)
-# -------------------------
-resource "aws_lambda_function_url" "transaction_handler_url" {
-  function_name      = aws_lambda_function.transaction_handler.function_name
-  authorization_type = "NONE"
+# Products Lambda
+resource "aws_lambda_function" "products_handler" {
+  function_name = "ProductsHandler"
+  filename      = var.products_lambda_zip_path
+  handler       = "lambda_handler.lambda_handler"
+  runtime       = "python3.11"
+  role          = aws_iam_role.lambda_exec.arn
+  source_code_hash = filebase64sha256(var.products_lambda_zip_path)
+  depends_on = [
+    aws_cloudwatch_log_group.products_handler_logs
+  ]
+
+  tags = {
+    application = "plantpass"
+  }
 }
 
-output "lambda_function_url" {
-  value = aws_lambda_function_url.transaction_handler_url.function_url
-  description = "Optional URL for the Transaction Lambda"
+# Discounts Lambda
+resource "aws_lambda_function" "discounts_handler" {
+  function_name = "DiscountsHandler"
+  filename      = var.discounts_lambda_zip_path
+  handler       = "lambda_handler.lambda_handler"
+  runtime       = "python3.11"
+  role          = aws_iam_role.lambda_exec.arn
+  source_code_hash = filebase64sha256(var.discounts_lambda_zip_path)
+  depends_on = [
+    aws_cloudwatch_log_group.discounts_handler_logs
+  ]
+
+  tags = {
+    application = "plantpass"
+  }
 }
 
 # -------------------------
@@ -152,6 +190,24 @@ resource "aws_lambda_permission" "apigw_admin" {
   statement_id  = "AllowAPIGatewayInvokeAdmin"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.admin.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.frontend_api.execution_arn}/*/*"
+}
+
+# Products Lambda
+resource "aws_lambda_permission" "apigw_products" {
+  statement_id  = "AllowAPIGatewayInvokeProducts"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.products_handler.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.frontend_api.execution_arn}/*/*"
+}
+
+# Discounts Lambda
+resource "aws_lambda_permission" "apigw_discounts" {
+  statement_id  = "AllowAPIGatewayInvokeDiscounts"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.discounts_handler.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.frontend_api.execution_arn}/*/*"
 }

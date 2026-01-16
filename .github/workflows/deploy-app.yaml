@@ -37,20 +37,32 @@ jobs:
       - name: Package Transaction Lambda
         run: |
           cd src/lambda/TransactionHandler
-          zip -r ../../../terraform/transactionshandler_lambda_package.zip .
+          zip -r ../../../terraform/transactions_handler_lambda_package.zip .
 
       - name: Package Admin Lambda
         run: |
           cd src/lambda/AdminPassword
-          zip -r ../../../terraform/adminpassword_lambda_package.zip .
+          zip -r ../../../terraform/admin_password_lambda_package.zip .
+
+      - name: Package Products Lambda
+        run: |
+          cd src/lambda/ProductsHandler
+          zip -r ../../../terraform/products_handler_lambda_package.zip .
+
+      - name: Package Discounts Lambda
+        run: |
+          cd src/lambda/DiscountsHandler
+          zip -r ../../../terraform/discounts_handler_lambda_package.zip .
 
       - name: Upload Lambda ZIPs
         uses: actions/upload-artifact@v4
         with:
           name: lambda-packages
           path: |
-            terraform/transactionshandler_lambda_package.zip
-            terraform/adminpassword_lambda_package.zip
+            terraform/transactions_handler_lambda_package.zip
+            terraform/admin_password_lambda_package.zip
+            terraform/products_handler_lambda_package.zip
+            terraform/discounts_handler_lambda_package.zip
             terraform/auth_layer.zip
 
   deploy-infra:
@@ -86,8 +98,10 @@ jobs:
         run: |
           terraform init -input=false
           terraform apply -auto-approve -input=false -lock-timeout=60s \
-            -var "transaction_lambda_zip_path=transactionshandler_lambda_package.zip" \
-            -var "admin_lambda_zip_path=adminpassword_lambda_package.zip" \
+            -var "transaction_lambda_zip_path=transactions_handler_lambda_package.zip" \
+            -var "admin_lambda_zip_path=admin_password_lambda_package.zip" \
+            -var "products_lambda_zip_path=products_handler_lambda_package.zip" \
+            -var "discounts_lambda_zip_path=discounts_handler_lambda_package.zip" \
             -var "auth_layer_zip_path=auth_layer.zip" \
             -var "reset_token_hash=${{ secrets.RESET_TOKEN_HASH }}"
 
