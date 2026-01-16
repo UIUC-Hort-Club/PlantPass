@@ -5,6 +5,7 @@ import {
   Button,
   Stack,
   Alert,
+  LinearProgress,
 } from '@mui/material';
 import React, { useState } from 'react';
 import { changePassword } from '../../api/passwordAuthentication';
@@ -94,6 +95,8 @@ function ResetPassword() {
         >
           Update Password
         </Button>
+
+        {submitting && <LinearProgress />}
 
         {notificationMessage.type === 'error' && <Alert severity="error">{notificationMessage.text}</Alert>}
         {notificationMessage.type === 'success' && <Alert severity="success">{notificationMessage.text}</Alert>}

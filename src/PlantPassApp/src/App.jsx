@@ -94,7 +94,7 @@ export default function App() {
   };
 
   const handleAdminPasswordSubmit = (password) => {
-    authenticateAdmin(password)
+    return authenticateAdmin(password)  // <-- return promise so modal can handle loading state
       .then(() => {
         setIsAdmin(true);
         setAdminModalOpen(false);
@@ -102,6 +102,7 @@ export default function App() {
       })
       .catch((error) => {
         setAdminError('Password incorrect');
+        throw error; // re-throw so modal can catch it if needed
       });
   };
 
