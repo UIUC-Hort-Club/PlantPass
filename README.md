@@ -1,6 +1,6 @@
 # PlantPass; UIUC Horticulture Club
 
-## Todo for MVPnpm
+## Todo for MVP
 - Backend Database
     - Purchase Transactions (CRUD): Should have all data related to a transaction
     - Discounts (CRUD): Should have discount name and percent off
