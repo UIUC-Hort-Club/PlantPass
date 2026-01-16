@@ -14,7 +14,7 @@ import ItemsTable from './SubComponents/ItemsTable';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import Receipt from './SubComponents/Receipt';
 import Scanner from './SubComponents/Scanner';
-import { writeTransaction } from '../../api/writeTransaction';
+import { createTransaction } from '../../api/transaction_interface/createTransaction';
 import ShowTransactionID from './SubComponents/ShowTransactionID';
 
 function OrderEntry({ product_listings }) {
@@ -103,7 +103,7 @@ function OrderEntry({ product_listings }) {
       voucher: voucher,
     };
 
-    writeTransaction(transaction)
+    createTransaction(transaction)
       .then((response) => {
         const responseData = response.transaction;
         console.log('Transaction recorded successfully:', responseData);

@@ -1,8 +1,12 @@
 from utils import generate_random_id, validate_transaction_id
 
-def save_transaction(transaction):
+# TODO @maahum: Implement the record creation for this function.
+#               All fields in the full transaction data should
+#               be stored in the database, or be able to be
+#               derived from it.
+def create_transaction(transaction):
     """
-    Save the transaction to the database
+    Create the transaction in the database
 
     ----------
     This expects a transaction object with the following structure:
@@ -22,7 +26,6 @@ def save_transaction(transaction):
     Returns the full transaction data from the backend, which includes discounts applied, etc.
 
     Example of full transaction data returned:
-
     {
         "payment": {
             "method": "string",
@@ -76,7 +79,12 @@ def save_transaction(transaction):
     transaction_created["items"] = transaction.get("items", [])
 
     # Add discounts
-    transaction_created["discounts"] = []  # Placeholder for any discounts applied (Pull from DB)
+    #
+    # Note: We pull these from the discounts database and store them with this record in the off chance
+    # that the discount details change in the future. This way we can always know exactly what discounts
+    # were applied at the time of purchase. This is the same reason the product price is stored with the
+    # transaction record instead of being pulled from the product database when needed.
+    transaction_created["discounts"] = []
 
     # Add club voucher amount
     transaction_created["club_voucher"] = transaction.get("voucher", 0)
@@ -91,18 +99,38 @@ def save_transaction(transaction):
         "total": total
     }
 
-    return transaction_created  # Replace with DB write logic and return full transaction data
+    return transaction_created
 
-
-def get_transaction(transaction_id):
+# TODO @maahum: Implement the database read logic for this function.
+#               Be sure to return the transaction in the same format as described in create_transaction, with all fields populated.
+def read_transaction(transaction_id):
     """
     Retrieve a transaction by its ID.
     """
     return {}  # Replace with DB read logic
 
+# TODO @maahum: Implement the database update logic for this function.
+#               The use case here is that after order lookup, the customer
+#               may choose to update the order or it was found that the
+#               order details were incorrect and need to be updated. In
+#               this case, we want to update the existing record in the
+#               database with the new transaction data.
+def update_transaction(transaction_id, updated_transaction):
+    """
+    Update an existing transaction with new data.
+    """
+    return {}  # Replace with DB update logic
 
-def compute_total(customer_id=None):
+# TODO @maahum: Implement the database delete logic for this function.
+def delete_transaction(transaction_id):
     """
-    Sum totals for all transactions, or filter by customer_id if provided.
+    Delete a transaction by its ID.
     """
-    return 0  # Replace with DB aggregation logic
+    pass  # Replace with DB delete logic
+
+# TODO @joe: Scope out the sales analytics that would be useful to compute
+def compute_sales_analytics():
+    """
+    Compute sales analytics such as total sales, average order value, etc.
+    """
+    return {}  # Replace with actual computation logic

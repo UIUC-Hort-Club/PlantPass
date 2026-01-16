@@ -1,6 +1,12 @@
 import json
 import logging
-from database_interface import save_transaction, get_transaction, update_transaction, delete_transaction
+from database_interface import (
+    create_transaction,
+    read_transaction,
+    update_transaction,
+    delete_transaction,
+    compute_sales_analytics
+)
 
 # Configure logging
 logger = logging.getLogger()
@@ -18,9 +24,13 @@ def lambda_handler(event, context):
 
         # ---- Create transaction ----
         if route_key == "POST /transactions":
-            transaction = save_transaction(body)
-            logger.info(f"Transaction created: {transaction}")
-            return response(201, {"transaction": transaction})
+            try:
+                transaction = create_transaction(body)
+                logger.info("Transaction saved successfully")
+                return response(201, {"message": "Transaction created successfully", "transaction": transaction})
+            except Exception as e:
+                logger.error(f"Error saving transaction: {e}", exc_info=True)
+                return response(500, {"message": "Error saving transaction", "error": str(e)})
 
         # ---- Read transaction ----
         elif route_key == "GET /transactions/{purchase_id}":
@@ -29,7 +39,7 @@ def lambda_handler(event, context):
                 logger.warning("purchase_id missing in GET request")
                 return response(400, {"message": "purchase_id required"})
             
-            transaction = get_transaction(purchase_id)
+            transaction = read_transaction(purchase_id)
             if not transaction:
                 return response(404, {"message": "Transaction not found"})
             
@@ -55,6 +65,12 @@ def lambda_handler(event, context):
             delete_transaction(purchase_id)
             logger.info(f"Transaction deleted: {purchase_id}")
             return response(204, {})  # 204 No Content
+        
+        # ---- Sales Analytics ----
+        elif route_key == "GET /transactions/sales-analytics":
+            analytics = compute_sales_analytics()
+            logger.info(f"Analytics computed: {analytics}")
+            return response(200, analytics)
 
         # ---- Unknown route ----
         else:

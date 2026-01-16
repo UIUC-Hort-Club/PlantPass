@@ -87,6 +87,12 @@ resource "aws_apigatewayv2_route" "delete_transaction" {
   target    = "integrations/${aws_apigatewayv2_integration.transaction_lambda_integration.id}"
 }
 
+resource "aws_apigatewayv2_route" "sales_analytics" {
+  api_id    = aws_apigatewayv2_api.frontend_api.id
+  route_key = "GET /transactions/sales-analytics"
+  target    = "integrations/${aws_apigatewayv2_integration.transaction_lambda_integration.id}"
+}
+
 # -------------------------
 # Admin Lambda Routes
 # -------------------------
