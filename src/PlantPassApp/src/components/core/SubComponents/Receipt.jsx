@@ -12,6 +12,7 @@ import {
   Paper,
   Stack,
   Tab,
+  Alert,
 } from '@mui/material';
 
 function Receipt({ totals, transactionId }) {
@@ -36,6 +37,12 @@ function Receipt({ totals, transactionId }) {
         <Typography variant="h6" gutterBottom color={'black'} align="center">
           Transaction Receipt
         </Typography>
+
+        {transactionId ? (
+            <Alert severity="success"><strong>Transaction ID:</strong> {transactionId}</Alert>
+          ) : (
+            <Alert severity="warning">No transaction ID found.</Alert>
+          )}
 
         <Typography variant="body1" sx={{ mb: 1 }} color={'black'} align="right">
           Subtotal: ${totals.subtotal}
@@ -65,16 +72,7 @@ function Receipt({ totals, transactionId }) {
           </Table>
         </TableContainer>
 
-        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ marginBottom: '10px' }}>
-          {/* Transaction ID */}
-          {transactionId ? (
-            <Typography variant="body1" sx={{ mt: 2, fontWeight: 700 }} color="black">
-              ID: {transactionId}
-            </Typography>
-          ) : (
-            <Box sx={{ mt: 2, minHeight: '24px' }} />
-          )}
-
+        <Stack direction="row" justifyContent="right" alignItems="center" sx={{ marginBottom: '10px' }}>
           {/* Grand Total */}
           <Typography variant="body1" sx={{ mt: 2, fontWeight: 700 }} color="black" align="right">
             Grand Total: ${totals.grandTotal}

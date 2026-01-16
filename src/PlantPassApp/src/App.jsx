@@ -36,6 +36,8 @@ import NavigationMenu from './components/Navigation/NavigationMenu';
 
 /* =========================
    Static data sources
+
+   TODO @joe: eventually replace with real API calls, but this is fine for now since the data is pretty static and read-only
    ========================= */
 const DISCOUNTS_SOURCE = `${import.meta.env.BASE_URL}data/discounts.json`;
 const PRODUCTS_SOURCE = `${import.meta.env.BASE_URL}data/products.json`;

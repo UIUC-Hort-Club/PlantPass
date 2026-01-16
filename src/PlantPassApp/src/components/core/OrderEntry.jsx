@@ -105,13 +105,12 @@ function OrderEntry({ product_listings }) {
 
     createTransaction(transaction)
       .then((response) => {
-        const responseData = response.transaction;
-        console.log('Transaction recorded successfully:', responseData);
-        setCurrentTransactionID(responseData.purchase_id);
+        console.log('Transaction recorded successfully:', response);
+        setCurrentTransactionID(response.purchase_id);
         setTotals({
-          subtotal: responseData.receipt.subtotal,
-          discount: responseData.receipt.discount,
-          grandTotal: responseData.receipt.total,
+          subtotal: response.receipt.subtotal,
+          discount: response.receipt.discount,
+          grandTotal: response.receipt.total,
         });
         setShowNotification(true);
         setTransactionIDDialogOpen(true);
@@ -179,16 +178,21 @@ function OrderEntry({ product_listings }) {
       </Box>
 
       {/* Receipt Component */}
-      <Receipt
-        totals={totals}
-        transactionId={currentTransactionID}
-      />
 
-      <Stack direction="row" justifyContent="flex-end" alignItems="center" sx={{ mt: 2 }}>
-        <Button variant="contained" color="success" onClick={handleNewOrder} size='small'>
-          New Order
-        </Button>
-      </Stack>
+      {currentTransactionID && (
+        <>
+          <Receipt
+            totals={totals}
+            transactionId={currentTransactionID}
+          />
+
+          <Stack direction="row" justifyContent="flex-end" alignItems="center" sx={{ mt: 2 }}>
+            <Button variant="contained" color="success" onClick={handleNewOrder} size='small'>
+              New Order
+            </Button>
+          </Stack>          
+        </>
+      )}
 
       <div style={{height: "1rem"}}/>
 
