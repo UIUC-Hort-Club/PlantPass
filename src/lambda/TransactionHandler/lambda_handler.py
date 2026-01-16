@@ -2,6 +2,7 @@ import json
 import logging
 from database_interface import (
     create_transaction,
+    export_transaction_data,
     read_transaction,
     update_transaction,
     delete_transaction,
@@ -71,6 +72,12 @@ def lambda_handler(event, context):
             analytics = compute_sales_analytics()
             logger.info(f"Analytics computed: {analytics}")
             return response(200, analytics)
+
+        # ---- Export Data ----
+        elif route_key == "GET /transactions/export-data":
+            export_data = export_transaction_data()
+            logger.info(f"Export data retrieved: {len(export_data)} records")
+            return response(200, {"export_data": export_data})
 
         # ---- Unknown route ----
         else:

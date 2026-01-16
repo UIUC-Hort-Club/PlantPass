@@ -80,7 +80,7 @@ def create_transaction(transaction):
 
     # Add discounts
     #
-    # Note: We pull these from the discounts database and store them with this record in the off chance
+    # Note: We pull these from the discounts endpoint and store them with this record in the off chance
     # that the discount details change in the future. This way we can always know exactly what discounts
     # were applied at the time of purchase. This is the same reason the product price is stored with the
     # transaction record instead of being pulled from the product database when needed.
@@ -134,3 +134,15 @@ def compute_sales_analytics():
     Compute sales analytics such as total sales, average order value, etc.
     """
     return {}  # Replace with actual computation logic
+
+# TODO @maahum/joe: Implement the export data logic for this function.
+#                   This should return a list of all transactions in a
+#                   format suitable for export.
+#
+# Note: Not a priority for MVP. May need discovery since we need to push to s3 and
+#       generate a presigned url for download instead of returning the data directly from this function if the data is large.
+def export_transaction_data():
+    """
+    Export all transaction data in a format suitable for export (e.g., CSV, JSON).
+    """
+    return []  # Replace with actual export logic

@@ -29,6 +29,8 @@ Transaction Handler - Allows management of the transactions/purchases database
 - `GET /transactions/{purchase_id}`: Read a transaction – Retrieves a transaction record associated with the given purchase_id.
 - `PUT /transactions/{purchase_id}`: Update a transaction – Replaces an existing transaction with the data provided in the request body. The purchase_id in the path identifies the record to update.
 - `DELETE /transactions/{purchase_id}`: Delete a transaction – Removes the transaction associated with the given purchase_id from the database.
+- `GET /transactions/sales-analytics`: Gets sales analytics for admin console.
+- `GET /transactions/export-data`: Gets a .csv file of the transactions data
 
 Products Handler - Allows management of the products database
 - `GET /products` – Get all products

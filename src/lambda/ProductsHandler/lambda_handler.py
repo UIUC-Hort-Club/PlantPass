@@ -11,15 +11,11 @@ from database_interface import (
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-def lambda_handler(event, context):
-    logger.info(f"Received event: {json.dumps(event)}")
-    
+def lambda_handler(event, context):    
     try:
         route_key = event.get("routeKey", "")
         path_params = event.get("pathParameters") or {}
         body = json.loads(event.get("body", "{}")) if event.get("body") else {}
-
-        logger.info(f"Route: {route_key}, Path params: {path_params}, Body: {body}")
 
         # ---- Get all products ----
         if route_key == "GET /products":

@@ -93,6 +93,12 @@ resource "aws_apigatewayv2_route" "sales_analytics" {
   target    = "integrations/${aws_apigatewayv2_integration.transaction_lambda_integration.id}"
 }
 
+resource "aws_apigatewayv2_route" "export_transactions" {
+  api_id    = aws_apigatewayv2_api.frontend_api.id
+  route_key = "GET /transactions/export-data"
+  target    = "integrations/${aws_apigatewayv2_integration.transaction_lambda_integration.id}"
+}
+
 # -------------------------
 # Admin Lambda Routes
 # -------------------------
