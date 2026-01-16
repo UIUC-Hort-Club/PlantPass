@@ -60,7 +60,7 @@ def lambda_handler(event, context):
         # ---- Change password ----
         if route_key == "POST /admin/change-password":
             headers = event.get("headers", {})
-            authorization = headers.get("Authorization", "")
+            authorization = headers.get("authorization", "")
             token = authorization.replace("Bearer ", "") if authorization.startswith("Bearer ") else ""
 
             logger.info(f"Headers: {headers}")
