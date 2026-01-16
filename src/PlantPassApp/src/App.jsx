@@ -23,7 +23,7 @@ import PublicIcon from '@mui/icons-material/Public';
 /* =========================
    API utilities
    ========================= */
-import { authenticateAdmin } from './api/passwordAuthentication';
+import { authenticateAdmin } from './api/authentication/passwordAuthentication';
 
 /* =========================
    Application components

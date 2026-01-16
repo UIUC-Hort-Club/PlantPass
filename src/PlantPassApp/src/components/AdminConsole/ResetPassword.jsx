@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import { changePassword } from '../../api/passwordAuthentication';
+import { changePassword } from '../../api/authentication/passwordAuthentication';
 
 function ResetPassword() {
   const [oldPassword, setOldPassword] = useState('');
