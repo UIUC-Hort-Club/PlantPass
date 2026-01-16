@@ -50,7 +50,7 @@ def lambda_handler(event, context):
 
             if bcrypt.checkpw(password.encode(), pw_hash):
                 token = jwt.encode(
-                    {"exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)},
+                    {"exp": datetime.datetime.utcnow() + datetime.timedelta(hours=24)},
                     JWT_SECRET,
                     algorithm="HS256"
                 )
@@ -60,6 +60,9 @@ def lambda_handler(event, context):
         # ---- Change password ----
         if route_key == "POST /admin/change-password":
             token = event["headers"].get("Authorization", "").replace("Bearer ", "")
+
+            logger.info(f"Received token: {token}")
+
             try:
                 jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
             except jwt.ExpiredSignatureError:
