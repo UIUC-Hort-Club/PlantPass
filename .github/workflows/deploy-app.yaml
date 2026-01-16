@@ -36,13 +36,13 @@ jobs:
 
       - name: Package Transaction Lambda
         run: |
-          cd src/TransactionHandler
-          zip -r ../../terraform/transactionshandler_lambda_package.zip .
+          cd src/lambda/TransactionHandler
+          zip -r ../../../terraform/transactionshandler_lambda_package.zip .
 
       - name: Package Admin Lambda
         run: |
-          cd src/AdminPassword
-          zip -r ../../terraform/adminpassword_lambda_package.zip .
+          cd src/lambda/AdminPassword
+          zip -r ../../../terraform/adminpassword_lambda_package.zip .
 
       - name: Upload Lambda ZIPs
         uses: actions/upload-artifact@v4
