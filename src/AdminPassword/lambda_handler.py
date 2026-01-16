@@ -43,10 +43,10 @@ def lambda_handler(event, context):
 
         # ---- Admin login ----
         if route_key == "POST /admin/login":
-            logger.info(f"Received login attempt with password: {password} (REMOVE FOR PROD)")
-
             pw_hash = get_password_hash()
             password = body.get("password", "")
+
+            logger.info(f"Received login attempt with password: {password} (REMOVE FOR PROD)")
 
             if bcrypt.checkpw(password.encode(), pw_hash):
                 token = jwt.encode(
