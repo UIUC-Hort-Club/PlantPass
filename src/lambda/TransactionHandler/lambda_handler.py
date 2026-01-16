@@ -1,48 +1,83 @@
 import json
 import logging
-from database_interface import save_transaction, get_transaction, compute_total
+from database_interface import (
+    create_transaction,
+    export_transaction_data,
+    read_transaction,
+    update_transaction,
+    delete_transaction,
+    compute_sales_analytics
+)
 
 # Configure logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
-    logger.info(f"Received event: {json.dumps(event)}")  # Log the raw event
+    logger.info(f"Received event: {json.dumps(event)}")
 
     try:
-        body = json.loads(event.get("body", "{}"))
         route_key = event.get("routeKey", "")
-        logger.info(f"Route key: {route_key}, Body: {body}")
+        path_params = event.get("pathParameters") or {}
+        body = json.loads(event.get("body", "{}"))
 
-        # ---- Write transaction ----
-        if route_key == "POST /write":
-            logger.info("Processing /write request")
+        logger.info(f"Route: {route_key}, Path params: {path_params}, Body: {body}")
+
+        # ---- Create transaction ----
+        if route_key == "POST /transactions":
             try:
-                full_transaction = save_transaction(body)
-                logger.info(f"Transaction saved successfully: {full_transaction}")
+                transaction = create_transaction(body)
+                logger.info("Transaction saved successfully")
+                return response(201, {"message": "Transaction created successfully", "transaction": transaction})
             except Exception as e:
                 logger.error(f"Error saving transaction: {e}", exc_info=True)
-                return response(500, {"message": "Failed to save transaction"})
-            
-            return response(200, {"transaction": full_transaction})
+                return response(500, {"message": "Error saving transaction", "error": str(e)})
 
         # ---- Read transaction ----
-        elif route_key == "POST /read":
-            transaction_id = body.get("transactionId")
-            if not transaction_id:
-                logger.warning("transactionId missing in /read request")
-                return response(400, {"message": "transactionId required"})
+        elif route_key == "GET /transactions/{purchase_id}":
+            purchase_id = path_params.get("purchase_id")
+            if not purchase_id:
+                logger.warning("purchase_id missing in GET request")
+                return response(400, {"message": "purchase_id required"})
             
-            transaction = get_transaction(transaction_id)
+            transaction = read_transaction(purchase_id)
+            if not transaction:
+                return response(404, {"message": "Transaction not found"})
+            
             logger.info(f"Transaction retrieved: {transaction}")
             return response(200, transaction)
 
-        # ---- Compute total ----
-        elif route_key == "POST /total":
-            customer_id = body.get("customerId")  # optional
-            total = compute_total(customer_id)
-            logger.info(f"Total computed: {total}")
-            return response(200, {"total": total})
+        # ---- Update transaction ----
+        elif route_key == "PUT /transactions/{purchase_id}":
+            purchase_id = path_params.get("purchase_id")
+            if not purchase_id:
+                return response(400, {"message": "purchase_id required"})
+            
+            updated_transaction = update_transaction(purchase_id, body)
+            logger.info(f"Transaction updated: {updated_transaction}")
+            return response(200, {"transaction": updated_transaction})
+
+        # ---- Delete transaction ----
+        elif route_key == "DELETE /transactions/{purchase_id}":
+            purchase_id = path_params.get("purchase_id")
+            if not purchase_id:
+                return response(400, {"message": "purchase_id required"})
+            
+            delete_transaction(purchase_id)
+            logger.info(f"Transaction deleted: {purchase_id}")
+            return response(204, {})  # 204 No Content
+        
+        # ---- Sales Analytics ----
+        elif route_key == "GET /transactions/sales-analytics":
+            analytics = compute_sales_analytics()
+            logger.info(f"Analytics computed: {analytics}")
+            return response(200, analytics)
+
+        # ---- Export Data ----
+        elif route_key == "GET /transactions/export-data":
+            export_data = export_transaction_data()
+            logger.info(f"Export data retrieved: {len(export_data)} records")
+            return response(200, {"export_data": export_data})
 
         # ---- Unknown route ----
         else:
@@ -58,7 +93,7 @@ def response(status_code, body):
         "statusCode": status_code,
         "headers": {
             "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+            "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
             "Access-Control-Allow-Headers": "Content-Type"
         },
         "body": json.dumps(body)
