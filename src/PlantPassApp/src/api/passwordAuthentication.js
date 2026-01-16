@@ -34,7 +34,7 @@ export async function authenticateAdmin(password) {
 // -------------------------
 // Change admin password
 // -------------------------
-export async function changePassword(newPassword) {
+export async function changePassword(oldPassword, newPassword) {
   try {
     // Get token from localStorage
     const token = localStorage.getItem("admin_token");
@@ -46,7 +46,7 @@ export async function changePassword(newPassword) {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`, // send JWT
       },
-      body: JSON.stringify({ new_password: newPassword }),
+      body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
     });
 
     if (!response.ok) {

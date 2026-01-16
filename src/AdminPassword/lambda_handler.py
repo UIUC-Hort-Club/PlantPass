@@ -58,7 +58,7 @@ def lambda_handler(event, context):
             return {"statusCode": 401, "body": json.dumps({"error": "Invalid password"})}
         
         # ---- Change password ----
-        if route_key == "/admin/change-password":
+        if route_key == "POST /admin/change-password":
             token = event["headers"].get("Authorization", "").replace("Bearer ", "")
             try:
                 jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
@@ -78,8 +78,8 @@ def lambda_handler(event, context):
             set_password_hash(new_hash)
             return {"statusCode": 200, "body": json.dumps({"success": True})}
 
-        # ---- Reset password ----
-        if route_key == "/admin/reset-password":
+        # ---- Reset (Forgot) password ----
+        if route_key == "POST/admin/reset-password":
             reset_token = event["headers"].get("X-Reset-Token", "")
             if not RESET_ENABLED:
                 return {"statusCode": 404, "body": json.dumps({"error": "Password reset is disabled"})}

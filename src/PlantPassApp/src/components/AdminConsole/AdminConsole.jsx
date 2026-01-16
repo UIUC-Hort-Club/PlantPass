@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Typography, Paper } from '@mui/material';
 import Divider from '@mui/material/Divider';
 import SalesAnalytics from './SalesAnalytics';
+import ResetPassword from './ResetPassword';
 
 function AdminTabPanel({ value, index, children }) {
   return value === index ? <Box sx={{ mt: 2 }}>{children}</Box> : null;
@@ -34,7 +35,7 @@ export default function AdminConsole({ tabIndex }) {
         </AdminTabPanel>
 
         <AdminTabPanel value={tabIndex} index={3}>
-          <Typography>👥 Reset Password</Typography>
+          <ResetPassword />
         </AdminTabPanel>
       </Paper>
     </Box>
