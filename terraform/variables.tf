@@ -35,3 +35,8 @@ variable "admin_lambda_zip_path" {
 variable "auth_layer_zip_path" {
   type = string
 }
+
+variable "reset_token_hash" {
+  type      = string
+  sensitive = true
+}

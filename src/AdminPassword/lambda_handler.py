@@ -13,7 +13,10 @@ logger.setLevel(logging.INFO)
 s3 = boto3.client("s3")
 bucket = os.environ["PASSWORD_BUCKET"]
 key = os.environ["PASSWORD_KEY"]
+
 JWT_SECRET = os.environ["JWT_SECRET"]
+RESET_TOKEN_HASH = os.environ.get("RESET_TOKEN_HASH")
+RESET_ENABLED = os.environ.get("RESET_ENABLED") == "true"
 
 def get_password_hash():
     logger.info("Fetching admin password hash from S3")
@@ -33,42 +36,63 @@ def set_password_hash(new_hash):
 def lambda_handler(event, context):
     logger.info(f"Received event: {json.dumps(event)}")
 
-    route = event.get("path")
-    body = json.loads(event.get("body", "{}"))
+    try:
+        body = json.loads(event.get("body", "{}"))
+        route_key = event.get("routeKey", "")
+        logger.info(f"Route key: {route_key}, Body: {body}")
 
-    if route == "/login":
-        logger.info(f"Received login attempt with password: {password} (REMOVE FOR PROD)")
+        # ---- Admin login ----
+        if route_key == "POST /admin/login":
+            logger.info(f"Received login attempt with password: {password} (REMOVE FOR PROD)")
 
-        pw_hash = get_password_hash()
-        password = body.get("password", "")
+            pw_hash = get_password_hash()
+            password = body.get("password", "")
 
-        if bcrypt.checkpw(password.encode(), pw_hash):
-            token = jwt.encode(
-                {"exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)},
-                JWT_SECRET,
-                algorithm="HS256"
-            )
-            return {"statusCode": 200, "body": json.dumps({"token": token})}
-        return {"statusCode": 401, "body": json.dumps({"error": "Invalid password"})}
+            if bcrypt.checkpw(password.encode(), pw_hash):
+                token = jwt.encode(
+                    {"exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)},
+                    JWT_SECRET,
+                    algorithm="HS256"
+                )
+                return {"statusCode": 200, "body": json.dumps({"token": token})}
+            return {"statusCode": 401, "body": json.dumps({"error": "Invalid password"})}
+        
+        # ---- Change password ----
+        if route_key == "/admin/change-password":
+            token = event["headers"].get("Authorization", "").replace("Bearer ", "")
+            try:
+                jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+            except jwt.ExpiredSignatureError:
+                return {"statusCode": 401, "body": json.dumps({"error": "Token expired"})}
+            except:
+                return {"statusCode": 401, "body": json.dumps({"error": "Invalid token"})}
 
-    if route == "/change-password":
-        token = event["headers"].get("Authorization", "").replace("Bearer ", "")
-        try:
-            jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-        except jwt.ExpiredSignatureError:
-            return {"statusCode": 401, "body": json.dumps({"error": "Token expired"})}
-        except:
-            return {"statusCode": 401, "body": json.dumps({"error": "Invalid token"})}
+            old_pw = body.get("old_password", "")
+            new_pw = body.get("new_password", "")
 
-        old_pw = body.get("old_password", "")
-        new_pw = body.get("new_password", "")
+            pw_hash = get_password_hash()
+            if not bcrypt.checkpw(old_pw.encode(), pw_hash):
+                return {"statusCode": 401, "body": json.dumps({"error": "Invalid current password"})}
 
-        pw_hash = get_password_hash()
-        if not bcrypt.checkpw(old_pw.encode(), pw_hash):
-            return {"statusCode": 401, "body": json.dumps({"error": "Invalid current password"})}
+            new_hash = bcrypt.hashpw(new_pw.encode(), bcrypt.gensalt())
+            set_password_hash(new_hash)
+            return {"statusCode": 200, "body": json.dumps({"success": True})}
 
-        new_hash = bcrypt.hashpw(new_pw.encode(), bcrypt.gensalt())
-        set_password_hash(new_hash)
-        return {"statusCode": 200, "body": json.dumps({"success": True})}
+        # ---- Reset password ----
+        if route_key == "/admin/reset-password":
+            reset_token = event["headers"].get("X-Reset-Token", "")
+            if not RESET_ENABLED:
+                return {"statusCode": 404, "body": json.dumps({"error": "Password reset is disabled"})}
+            if not bcrypt.checkpw(reset_token.encode(), RESET_TOKEN_HASH.encode()):
+                return {"statusCode": 401, "body": json.dumps({"error": "Invalid reset token"})}
 
-    return {"statusCode": 404, "body": json.dumps({"error": "Not found"})}
+            new_pw = body.get("new_password", "")
+            new_hash = bcrypt.hashpw(new_pw.encode(), bcrypt.gensalt())
+            set_password_hash(new_hash)
+            return {"statusCode": 200, "body": json.dumps({"success": True})}
+
+        return {"statusCode": 404, "body": json.dumps({"error": "Route not found"})}
+
+    except:
+        logger.exception("Error processing request")
+        return {"statusCode": 500, "body": json.dumps({"error": "Internal server error"})}

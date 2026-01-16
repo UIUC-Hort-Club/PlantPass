@@ -82,6 +82,12 @@ resource "aws_apigatewayv2_route" "admin_change_route" {
   target    = "integrations/${aws_apigatewayv2_integration.admin_lambda_integration.id}"
 }
 
+resource "aws_apigatewayv2_route" "admin_reset_route" {
+  api_id    = aws_apigatewayv2_api.frontend_api.id
+  route_key = "POST /admin/reset-password"
+  target    = "integrations/${aws_apigatewayv2_integration.admin_lambda_integration.id}"
+}
+
 # -------------------------
 # Outputs
 # -------------------------

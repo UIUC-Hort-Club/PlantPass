@@ -106,6 +106,10 @@ resource "aws_lambda_function" "admin" {
       PASSWORD_BUCKET = aws_s3_bucket.admin_password.bucket
       PASSWORD_KEY    = "password.json"
       JWT_SECRET      = "super-secret-key"
+
+      # Reset token configuration (used for password reset flow)
+      RESET_TOKEN_HASH  = var.reset_token_hash
+      RESET_ENABLED     = "true"
     }
   }
 

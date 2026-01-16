@@ -88,8 +88,8 @@ jobs:
           terraform apply -auto-approve -input=false -lock-timeout=60s \
             -var "transaction_lambda_zip_path=transactionshandler_lambda_package.zip" \
             -var "admin_lambda_zip_path=adminpassword_lambda_package.zip" \
-            -var "auth_layer_zip_path=auth_layer.zip"
-
+            -var "auth_layer_zip_path=auth_layer.zip" \
+            -var "reset_token_hash=${{ secrets.RESET_TOKEN_HASH }}"
 
       - name: Get frontend bucket name
         id: bucket
