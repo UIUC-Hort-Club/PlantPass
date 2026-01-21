@@ -33,13 +33,8 @@ export default function ProductTable() {
     );
   };
 
-  const handleReset = () => {
-    setRows(defaultRows);
-  };
-
-  const handleClear = () => {
-    setRows([]);
-  };
+  const handleReset = () => setRows(defaultRows);
+  const handleClear = () => setRows([]);
 
   const handleDragEnd = (result) => {
     if (!result.destination) return;
@@ -90,21 +85,26 @@ export default function ProductTable() {
         </Button>
       </Stack>
 
-      <TableContainer>
+      <TableContainer component={Paper}>
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="products">
             {(provided) => (
-              <Table {...provided.droppableProps} ref={provided.innerRef}>
+              <Table
+                size="small"
+                sx={{ minWidth: 650 }}
+                aria-label="dense editable product table"
+                {...provided.droppableProps}
+                ref={provided.innerRef}
+              >
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ width: "80%" }}>
+                    <TableCell sx={{ width: "65%" }}>
                       <strong>Product Name</strong>
                     </TableCell>
-                    <TableCell sx={{ width: "20%" }}>
+                    <TableCell sx={{ width: "30%" }}>
                       <strong>Unit Price</strong>
                     </TableCell>
-                    <TableCell>
-                      <strong>Actions</strong>
+                    <TableCell sx={{ width: "5%" }}>
                     </TableCell>
                   </TableRow>
                 </TableHead>
@@ -116,11 +116,9 @@ export default function ProductTable() {
                         <TableRow
                           ref={provided.innerRef}
                           {...provided.draggableProps}
+                          sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                         >
-                          <TableCell
-                            {...provided.dragHandleProps}
-                            sx={{ width: "80%" }}
-                          >
+                          <TableCell {...provided.dragHandleProps}>
                             <TextField
                               fullWidth
                               size="small"
@@ -131,7 +129,7 @@ export default function ProductTable() {
                             />
                           </TableCell>
 
-                          <TableCell sx={{ width: "20%" }}>
+                          <TableCell>
                             <TextField
                               type="number"
                               fullWidth
@@ -162,7 +160,7 @@ export default function ProductTable() {
       </TableContainer>
 
       <Stack direction="row" spacing={1} justifyContent="right" sx={{ paddingTop: "10px" }}>
-        <Button>Save</Button>
+        <Button variant="contained">Save</Button>
       </Stack>
     </Paper>
   );

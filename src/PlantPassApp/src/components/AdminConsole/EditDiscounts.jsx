@@ -33,13 +33,8 @@ export default function DiscountTable() {
 		);
 	};
 
-	const handleReset = () => {
-		setRows(defaultRows);
-	};
-
-	const handleClear = () => {
-		setRows([]);
-	};
+	const handleReset = () => setRows(defaultRows);
+	const handleClear = () => setRows([]);
 
 	const handleDragEnd = (result) => {
 		if (!result.destination) return;
@@ -53,10 +48,10 @@ export default function DiscountTable() {
 
 	return (
 		<Paper sx={{ p: 2 }}>
-			{/* Header with Refresh */}
 			<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
 				<Typography variant="h6">Edit Discounts</Typography>
 			</Stack>
+
 			<Stack direction="row" justifyContent="space-between" sx={{ mb: 1 }}>
 				<Stack direction="row" spacing={1}>
 					<Button
@@ -65,16 +60,16 @@ export default function DiscountTable() {
 						color="error"
 						onClick={handleClear}
 						sx={{
-							backgroundColor: 'transparent !important',
-							borderColor: '#d32f2f !important',
-							color: '#d32f2f !important',
+							backgroundColor: "transparent !important",
+							borderColor: "#d32f2f !important",
+							color: "#d32f2f !important",
 							fontWeight: 600,
-							textTransform: 'none',
-							'&:hover': {
-								backgroundColor: 'rgba(211, 47, 47, 0.12) !important',
-								borderColor: '#b71c1c !important',
-								color: '#b71c1c !important'
-							}
+							textTransform: "none",
+							"&:hover": {
+								backgroundColor: "rgba(211, 47, 47, 0.12) !important",
+								borderColor: "#b71c1c !important",
+								color: "#b71c1c !important",
+							},
 						}}
 					>
 						Clear
@@ -84,29 +79,32 @@ export default function DiscountTable() {
 						Reset
 					</Button>
 				</Stack>
+
 				<Button variant="contained" size="small" onClick={handleAddRow}>
 					Add Discount
 				</Button>
 			</Stack>
 
-			<TableContainer>
+			<TableContainer component={Paper}>
 				<DragDropContext onDragEnd={handleDragEnd}>
 					<Droppable droppableId="discounts">
 						{(provided) => (
 							<Table
+								size="small"
+								sx={{ minWidth: 650 }}
+								aria-label="dense discount table"
 								{...provided.droppableProps}
 								ref={provided.innerRef}
 							>
 								<TableHead>
 									<TableRow>
-										<TableCell sx={{ width: '80%' }}>
+										<TableCell sx={{ width: "70%" }}>
 											<strong>Discount Name</strong>
 										</TableCell>
-										<TableCell sx={{ width: '20%' }}>
+										<TableCell sx={{ width: "25%" }}>
 											<strong>Percent Off</strong>
 										</TableCell>
-										<TableCell>
-											<strong>Actions</strong>
+										<TableCell sx={{ width: "5%" }}>
 										</TableCell>
 									</TableRow>
 								</TableHead>
@@ -118,11 +116,9 @@ export default function DiscountTable() {
 												<TableRow
 													ref={provided.innerRef}
 													{...provided.draggableProps}
+													sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
 												>
-													<TableCell
-														{...provided.dragHandleProps}
-														sx={{ width: '80%' }}
-													>
+													<TableCell {...provided.dragHandleProps}>
 														<TextField
 															fullWidth
 															size="small"
@@ -133,7 +129,7 @@ export default function DiscountTable() {
 														/>
 													</TableCell>
 
-													<TableCell sx={{ width: '20%' }}>
+													<TableCell>
 														<TextField
 															type="number"
 															fullWidth
@@ -154,6 +150,7 @@ export default function DiscountTable() {
 											)}
 										</Draggable>
 									))}
+
 									{provided.placeholder}
 								</TableBody>
 							</Table>
@@ -162,11 +159,9 @@ export default function DiscountTable() {
 				</DragDropContext>
 			</TableContainer>
 
-			<Stack direction="row" spacing={1} justifyContent="right" sx={{ paddingTop: '10px' }}>
-				<Button>
-					Save
-				</Button>
+			<Stack direction="row" spacing={1} justifyContent="right" sx={{ paddingTop: "10px" }}>
+				<Button variant="contained">Save</Button>
 			</Stack>
-		</Paper >
+		</Paper>
 	);
 }
