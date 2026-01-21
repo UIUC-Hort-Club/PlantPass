@@ -3,6 +3,8 @@ import { Box, Typography, Paper } from '@mui/material';
 import Divider from '@mui/material/Divider';
 import SalesAnalytics from './SalesAnalytics';
 import ResetPassword from './ResetPassword';
+import EditProducts from './EditProducts';
+import EditDiscounts from './EditDiscounts';
 
 function AdminTabPanel({ value, index, children }) {
   return value === index ? <Box sx={{ mt: 2 }}>{children}</Box> : null;
@@ -27,11 +29,11 @@ export default function AdminConsole({ tabIndex }) {
         </AdminTabPanel>
 
         <AdminTabPanel value={tabIndex} index={1}>
-          <Typography>🛠 Edit Products</Typography>
+          <EditProducts />
         </AdminTabPanel>
 
         <AdminTabPanel value={tabIndex} index={2}>
-          <Typography>🏷 Edit Discounts</Typography>
+          <EditDiscounts />
         </AdminTabPanel>
 
         <AdminTabPanel value={tabIndex} index={3}>
