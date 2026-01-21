@@ -167,6 +167,6 @@ export default function DiscountTable() {
 					Save
 				</Button>
 			</Stack>
-		</Paper>
+		</Paper >
 	);
 }
