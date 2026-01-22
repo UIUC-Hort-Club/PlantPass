@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Container,
   Button,
@@ -8,14 +8,14 @@ import {
   Stack,
   Box,
   TextField,
-} from '@mui/material';
-import { InputAdornment } from '@mui/material';
-import ItemsTable from './SubComponents/ItemsTable';
-import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
-import Receipt from './SubComponents/Receipt';
-import Scanner from './SubComponents/Scanner';
-import { createTransaction } from '../../api/transaction_interface/createTransaction';
-import ShowTransactionID from './SubComponents/ShowTransactionID';
+} from "@mui/material";
+import { InputAdornment } from "@mui/material";
+import ItemsTable from "./SubComponents/ItemsTable";
+import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
+import Receipt from "./SubComponents/Receipt";
+import Scanner from "./SubComponents/Scanner";
+import { createTransaction } from "../../api/transaction_interface/createTransaction";
+import ShowTransactionID from "./SubComponents/ShowTransactionID";
 
 function OrderEntry({ product_listings }) {
   const [products, setProducts] = useState([]);
@@ -48,7 +48,9 @@ function OrderEntry({ product_listings }) {
         [sku]: (scannedProduct.Price * newQuantity).toFixed(2),
       }));
     } else {
-      alert(`Internal Error: Item with SKU "${scannedProduct?.SKU}" not found, but should have been found...`);
+      alert(
+        `Internal Error: Item with SKU "${scannedProduct?.SKU}" not found, but should have been found...`,
+      );
     }
   };
 
@@ -70,13 +72,13 @@ function OrderEntry({ product_listings }) {
         const initialSubtotals = {};
         data.forEach((item) => {
           initialQuantities[item.SKU] = 0;
-          initialSubtotals[item.SKU] = '0.00';
+          initialSubtotals[item.SKU] = "0.00";
         });
         setQuantities(initialQuantities);
         setSubtotals(initialSubtotals);
         setVoucher(0);
       })
-      .catch((err) => console.error('Error loading stock.json:', err));
+      .catch((err) => console.error("Error loading stock.json:", err));
   }, []);
 
   const handleQuantityChange = (e, sku) => {
@@ -105,7 +107,7 @@ function OrderEntry({ product_listings }) {
 
     createTransaction(transaction)
       .then((response) => {
-        console.log('Transaction recorded successfully:', response);
+        console.log("Transaction recorded successfully:", response);
         setCurrentTransactionID(response.purchase_id);
         setTotals({
           subtotal: response.receipt.subtotal,
@@ -116,8 +118,8 @@ function OrderEntry({ product_listings }) {
         setTransactionIDDialogOpen(true);
       })
       .catch((error) => {
-        console.error('Error recording transaction:', error);
-        alert('An error occurred while recording the transaction...');
+        console.error("Error recording transaction:", error);
+        alert("An error occurred while recording the transaction...");
       });
   };
 
@@ -132,7 +134,11 @@ function OrderEntry({ product_listings }) {
       />
 
       <Box sx={{ mt: 2 }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+        >
           <Button
             variant="outlined"
             startIcon={<QrCodeScannerIcon />}
@@ -181,20 +187,27 @@ function OrderEntry({ product_listings }) {
 
       {currentTransactionID && (
         <>
-          <Receipt
-            totals={totals}
-            transactionId={currentTransactionID}
-          />
+          <Receipt totals={totals} transactionId={currentTransactionID} />
 
-          <Stack direction="row" justifyContent="flex-end" alignItems="center" sx={{ mt: 2 }}>
-            <Button variant="contained" color="success" onClick={handleNewOrder} size='small'>
+          <Stack
+            direction="row"
+            justifyContent="flex-end"
+            alignItems="center"
+            sx={{ mt: 2 }}
+          >
+            <Button
+              variant="contained"
+              color="success"
+              onClick={handleNewOrder}
+              size="small"
+            >
               New Order
             </Button>
-          </Stack>          
+          </Stack>
         </>
       )}
 
-      <div style={{height: "1rem"}}/>
+      <div style={{ height: "1rem" }} />
 
       {/* Snackbar Alert Component */}
       <Snackbar

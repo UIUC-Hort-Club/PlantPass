@@ -2,7 +2,7 @@ import { API_URL } from "../config";
 
 /**
  * Writes a transaction to the backend.
- * 
+ *
  * @param {object} transactionData - JSON object with structure:
  * {
  *   "timestamp": 0,
@@ -16,7 +16,7 @@ import { API_URL } from "../config";
  *   ],
  *   "voucher": 10  // Dollar amount
  * }
- * 
+ *
  * @returns {object} The full transaction object from backend, including discounts, totals, etc.
  */
 export async function createTransaction(transactionData) {
@@ -29,12 +29,13 @@ export async function createTransaction(transactionData) {
 
     if (!response.ok) {
       const errorBody = await response.json().catch(() => ({}));
-      throw new Error(`HTTP ${response.status}: ${errorBody.message || "Unknown error"}`);
+      throw new Error(
+        `HTTP ${response.status}: ${errorBody.message || "Unknown error"}`,
+      );
     }
 
     const data = await response.json();
     return data.transaction; // Return only the transaction object
-
   } catch (err) {
     console.error("Error writing transaction:", err);
     throw err;

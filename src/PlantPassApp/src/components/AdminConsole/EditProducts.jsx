@@ -1,7 +1,17 @@
 import React, { useState } from "react";
 import {
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, IconButton, TextField, Button, Stack, Typography
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  TextField,
+  Button,
+  Stack,
+  Typography,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
@@ -15,10 +25,7 @@ export default function ProductTable() {
   const [rows, setRows] = useState(defaultRows);
 
   const handleAddRow = () => {
-    setRows([
-      ...rows,
-      { id: Date.now().toString(), name: "", price: 0 }
-    ]);
+    setRows([...rows, { id: Date.now().toString(), name: "", price: 0 }]);
   };
 
   const handleDelete = (id) => {
@@ -26,11 +33,7 @@ export default function ProductTable() {
   };
 
   const handleEdit = (id, field, value) => {
-    setRows(
-      rows.map((r) =>
-        r.id === id ? { ...r, [field]: value } : r
-      )
-    );
+    setRows(rows.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
   };
 
   const handleReset = () => setRows(defaultRows);
@@ -48,7 +51,12 @@ export default function ProductTable() {
 
   return (
     <Paper sx={{ p: 2 }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        sx={{ mb: 3 }}
+      >
         <Typography variant="h6">Edit Products</Typography>
       </Stack>
 
@@ -104,8 +112,7 @@ export default function ProductTable() {
                     <TableCell sx={{ width: "30%" }}>
                       <strong>Unit Price</strong>
                     </TableCell>
-                    <TableCell sx={{ width: "5%" }}>
-                    </TableCell>
+                    <TableCell sx={{ width: "5%" }}></TableCell>
                   </TableRow>
                 </TableHead>
 
@@ -116,7 +123,9 @@ export default function ProductTable() {
                         <TableRow
                           ref={provided.innerRef}
                           {...provided.draggableProps}
-                          sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                          sx={{
+                            "&:last-child td, &:last-child th": { border: 0 },
+                          }}
                         >
                           <TableCell {...provided.dragHandleProps}>
                             <TextField
@@ -142,7 +151,10 @@ export default function ProductTable() {
                           </TableCell>
 
                           <TableCell>
-                            <IconButton size="small" onClick={() => handleDelete(row.id)}>
+                            <IconButton
+                              size="small"
+                              onClick={() => handleDelete(row.id)}
+                            >
                               <DeleteIcon fontSize="small" />
                             </IconButton>
                           </TableCell>
@@ -159,7 +171,12 @@ export default function ProductTable() {
         </DragDropContext>
       </TableContainer>
 
-      <Stack direction="row" spacing={1} justifyContent="right" sx={{ paddingTop: "10px" }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        justifyContent="right"
+        sx={{ paddingTop: "10px" }}
+      >
         <Button variant="contained">Save</Button>
       </Stack>
     </Paper>

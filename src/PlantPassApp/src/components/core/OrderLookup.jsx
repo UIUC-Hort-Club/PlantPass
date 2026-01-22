@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Container,
   Button,
@@ -12,16 +12,16 @@ import {
   InputLabel,
   Select,
   MenuItem,
-} from '@mui/material';
-import ItemsTable from './SubComponents/ItemsTable';
-import Receipt from './SubComponents/Receipt';
+} from "@mui/material";
+import ItemsTable from "./SubComponents/ItemsTable";
+import Receipt from "./SubComponents/Receipt";
 // import { getTransaction } from '../api/getTransaction';
 // import { updateTransaction } from '../api/updateTransaction';
 // import { deleteTransaction } from '../api/deleteTransaction';
 // import { completeTransaction } from '../api/completeTransaction';
 
 function OrderLookup({ product_listings }) {
-  const [orderId, setOrderId] = useState('');
+  const [orderId, setOrderId] = useState("");
   const [products, setProducts] = useState([]);
   const [quantities, setQuantities] = useState({});
   const [subtotals, setSubtotals] = useState({});
@@ -31,11 +31,11 @@ function OrderLookup({ product_listings }) {
     grandTotal: 0,
   });
 
-  const [currentTransactionID, setCurrentTransactionID] = useState('');
+  const [currentTransactionID, setCurrentTransactionID] = useState("");
   const [showNotification, setShowNotification] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
-  const [paymentMethod, setPaymentMethod] = useState('Cash');
+  const [paymentMethod, setPaymentMethod] = useState("Cash");
 
   /* ---------------------------------- Load product catalog ---------------------------------- */
   useEffect(() => {
@@ -48,13 +48,13 @@ function OrderLookup({ product_listings }) {
         const initialSubtotals = {};
         data.forEach((item) => {
           initialQuantities[item.SKU] = 0;
-          initialSubtotals[item.SKU] = '0.00';
+          initialSubtotals[item.SKU] = "0.00";
         });
 
         setQuantities(initialQuantities);
         setSubtotals(initialSubtotals);
       })
-      .catch((err) => console.error('Error loading products:', err));
+      .catch((err) => console.error("Error loading products:", err));
   }, []);
 
   /* ---------------------------------- Quantity editing ---------------------------------- */
@@ -88,7 +88,7 @@ function OrderLookup({ product_listings }) {
 
   /* ---------------------------------- Lookup transaction ---------------------------------- */
   const handleLookup = async () => {
-    setError('');
+    setError("");
 
     try {
       const data = await getTransaction(orderId);
@@ -110,7 +110,7 @@ function OrderLookup({ product_listings }) {
       recalculateTotals(newQuantities);
     } catch (err) {
       console.error(err);
-      setError('Order not found or failed to load.');
+      setError("Order not found or failed to load.");
     }
   };
 
@@ -133,7 +133,7 @@ function OrderLookup({ product_listings }) {
       setShowNotification(true);
     } catch (err) {
       console.error(err);
-      setError('Failed to update transaction.');
+      setError("Failed to update transaction.");
     }
   };
 
@@ -143,14 +143,14 @@ function OrderLookup({ product_listings }) {
 
     try {
       // await deleteTransaction(currentTransactionID);
-      setCurrentTransactionID('');
+      setCurrentTransactionID("");
       setQuantities({});
       setSubtotals({});
       setTotals({ subtotal: 0, discount: 0, grandTotal: 0 });
       setShowNotification(true);
     } catch (err) {
       console.error(err);
-      setError('Failed to delete transaction.');
+      setError("Failed to delete transaction.");
     }
   };
 
@@ -168,14 +168,20 @@ function OrderLookup({ product_listings }) {
       // Reset state for new order lookup
     } catch (err) {
       console.error(err);
-      setError('Failed to complete order.');
+      setError("Failed to complete order.");
     }
   };
 
   return (
     <Container maxWidth="md">
       {/* Lookup Header */}
-      <Stack direction="row" spacing={2} alignItems="center" justifyContent="right" sx={{ mb: 2 }}>
+      <Stack
+        direction="row"
+        spacing={2}
+        alignItems="center"
+        justifyContent="right"
+        sx={{ mb: 2 }}
+      >
         <TextField
           label="Order ID"
           size="small"
@@ -228,11 +234,11 @@ function OrderLookup({ product_listings }) {
       {/* Receipt */}
       <Receipt totals={totals} transactionId={currentTransactionID} />
 
-      <div style={{ height: '1rem' }} />
+      <div style={{ height: "1rem" }} />
 
       {/* Payment & Complete */}
       {currentTransactionID && (
-        <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box sx={{ mt: 2, display: "flex", alignItems: "center", gap: 2 }}>
           <FormControl size="small" sx={{ minWidth: 150 }}>
             <InputLabel>Payment Method</InputLabel>
             <Select
@@ -257,7 +263,7 @@ function OrderLookup({ product_listings }) {
         </Box>
       )}
 
-      <div style={{ height: '1rem' }} />
+      <div style={{ height: "1rem" }} />
 
       {/* Success Snackbar */}
       <Snackbar

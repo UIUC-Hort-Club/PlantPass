@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 /* =========================
    MUI — layout & utilities
@@ -11,28 +11,28 @@ import {
   IconButton,
   useTheme,
   useMediaQuery,
-} from '@mui/material';
+} from "@mui/material";
 
 /* =========================
    MUI — icons
    ========================= */
-import MenuIcon from '@mui/icons-material/Menu';
-import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
-import PublicIcon from '@mui/icons-material/Public';
+import MenuIcon from "@mui/icons-material/Menu";
+import SupervisorAccountIcon from "@mui/icons-material/SupervisorAccount";
+import PublicIcon from "@mui/icons-material/Public";
 
 /* =========================
    API utilities
    ========================= */
-import { authenticateAdmin } from './api/authentication/passwordAuthentication';
+import { authenticateAdmin } from "./api/authentication/passwordAuthentication";
 
 /* =========================
    Application components
    ========================= */
-import OrderEntry from './components/core/OrderEntry';
-import OrderLookup from './components/core/OrderLookup';
-import AdminConsole from './components/AdminConsole/AdminConsole';
-import AdminPasswordModal from './components/AdminConsole/AdminPasswordModal';
-import NavigationMenu from './components/Navigation/NavigationMenu';
+import OrderEntry from "./components/core/OrderEntry";
+import OrderLookup from "./components/core/OrderLookup";
+import AdminConsole from "./components/AdminConsole/AdminConsole";
+import AdminPasswordModal from "./components/AdminConsole/AdminPasswordModal";
+import NavigationMenu from "./components/Navigation/NavigationMenu";
 
 /* =========================
    Static data sources
@@ -58,7 +58,7 @@ export default function App() {
      Theme / responsiveness
      ========================= */
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   /* =========================
      Navigation & UI state
@@ -72,7 +72,7 @@ export default function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminTabIndex, setAdminTabIndex] = useState(0);
   const [adminModalOpen, setAdminModalOpen] = useState(false);
-  const [adminError, setAdminError] = useState('');
+  const [adminError, setAdminError] = useState("");
 
   /* =========================
      Menu handlers
@@ -96,10 +96,9 @@ export default function App() {
   };
 
   const handleAdminPasswordSubmit = (password) => {
-
     setIsAdmin(true);
     setAdminModalOpen(false);
-    setAdminError('');
+    setAdminError("");
 
     // return authenticateAdmin(password)  // <-- return promise so modal can handle loading state
     //   .then(() => {
@@ -122,13 +121,13 @@ export default function App() {
   return (
     <Box
       sx={{
-        minHeight: '100vh',
-        width: '100%',
+        minHeight: "100vh",
+        width: "100%",
         maxWidth: 800,
-        mx: 'auto',
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: 'white',
+        mx: "auto",
+        display: "flex",
+        flexDirection: "column",
+        backgroundColor: "white",
         py: 2,
       }}
     >
@@ -136,14 +135,14 @@ export default function App() {
           App header
          ========================= */}
       <AppBar position="static" elevation={0} sx={{ mb: 2 }}>
-        <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
+        <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
           {/* Logo + title */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Box
               component="img"
               src="hort_club_logo.png"
               alt="PlantPass Logo"
-              sx={{ height: 32, width: 32, objectFit: 'contain' }}
+              sx={{ height: 32, width: 32, objectFit: "contain" }}
             />
             <Typography variant="h6" fontWeight={600}>
               UIUC Hort Club PlantPass
@@ -151,7 +150,7 @@ export default function App() {
           </Box>
 
           {/* Header actions */}
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
             {!isAdmin ? (
               <IconButton color="inherit" onClick={handleAdminClick}>
                 <SupervisorAccountIcon />
@@ -202,7 +201,7 @@ export default function App() {
         open={adminModalOpen}
         onClose={() => {
           setAdminModalOpen(false);
-          setAdminError('');
+          setAdminError("");
         }}
         onSubmit={handleAdminPasswordSubmit}
         error={adminError}

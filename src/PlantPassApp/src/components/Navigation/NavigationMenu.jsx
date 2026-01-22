@@ -1,16 +1,13 @@
-import React from 'react';
-import { Menu, MenuItem } from '@mui/material';
+import React from "react";
+import { Menu, MenuItem } from "@mui/material";
 
-const USER_MENU = [
-    'Entry',
-    'Lookup'
-];
+const USER_MENU = ["Entry", "Lookup"];
 
 const ADMIN_MENU = [
-    'View Analytics',
-    'Edit Products',
-    'Edit Discounts',
-    'Reset Password',
+  "View Analytics",
+  "Edit Products",
+  "Edit Discounts",
+  "Reset Password",
 ];
 
 export default function NavigationMenu({
@@ -27,8 +24,8 @@ export default function NavigationMenu({
       anchorEl={anchorEl}
       open={open}
       onClose={onClose}
-      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+      anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      transformOrigin={{ vertical: "top", horizontal: "right" }}
     >
       {menuItems.map((label, index) => (
         <MenuItem
