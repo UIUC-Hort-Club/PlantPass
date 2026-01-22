@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -17,18 +17,13 @@ import {
   FilledInput,
   InputAdornment,
   FormHelperText,
-} from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import Visibility from '@mui/icons-material/Visibility';
-import VisibilityOff from '@mui/icons-material/VisibilityOff';
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
-export default function AdminPasswordModal({
-  open,
-  onClose,
-  onSubmit,
-  error,
-}) {
-  const [password, setPassword] = useState('');
+export default function AdminPasswordModal({ open, onClose, onSubmit, error }) {
+  const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   /* ===== Password Visibility Toggle Logic ===== */
@@ -48,10 +43,10 @@ export default function AdminPasswordModal({
   /* =========================================== */
 
   const theme = useTheme();
-  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
+  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
   const handleClose = () => {
-    setPassword('');
+    setPassword("");
     onClose();
   };
 
@@ -60,12 +55,12 @@ export default function AdminPasswordModal({
     setSubmitting(true);
 
     try {
-      await onSubmit(password);     // wait for result
-      setPassword('');              // clear input only if successful
+      await onSubmit(password); // wait for result
+      setPassword(""); // clear input only if successful
     } catch (err) {
       console.error("Admin authentication error:", err);
     } finally {
-      setSubmitting(false);         // hide progress bar after result
+      setSubmitting(false); // hide progress bar after result
     }
   };
 
@@ -82,7 +77,7 @@ export default function AdminPasswordModal({
           Admin Access
           <IconButton
             onClick={handleClose}
-            sx={{ position: 'absolute', right: 8, top: 8 }}
+            sx={{ position: "absolute", right: 8, top: 8 }}
           >
             <CloseIcon />
           </IconButton>
@@ -97,12 +92,14 @@ export default function AdminPasswordModal({
             <InputLabel htmlFor="admin-console-password">Password</InputLabel>
             <FilledInput
               id="admin-console-password"
-              type={showPassword ? 'text' : 'password'}
+              type={showPassword ? "text" : "password"}
               endAdornment={
                 <InputAdornment position="end">
                   <IconButton
                     aria-label={
-                      showPassword ? 'hide the password' : 'display the password'
+                      showPassword
+                        ? "hide the password"
+                        : "display the password"
                     }
                     onClick={handleClickShowPassword}
                     onMouseDown={handleMouseDownPassword}
@@ -113,14 +110,14 @@ export default function AdminPasswordModal({
                   </IconButton>
                 </InputAdornment>
               }
-              size='small'
+              size="small"
               value={password}
               helperText={error}
               onChange={(e) => setPassword(e.target.value)}
               disabled={submitting}
             />
             <FormHelperText error={Boolean(error)}>
-              {error || ' '}
+              {error || " "}
             </FormHelperText>
           </FormControl>
         </DialogContent>
@@ -134,11 +131,7 @@ export default function AdminPasswordModal({
             Cancel
           </Button>
 
-          <Button
-            type="submit"
-            variant="contained"
-            disabled={submitting}
-          >
+          <Button type="submit" variant="contained" disabled={submitting}>
             Enter
           </Button>
         </DialogActions>

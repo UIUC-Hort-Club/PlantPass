@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -9,17 +9,23 @@ import {
   Box,
   Snackbar,
   Alert,
-} from '@mui/material';
-import { Html5Qrcode } from 'html5-qrcode';
-import SearchOffIcon from '@mui/icons-material/SearchOff';
-import SavedSearchIcon from '@mui/icons-material/SavedSearch';
-import { v4 as uuidv4 } from 'uuid';
+} from "@mui/material";
+import { Html5Qrcode } from "html5-qrcode";
+import SearchOffIcon from "@mui/icons-material/SearchOff";
+import SavedSearchIcon from "@mui/icons-material/SavedSearch";
+import { v4 as uuidv4 } from "uuid";
 
-export default function Scanner({ opened, onClose, onScan, products, getQuantity }) {
+export default function Scanner({
+  opened,
+  onClose,
+  onScan,
+  products,
+  getQuantity,
+}) {
   const [matchedProduct, setMatchedProduct] = useState(null);
   const [cameras, setCameras] = useState([]);
   const [selectedCamera, setSelectedCamera] = useState(null);
-  
+
   const [snackbars, setSnackbars] = useState([]);
   const [foundSKUs, setFoundSKUs] = useState(new Set());
 
@@ -35,11 +41,11 @@ export default function Scanner({ opened, onClose, onScan, products, getQuantity
       .then((devices) => {
         setCameras(devices);
         const backCam =
-          devices.find((d) => d.label.toLowerCase().includes('back'))?.id ||
+          devices.find((d) => d.label.toLowerCase().includes("back"))?.id ||
           devices[0]?.id;
         setSelectedCamera(backCam);
       })
-      .catch((err) => console.error('Camera fetch error:', err));
+      .catch((err) => console.error("Camera fetch error:", err));
   }, [opened]);
 
   // ----------------------------------------------------
@@ -48,7 +54,7 @@ export default function Scanner({ opened, onClose, onScan, products, getQuantity
   useEffect(() => {
     if (!opened || !selectedCamera || !scannerContainerRef.current) return;
 
-    const containerId = 'scanner-container';
+    const containerId = "scanner-container";
     const qr = new Html5Qrcode(containerId);
 
     qr.start(
@@ -64,22 +70,29 @@ export default function Scanner({ opened, onClose, onScan, products, getQuantity
           if (!foundSKUs.has(product.SKU)) {
             setSnackbars((prev) => [
               ...prev,
-              { id: uuidv4(), message: `Found (${product.SKU}) ${product.Item}`, severity: 'success' },
+              {
+                id: uuidv4(),
+                message: `Found (${product.SKU}) ${product.Item}`,
+                severity: "success",
+              },
             ]);
             setFoundSKUs((prev) => new Set(prev).add(product.SKU));
           }
-
         } else {
           setMatchedProduct(null);
           // Show Not Found message always
           setSnackbars((prev) => [
             ...prev,
-            { id: uuidv4(), message: `SKU: ${decodedText} Not Found`, severity: 'warning' },
+            {
+              id: uuidv4(),
+              message: `SKU: ${decodedText} Not Found`,
+              severity: "warning",
+            },
           ]);
         }
       },
-      (err) => console.log('scan error', err)
-    ).catch((err) => console.error('start error', err));
+      (err) => console.log("scan error", err),
+    ).catch((err) => console.error("start error", err));
 
     scannerInstanceRef.current = qr;
 
@@ -107,7 +120,7 @@ export default function Scanner({ opened, onClose, onScan, products, getQuantity
 
     // Compute what the new quantity will be
     const newQuantity = (getQuantity(matchedProduct.SKU) || 0) + 1;
-    
+
     // Call parent callback to update state
     onScan(matchedProduct);
 
@@ -117,7 +130,7 @@ export default function Scanner({ opened, onClose, onScan, products, getQuantity
       {
         id: uuidv4(),
         message: `Added Item: ${matchedProduct.Item} (Qty: ${newQuantity})`,
-        severity: 'info',
+        severity: "info",
       },
     ]);
   };
@@ -128,31 +141,43 @@ export default function Scanner({ opened, onClose, onScan, products, getQuantity
 
   return (
     <>
-      <Dialog open={opened} onClose={onClose} fullWidth maxWidth="sm" keepMounted>
+      <Dialog
+        open={opened}
+        onClose={onClose}
+        fullWidth
+        maxWidth="sm"
+        keepMounted
+      >
         {/* Dialog Title Bar */}
         <DialogTitle>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
             <Typography variant="h6">Scan Item</Typography>
             {!matchedProduct ? (
-              <SearchOffIcon sx={{ color: 'text.disabled', fontSize: 28 }} />
+              <SearchOffIcon sx={{ color: "text.disabled", fontSize: 28 }} />
             ) : (
-              <SavedSearchIcon sx={{ color: 'green', fontSize: 28 }} />
+              <SavedSearchIcon sx={{ color: "green", fontSize: 28 }} />
             )}
           </Box>
         </DialogTitle>
 
-        <DialogContent style={{ overflow: 'hidden' }}>
+        <DialogContent style={{ overflow: "hidden" }}>
           {/* Camera Toggle */}
           {cameras.length > 1 && (
             <Box sx={{ mb: 2 }}>
               <select
-                value={selectedCamera || ''}
+                value={selectedCamera || ""}
                 onChange={(e) => setSelectedCamera(e.target.value)}
                 style={{
-                  width: '100%',
-                  padding: '8px',
-                  borderRadius: '6px',
-                  fontSize: '1rem',
+                  width: "100%",
+                  padding: "8px",
+                  borderRadius: "6px",
+                  fontSize: "1rem",
                 }}
               >
                 {cameras.map((cam) => (
@@ -169,16 +194,19 @@ export default function Scanner({ opened, onClose, onScan, products, getQuantity
             id="scanner-container"
             ref={scannerContainerRef}
             sx={{
-              width: '100%',
-              height: '60%',
+              width: "100%",
+              height: "60%",
             }}
           />
 
           {/* Display matched item */}
           {matchedProduct && (
-            <Box sx={{ mt: 2, textAlign: 'center' }}>
+            <Box sx={{ mt: 2, textAlign: "center" }}>
               <Typography variant="body1">
-                Item: <strong>{matchedProduct.Item} ({matchedProduct.SKU})</strong>
+                Item:{" "}
+                <strong>
+                  {matchedProduct.Item} ({matchedProduct.SKU})
+                </strong>
               </Typography>
             </Box>
           )}
@@ -208,13 +236,13 @@ export default function Scanner({ opened, onClose, onScan, products, getQuantity
           open
           autoHideDuration={4000}
           onClose={() => handleCloseSnackbar(s.id)}
-          anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
+          anchorOrigin={{ vertical: "top", horizontal: "left" }}
           sx={{ mb: `${index * 56}px` }} // stack each snackbar
         >
           <Alert
             onClose={() => handleCloseSnackbar(s.id)}
             severity={s.severity}
-            sx={{ width: '100%' }}
+            sx={{ width: "100%" }}
           >
             {s.message}
           </Alert>

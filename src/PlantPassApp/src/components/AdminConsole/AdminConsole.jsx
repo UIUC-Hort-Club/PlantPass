@@ -1,10 +1,10 @@
-import React from 'react';
-import { Box, Typography, Paper } from '@mui/material';
-import Divider from '@mui/material/Divider';
-import SalesAnalytics from './SalesAnalytics';
-import ResetPassword from './ResetPassword';
-import EditProducts from './EditProducts';
-import EditDiscounts from './EditDiscounts';
+import React from "react";
+import { Box, Typography, Paper } from "@mui/material";
+import Divider from "@mui/material/Divider";
+import SalesAnalytics from "./SalesAnalytics";
+import ResetPassword from "./ResetPassword";
+import EditProducts from "./EditProducts";
+import EditDiscounts from "./EditDiscounts";
 
 function AdminTabPanel({ value, index, children }) {
   return value === index ? <Box sx={{ mt: 2 }}>{children}</Box> : null;
@@ -19,7 +19,8 @@ export default function AdminConsole({ tabIndex }) {
         </Typography>
 
         <Typography variant="body2" color="text.secondary" gutterBottom>
-          Welcome, Oh Great One.You are now in the admin console and have elevated privileges!
+          Welcome, Oh Great One.You are now in the admin console and have
+          elevated privileges!
         </Typography>
 
         <Divider sx={{ my: 2 }} />

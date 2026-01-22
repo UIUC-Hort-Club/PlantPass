@@ -43,9 +43,12 @@ export async function changePassword(oldPassword, newPassword) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
+      body: JSON.stringify({
+        old_password: oldPassword,
+        new_password: newPassword,
+      }),
     });
 
     const data = await response.json();

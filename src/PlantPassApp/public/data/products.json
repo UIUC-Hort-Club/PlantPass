@@ -2,7 +2,7 @@
   {
     "SKU": "PP001",
     "Item": "Purple Coneflower",
-    "Price": 4.50
+    "Price": 4.5
   },
   {
     "SKU": "PP002",
@@ -17,12 +17,12 @@
   {
     "SKU": "PP004",
     "Item": "Bee Balm",
-    "Price": 4.00
+    "Price": 4.0
   },
   {
     "SKU": "PP005",
     "Item": "Hosta",
-    "Price": 6.00
+    "Price": 6.0
   },
   {
     "SKU": "PP006",
@@ -32,7 +32,7 @@
   {
     "SKU": "PP007",
     "Item": "Sedum",
-    "Price": 3.50
+    "Price": 3.5
   },
   {
     "SKU": "PP008",
