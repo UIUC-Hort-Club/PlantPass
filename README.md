@@ -1,30 +1,34 @@
-# PlantPass; UIUC Horticulture Club
+<img src="/src/PlantPassApp/public/plantpass_logo_transp.png" alt="PlantPass Banner" />
 
 ## Todo for MVP
+
 - Backend Database
-    - Purchase Transactions (CRUD): Should have all data related to a transaction
-    - Discounts (CRUD): Should have discount name and percent off - See lambda handler
-    - Products (CRUD): Should have the product name, SKU, and price - See lambda handler
+  - Purchase Transactions (CRUD): Should have all data related to a transaction
+  - Discounts (CRUD): Should have discount name and percent off - See lambda handler
+  - Products (CRUD): Should have the product name, SKU, and price - See lambda handler
 
 - Backend Functions
-    - Transactions will come in as just items+quantities and club voucher. Backend logic should compute discount and create database entry. (Should log the discount and product data used as it maybe subject to change during the event) (IN PROGRESS)
-    - Query analytics data from the purchases table (See /transaction/sales-analytics endpoint)
-    - Endpoint to generate a .csv of all transactions (BACKLOG)
+  - Transactions will come in as just items+quantities and club voucher. Backend logic should compute discount and create database entry. (Should log the discount and product data used as it maybe subject to change during the event) (IN PROGRESS)
+  - Query analytics data from the purchases table (See /transaction/sales-analytics endpoint)
+  - Endpoint to generate a .csv of all transactions (BACKLOG)
 
 - Frontend (May need backend functionality)
-    - Implement discount and product modifications (IN PROGRESS)
-    - Admin password change (DONE)
-    - Admin reset password ("I forgot my password") (WIP)
-    - Email receipt (BACKLOG)
-    - Generate QR codes for scanning feature (Download pdf) (BACKLOG)
+  - Implement discount and product modifications (IN PROGRESS)
+  - Admin password change (DONE)
+  - Admin reset password ("I forgot my password") (WIP)
+  - Email receipt (BACKLOG)
+  - Generate QR codes for scanning feature (Download pdf) (BACKLOG)
 
 ### API Endpoints to Implement
+
 Admin Password - Allows management of admin authentication
+
 - `POST /admin/login`
 - `POST /admin/change-password`
 - `POST /admin/reset-password`
 
 Transaction Handler - Allows management of the transactions/purchases database
+
 - `POST /transactions`: Create a transaction – Creates a new purchase record in the database using the provided Transaction Schema.
 - `GET /transactions/{purchase_id}`: Read a transaction – Retrieves a transaction record associated with the given purchase_id.
 - `PUT /transactions/{purchase_id}`: Update a transaction – Replaces an existing transaction with the data provided in the request body. The purchase_id in the path identifies the record to update.
@@ -33,9 +37,11 @@ Transaction Handler - Allows management of the transactions/purchases database
 - `GET /transactions/export-data`: Gets a .csv file of the transactions data
 
 Products Handler - Allows management of the products database
+
 - `GET /products` – Get all products
-Description: Retrieves the full list of products to display at the cashier.
-Response Example:
+  Description: Retrieves the full list of products to display at the cashier.
+  Response Example:
+
 ```
 [
   {
@@ -50,14 +56,17 @@ Response Example:
   }
 ]
 ```
+
 - `POST /products` – Create a product
 - `PUT /products/{SKU}` – Update a product
 - `DELETE /products/{SKU}` – Delete a product
 
 Discounts Handler - Allows management of the discounts database
+
 - `GET /discounts` – Get all discounts
-Description: Retrieves the full list of active discounts for the cashier display.
-Response Example:
+  Description: Retrieves the full list of active discounts for the cashier display.
+  Response Example:
+
 ```
 [
   {
@@ -70,11 +79,13 @@ Response Example:
   }
 ]
 ```
+
 - `POST /discounts` – Create a discount
 - `PUT /discounts/{name}` – Update a discount
 - `DELETE /discounts/{name}` – Delete a discount
 
 ### Transaction SCHEMA
+
 ```
 {
     "payment": {
@@ -108,5 +119,6 @@ Response Example:
 ```
 
 ### Password authentication (wip)
+
 Admins may change the password at will, but if the password is forgotten, this may be used to reset it.
 Override Password (for reset): `uiuchortclub2026springplantfair`
