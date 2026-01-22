@@ -26,16 +26,20 @@ function OrderEntry({ product_listings }) {
     discount: 0,
     grandTotal: 0,
   });
-  const [voucher, setVoucher] = useState(0);
+  const [voucher, setVoucher] = useState("");
   const [showNotification, setShowNotification] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [currentTransactionID, setCurrentTransactionID] = useState("");
   const [transactionIDDialogOpen, setTransactionIDDialogOpen] = useState(false);
 
+  // Compute subtotal safely
+  const computedSubtotal = Object.values(subtotals)
+    .reduce((sum, val) => sum + (parseFloat(val) || 0), 0)
+    .toFixed(2);
+
   const handleScan = (scannedProduct) => {
     if (scannedProduct) {
       const sku = scannedProduct.SKU;
-
       const newQuantity = (quantities[sku] || 0) + 1;
 
       setQuantities((prev) => ({
@@ -55,14 +59,13 @@ function OrderEntry({ product_listings }) {
   };
 
   const getQuantity = (sku) => {
-    return quantities[sku] || 0; // return 0 if SKU not found
+    return quantities[sku] || 0;
   };
 
   const handleNewOrder = () => {
     window.location.reload();
   };
 
-  // @Todo: Fetch the product listings from the backend instead of loading from a local JSON file, and handle errors if fetch fails (e.g. show error message and disable order entry)
   useEffect(() => {
     fetch(product_listings)
       .then((res) => res.json())
@@ -71,22 +74,35 @@ function OrderEntry({ product_listings }) {
         const initialQuantities = {};
         const initialSubtotals = {};
         data.forEach((item) => {
-          initialQuantities[item.SKU] = 0;
+          initialQuantities[item.SKU] = "";
           initialSubtotals[item.SKU] = "0.00";
         });
         setQuantities(initialQuantities);
         setSubtotals(initialSubtotals);
-        setVoucher(0);
+        setVoucher("");
       })
       .catch((err) => console.error("Error loading stock.json:", err));
   }, []);
 
   const handleQuantityChange = (e, sku) => {
+    const value = e.target.value;
     const item = products.find((i) => i.SKU === sku);
-    const numericValue = parseFloat(e.target.value) || 0;
-    const subtotal = (numericValue * item.Price).toFixed(2);
+
+    // Allow empty input
+    if (value === "") {
+      setQuantities((prev) => ({ ...prev, [sku]: "" }));
+      setSubtotals((prev) => ({ ...prev, [sku]: "0.00" }));
+      return;
+    }
+
+    const numericValue = parseFloat(value);
 
     setQuantities((prev) => ({ ...prev, [sku]: numericValue }));
+
+    const subtotal = isNaN(numericValue)
+      ? "0.00"
+      : (numericValue * item.Price).toFixed(2);
+
     setSubtotals((prev) => ({ ...prev, [sku]: subtotal }));
   };
 
@@ -98,11 +114,11 @@ function OrderEntry({ product_listings }) {
         return {
           SKU: sku,
           item: product.Name,
-          quantity: quantity,
+          quantity: Number(quantity) || 0,
           price_ea: product.Price,
         };
       }),
-      voucher: voucher,
+      voucher: Number(voucher) || 0,
     };
 
     createTransaction(transaction)
@@ -125,7 +141,6 @@ function OrderEntry({ product_listings }) {
 
   return (
     <Container maxWidth="md">
-      {/* Items Table Component */}
       <ItemsTable
         stockItems={products}
         quantities={quantities}
@@ -151,15 +166,19 @@ function OrderEntry({ product_listings }) {
           <Stack direction="row" spacing={1} alignItems="center">
             <TextField
               label="Voucher"
-              type="number"
+              type="text"
               size="small"
               value={voucher}
-              onChange={(e) =>
-                setVoucher(Math.max(0, Math.floor(Number(e.target.value) || 0)))
-              }
-              inputProps={{
-                min: 0,
-                step: 1,
+              onChange={(e) => {
+                const value = e.target.value;
+
+                if (value === "") {
+                  setVoucher("");
+                  return;
+                }
+
+                const numeric = Math.max(0, Math.floor(Number(value)));
+                setVoucher(numeric);
               }}
               InputProps={{
                 startAdornment: (
@@ -169,6 +188,21 @@ function OrderEntry({ product_listings }) {
                 ),
               }}
               sx={{ width: 120 }}
+            />
+
+            <TextField
+              label="Subtotal"
+              size="small"
+              value={computedSubtotal}
+              InputProps={{
+                readOnly: true,
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Typography fontWeight={700}>$</Typography>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ width: 140 }}
             />
 
             <Button
@@ -183,18 +217,11 @@ function OrderEntry({ product_listings }) {
         </Stack>
       </Box>
 
-      {/* Receipt Component */}
-
       {currentTransactionID && (
         <>
           <Receipt totals={totals} transactionId={currentTransactionID} />
 
-          <Stack
-            direction="row"
-            justifyContent="flex-end"
-            alignItems="center"
-            sx={{ mt: 2 }}
-          >
+          <Stack direction="row" justifyContent="flex-end" sx={{ mt: 2 }}>
             <Button
               variant="contained"
               color="success"
@@ -209,7 +236,6 @@ function OrderEntry({ product_listings }) {
 
       <div style={{ height: "1rem" }} />
 
-      {/* Snackbar Alert Component */}
       <Snackbar
         open={showNotification}
         autoHideDuration={4000}
@@ -220,7 +246,6 @@ function OrderEntry({ product_listings }) {
         </Alert>
       </Snackbar>
 
-      {/* Scanner Component */}
       <Scanner
         opened={scannerOpen}
         onClose={() => setScannerOpen(false)}
@@ -229,7 +254,6 @@ function OrderEntry({ product_listings }) {
         getQuantity={getQuantity}
       />
 
-      {/* Show Transaction ID Dialog */}
       <ShowTransactionID
         open={transactionIDDialogOpen}
         onClose={() => setTransactionIDDialogOpen(false)}
