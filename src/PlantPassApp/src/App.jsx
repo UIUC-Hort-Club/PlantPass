@@ -140,13 +140,15 @@ export default function App() {
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Box
               component="img"
-              src="hort_club_logo.png"
+              src="plantpass_logo_transp.png"
               alt="PlantPass Logo"
-              sx={{ height: 32, width: 32, objectFit: "contain" }}
+              sx={{
+                height: "100%",
+                maxHeight: 56,
+                width: "auto",
+                objectFit: "contain",
+              }}
             />
-            <Typography variant="h6" fontWeight={600}>
-              UIUC Hort Club PlantPass
-            </Typography>
           </Box>
 
           {/* Header actions */}
