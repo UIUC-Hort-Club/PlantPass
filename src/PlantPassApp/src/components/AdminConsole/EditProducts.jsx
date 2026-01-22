@@ -65,20 +65,19 @@ export default function ProductTable() {
           <Button
             variant="outlined"
             size="small"
-            color="error"
-            onClick={handleClear}
             sx={{
-              backgroundColor: "transparent !important",
-              borderColor: "#d32f2f !important",
-              color: "#d32f2f !important",
-              fontWeight: 600,
-              textTransform: "none",
+              fontWeight: 200,
+              color: "error.dark",
+              borderColor: "error.light",
+              backgroundColor: "rgba(211, 47, 47, 0.08)",
+              borderWidth: 2,
               "&:hover": {
-                backgroundColor: "rgba(211, 47, 47, 0.12) !important",
-                borderColor: "#b71c1c !important",
-                color: "#b71c1c !important",
+                backgroundColor: "error.main",
+                color: "white",
+                borderColor: "error.main",
               },
             }}
+            onClick={handleClear}
           >
             Clear
           </Button>
