@@ -25,7 +25,7 @@ export async function updateTransaction(transactionId, updateData) {
     }
 
     const data = await response.json();
-    return data.transaction; // Updated transaction
+    return data.transaction;
   } catch (err) {
     console.error("Error updating transaction:", err);
     throw err;

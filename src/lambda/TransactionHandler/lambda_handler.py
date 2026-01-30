@@ -6,10 +6,10 @@ from database_interface import (
     read_transaction,
     update_transaction,
     delete_transaction,
-    compute_sales_analytics
+    compute_sales_analytics,
+    clear_all_transactions
 )
 
-# Configure logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
@@ -23,7 +23,6 @@ def lambda_handler(event, context):
 
         logger.info(f"Route: {route_key}, Path params: {path_params}, Body: {body}")
 
-        # ---- Create transaction ----
         if route_key == "POST /transactions":
             try:
                 transaction = create_transaction(body)
@@ -33,7 +32,6 @@ def lambda_handler(event, context):
                 logger.error(f"Error saving transaction: {e}", exc_info=True)
                 return response(500, {"message": "Error saving transaction", "error": str(e)})
 
-        # ---- Read transaction ----
         elif route_key == "GET /transactions/{purchase_id}":
             purchase_id = path_params.get("purchase_id")
             if not purchase_id:
@@ -47,7 +45,6 @@ def lambda_handler(event, context):
             logger.info(f"Transaction retrieved: {transaction}")
             return response(200, transaction)
 
-        # ---- Update transaction ----
         elif route_key == "PUT /transactions/{purchase_id}":
             purchase_id = path_params.get("purchase_id")
             if not purchase_id:
@@ -57,7 +54,6 @@ def lambda_handler(event, context):
             logger.info(f"Transaction updated: {updated_transaction}")
             return response(200, {"transaction": updated_transaction})
 
-        # ---- Delete transaction ----
         elif route_key == "DELETE /transactions/{purchase_id}":
             purchase_id = path_params.get("purchase_id")
             if not purchase_id:
@@ -67,19 +63,21 @@ def lambda_handler(event, context):
             logger.info(f"Transaction deleted: {purchase_id}")
             return response(204, {})  # 204 No Content
         
-        # ---- Sales Analytics ----
         elif route_key == "GET /transactions/sales-analytics":
             analytics = compute_sales_analytics()
             logger.info(f"Analytics computed: {analytics}")
             return response(200, analytics)
 
-        # ---- Export Data ----
         elif route_key == "GET /transactions/export-data":
             export_data = export_transaction_data()
             logger.info(f"Export data retrieved: {len(export_data)} records")
             return response(200, {"export_data": export_data})
 
-        # ---- Unknown route ----
+        elif route_key == "DELETE /transactions/clear-all":
+            cleared_count = clear_all_transactions()
+            logger.info(f"Cleared {cleared_count} transactions")
+            return response(200, {"message": f"Successfully cleared {cleared_count} transactions", "cleared_count": cleared_count})
+
         else:
             logger.warning(f"Unknown route: {route_key}")
             return response(404, {"message": "Route not found"})

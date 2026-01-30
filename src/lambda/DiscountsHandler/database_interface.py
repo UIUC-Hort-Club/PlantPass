@@ -4,11 +4,9 @@ import os
 from botocore.exceptions import ClientError
 from decimal import Decimal
 
-# Configure logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-# Initialize DynamoDB resource
 dynamodb = boto3.resource('dynamodb')
 table_name = os.environ.get('DISCOUNTS_TABLE', 'discounts')
 table = dynamodb.Table(table_name)
@@ -19,21 +17,16 @@ def get_all_discounts():
         response = table.scan()
         discounts = response.get('Items', [])
         
-        # Convert all Decimal objects to appropriate types for JSON serialization
         for discount in discounts:
-            # Convert percent_off from Decimal to float
             if 'percent_off' in discount and isinstance(discount['percent_off'], Decimal):
                 discount['percent_off'] = float(discount['percent_off'])
             
-            # Convert value_off from Decimal to float
             if 'value_off' in discount and isinstance(discount['value_off'], Decimal):
                 discount['value_off'] = float(discount['value_off'])
             
-            # Convert sort_order from Decimal to int
             if 'sort_order' in discount and isinstance(discount['sort_order'], Decimal):
                 discount['sort_order'] = int(discount['sort_order'])
         
-        # Sort by sort_order
         discounts.sort(key=lambda x: x.get('sort_order', 0))
         
         logger.info(f"Retrieved {len(discounts)} discounts from database")
@@ -55,26 +48,21 @@ def replace_all_discounts(discounts_data):
     - sort_order: int
     """
     try:
-        # First, get all existing discounts to delete them
         existing_discounts = get_all_discounts()
         
-        # Delete all existing discounts
         with table.batch_writer() as batch:
             for discount in existing_discounts:
                 batch.delete_item(Key={'name': discount['name']})
         
         logger.info(f"Deleted {len(existing_discounts)} existing discounts")
         
-        # Create new discounts
         created_count = 0
         with table.batch_writer() as batch:
             for discount_data in discounts_data:
-                # Validate required fields
                 if 'name' not in discount_data or 'type' not in discount_data:
                     logger.warning(f"Skipping invalid discount data: {discount_data}")
                     continue
                 
-                # Validate discount type
                 if discount_data['type'] not in ['percent', 'dollar']:
                     logger.warning(f"Skipping discount with invalid type: {discount_data}")
                     continue

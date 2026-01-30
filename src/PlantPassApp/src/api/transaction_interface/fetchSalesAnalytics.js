@@ -20,7 +20,7 @@ export async function fetchSalesAnalytics() {
     }
 
     const analytics = await response.json();
-    return analytics; // Full analytics object
+    return analytics;
   } catch (err) {
     console.error("Error fetching sales analytics:", err);
     throw err;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -12,9 +12,6 @@ import {
   Button,
   Stack,
   Typography,
-  Snackbar,
-  Alert,
-  CircularProgress,
   Box,
   ToggleButton,
   ToggleButtonGroup,
@@ -26,16 +23,20 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { getAllDiscounts } from "../../api/discounts_interface/getAllDiscounts";
 import { replaceAllDiscounts } from "../../api/discounts_interface/replaceAllDiscounts";
+import { useNotification } from "../../contexts/NotificationContext";
+import { formatPriceInput, formatPriceDisplay, handlePriceBlur } from "../../utils/priceFormatter";
+import { formatPercentInput, formatPercentDisplay, handlePercentBlur } from "../../utils/percentFormatter";
+import LoadingSpinner from "../common/LoadingSpinner";
 
 export default function DiscountTable() {
+  const { showSuccess, showError, showInfo } = useNotification();
+  
   const [rows, setRows] = useState([]);
   const [originalRows, setOriginalRows] = useState([]);
-  const [deletedRows, setDeletedRows] = useState([]); // Track deleted items
+  const [deletedRows, setDeletedRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [notification, setNotification] = useState({ open: false, message: "", severity: "success" });
 
-  // Load discounts from API on component mount
   useEffect(() => {
     loadDiscounts();
   }, []);
@@ -56,17 +57,23 @@ export default function DiscountTable() {
       }));
       setRows(formattedRows);
       setOriginalRows(JSON.parse(JSON.stringify(formattedRows)));
-      setDeletedRows([]); // Clear deleted rows when loading fresh data
+      setDeletedRows([]);
     } catch (error) {
       console.error("Error loading discounts:", error);
-      showNotification("Error loading discounts", "error");
+      showError("Error loading discounts");
     } finally {
       setLoading(false);
     }
   };
 
   const showNotification = (message, severity = "success") => {
-    setNotification({ open: true, message, severity });
+    if (severity === "success") {
+      showSuccess(message);
+    } else if (severity === "error") {
+      showError(message);
+    } else {
+      showInfo(message);
+    }
   };
 
   const handleAddRow = () => {
@@ -87,119 +94,47 @@ export default function DiscountTable() {
     const row = rows.find(r => r.id === id);
     
     if (row.isNew) {
-      // Just remove from UI if it's a new row (never saved to database)
       setRows(rows.filter((r) => r.id !== id));
     } else {
-      // Mark existing row for deletion and remove from UI
       setDeletedRows(prev => [...prev, row]);
       setRows(rows.filter((r) => r.id !== id));
     }
   };
 
   const handleEdit = (id, field, value) => {
-    if (field === 'percent' || field === 'value') {
-      // Handle value formatting for both percent and dollar amounts
-      const formattedValue = field === 'percent' ? formatPercentInput(value) : formatValueInput(value);
+    if (field === 'percent') {
+      const formattedValue = formatPercentInput(value);
+      setRows(rows.map((r) => (r.id === id ? { ...r, [field]: formattedValue } : r)));
+    } else if (field === 'value') {
+      const formattedValue = formatPriceInput(value);
       setRows(rows.map((r) => (r.id === id ? { ...r, [field]: formattedValue } : r)));
     } else {
       setRows(rows.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
     }
   };
 
-  const formatValueInput = (value) => {
-    // Remove any non-digit and non-decimal characters
-    let cleaned = value.replace(/[^\d.]/g, '');
-    
-    // Ensure only one decimal point
-    const parts = cleaned.split('.');
-    if (parts.length > 2) {
-      cleaned = parts[0] + '.' + parts.slice(1).join('');
-    }
-    
-    // Limit to 2 decimal places
-    if (parts.length === 2 && parts[1].length > 2) {
-      cleaned = parts[0] + '.' + parts[1].substring(0, 2);
-    }
-    
-    // Convert to number and back to ensure valid format
-    const numValue = parseFloat(cleaned);
-    if (isNaN(numValue)) {
-      return '';
-    }
-    
-    // Return the cleaned string
-    return cleaned;
-  };
-
-  const formatValueDisplay = (value) => {
-    // Format for display with 2 decimal places
-    const numValue = parseFloat(value);
-    if (isNaN(numValue)) return '0.00';
-    return numValue.toFixed(2);
-  };
-
-  const handleValueBlur = (id) => {
+  const handleValueBlurEvent = (id) => {
     const row = rows.find(r => r.id === id);
     if (!row) return;
     
-    // Format to 2 decimal places on blur
-    const formattedValue = formatValueDisplay(row.value);
+    const formattedValue = handlePriceBlur(row.value);
     setRows(rows.map((r) => (r.id === id ? { ...r, value: formattedValue } : r)));
   };
 
-  const formatPercentInput = (value) => {
-    // Remove any non-digit and non-decimal characters
-    let cleaned = value.replace(/[^\d.]/g, '');
-    
-    // Ensure only one decimal point
-    const parts = cleaned.split('.');
-    if (parts.length > 2) {
-      cleaned = parts[0] + '.' + parts.slice(1).join('');
-    }
-    
-    // Limit to 2 decimal places
-    if (parts.length === 2 && parts[1].length > 2) {
-      cleaned = parts[0] + '.' + parts[1].substring(0, 2);
-    }
-    
-    // Convert to number and back to ensure valid format
-    const numValue = parseFloat(cleaned);
-    if (isNaN(numValue)) {
-      return '';
-    }
-    
-    // Limit to reasonable percentage (0-100)
-    if (numValue > 100) {
-      return '100';
-    }
-    
-    // Return the cleaned string
-    return cleaned;
-  };
-
-  const formatPercentDisplay = (percent) => {
-    // Format for display with up to 2 decimal places (remove trailing zeros)
-    const numPercent = parseFloat(percent);
-    if (isNaN(numPercent)) return '0';
-    return numPercent.toString();
-  };
-
-  const handlePercentBlur = (id) => {
+  const handlePercentBlurEvent = (id) => {
     const row = rows.find(r => r.id === id);
     if (!row) return;
     
-    // Format on blur
-    const formattedPercent = formatPercentDisplay(row.percent);
+    const formattedPercent = handlePercentBlur(row.percent);
     setRows(rows.map((r) => (r.id === id ? { ...r, percent: formattedPercent } : r)));
   };
 
   const handleReset = () => {
     setRows(JSON.parse(JSON.stringify(originalRows)));
-    setDeletedRows([]); // Clear deleted rows on reset
+    setDeletedRows([]);
   };
 
   const handleClear = () => {
-    // Mark all existing rows for deletion, keep only new unsaved rows
     const existingRows = rows.filter(row => !row.isNew);
     setDeletedRows(prev => [...prev, ...existingRows]);
     setRows(rows.filter(row => row.isNew));
@@ -212,7 +147,6 @@ export default function DiscountTable() {
     const [moved] = updated.splice(result.source.index, 1);
     updated.splice(result.destination.index, 0, moved);
 
-    // Update sort orders based on new positions
     const reorderedRows = updated.map((row, index) => ({
       ...row,
       sortOrder: index + 1
@@ -221,12 +155,9 @@ export default function DiscountTable() {
     setRows(reorderedRows);
   };
 
-  // Check if there are changes to save
   const hasChanges = () => {
-    // Check if there are deleted rows
     if (deletedRows.length > 0) return true;
     
-    // Check if row count changed (excluding deleted rows)
     if (rows.length !== originalRows.length) return true;
     
     return rows.some(row => {
@@ -251,7 +182,6 @@ export default function DiscountTable() {
 
     setSaving(true);
     try {
-      // Filter out empty rows and prepare data for bulk replace
       const validDiscounts = rows
         .filter(row => row.name && row.name.trim() !== '')
         .map(row => ({
@@ -262,10 +192,8 @@ export default function DiscountTable() {
           sort_order: row.sortOrder
         }));
 
-      // Replace all discounts in database
       await replaceAllDiscounts(validDiscounts);
 
-      // Reload data to get fresh state
       await loadDiscounts();
       showNotification(`Discounts saved successfully (${validDiscounts.length} discounts)`);
     } catch (error) {
@@ -279,19 +207,7 @@ export default function DiscountTable() {
   if (loading) {
     return (
       <Paper sx={{ p: 2 }}>
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            minHeight: '200px',
-            gap: 2
-          }}
-        >
-          <CircularProgress />
-          <Typography>Loading discounts...</Typography>
-        </Box>
+        <LoadingSpinner message="Loading discounts..." />
       </Paper>
     );
   }
@@ -456,9 +372,9 @@ export default function DiscountTable() {
                               }
                               onBlur={() => {
                                 if (row.type === 'percent') {
-                                  handlePercentBlur(row.id);
+                                  handlePercentBlurEvent(row.id);
                                 } else {
-                                  handleValueBlur(row.id);
+                                  handleValueBlurEvent(row.id);
                                 }
                               }}
                               inputProps={{
@@ -503,19 +419,6 @@ export default function DiscountTable() {
           {saving ? "Saving..." : "Save"}
         </Button>
       </Stack>
-
-      <Snackbar
-        open={notification.open}
-        autoHideDuration={4000}
-        onClose={() => setNotification({ ...notification, open: false })}
-      >
-        <Alert 
-          severity={notification.severity} 
-          onClose={() => setNotification({ ...notification, open: false })}
-        >
-          {notification.message}
-        </Alert>
-      </Snackbar>
     </Paper>
   );
 }

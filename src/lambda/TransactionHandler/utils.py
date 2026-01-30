@@ -1,5 +1,8 @@
 import random
 import string
+import os
+import boto3
+from botocore.exceptions import ClientError
 
 def generate_random_id():
     """Generates a random 3 letter - 3 letter id like AAA-AAA"""
@@ -10,4 +13,15 @@ def generate_random_id():
 
 def validate_transaction_id(transaction_id):
     """Validates that the transaction ID does not exist in the database"""
-    return True
+    try:
+        dynamodb = boto3.resource('dynamodb')
+        table = dynamodb.Table(os.environ.get('TRANSACTIONS_TABLE', 'transactions'))
+        
+        response = table.get_item(Key={'purchase_id': transaction_id})
+        
+        return 'Item' not in response
+        
+    except ClientError:
+        return False
+    except Exception:
+        return False

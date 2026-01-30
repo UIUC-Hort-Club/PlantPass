@@ -1,8 +1,8 @@
-import { API_BASE_URL } from '../config';
+import { API_URL } from '../config';
 
 export const replaceAllDiscounts = async (discounts) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/discounts`, {
+    const response = await fetch(`${API_URL}/discounts`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

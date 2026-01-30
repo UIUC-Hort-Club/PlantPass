@@ -1,8 +1,4 @@
-import React, { useState } from "react";
-
-/* =========================
-   MUI — layout & utilities
-   ========================= */
+import { useState } from "react";
 import {
   Box,
   AppBar,
@@ -12,39 +8,19 @@ import {
   useTheme,
   useMediaQuery,
 } from "@mui/material";
-
-/* =========================
-   MUI — icons
-   ========================= */
 import MenuIcon from "@mui/icons-material/Menu";
 import SupervisorAccountIcon from "@mui/icons-material/SupervisorAccount";
 import PublicIcon from "@mui/icons-material/Public";
-
-/* =========================
-   API utilities
-   ========================= */
 import { authenticateAdmin } from "./api/authentication/passwordAuthentication";
-
-/* =========================
-   Application components
-   ========================= */
 import OrderEntry from "./components/core/OrderEntry";
 import OrderLookup from "./components/core/OrderLookup";
 import AdminConsole from "./components/AdminConsole/AdminConsole";
 import AdminPasswordModal from "./components/AdminConsole/AdminPasswordModal";
 import NavigationMenu from "./components/Navigation/NavigationMenu";
+import { NotificationProvider } from "./contexts/NotificationContext";
 
-/* =========================
-   Static data sources
-
-   TODO @joe: eventually replace with real API calls, but this is fine for now since the data is pretty static and read-only
-   ========================= */
 const DISCOUNTS_SOURCE = `${import.meta.env.BASE_URL}data/discounts.json`;
 const PRODUCTS_SOURCE = `${import.meta.env.BASE_URL}data/products.json`;
-
-/* =========================
-   Helper components
-   ========================= */
 function TabPanel({ children, value, index }) {
   return (
     <div hidden={value !== index}>
@@ -100,7 +76,7 @@ export default function App() {
     setAdminModalOpen(false);
     setAdminError("");
 
-    // return authenticateAdmin(password)  // <-- return promise so modal can handle loading state
+    // return authenticateAdmin(password)
     //   .then(() => {
     //     setIsAdmin(true);
     //     setAdminModalOpen(false);
@@ -108,7 +84,7 @@ export default function App() {
     //   })
     //   .catch((error) => {
     //     setAdminError('Password incorrect');
-    //     throw error; // re-throw so modal can catch it if needed
+    //     throw error;
     //   });
   };
 
@@ -119,18 +95,19 @@ export default function App() {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        width: "100%",
-        maxWidth: 800,
-        mx: "auto",
-        display: "flex",
-        flexDirection: "column",
-        backgroundColor: "white",
-        py: 2,
-      }}
-    >
+    <NotificationProvider>
+      <Box
+        sx={{
+          minHeight: "100vh",
+          width: "100%",
+          maxWidth: 800,
+          mx: "auto",
+          display: "flex",
+          flexDirection: "column",
+          backgroundColor: "white",
+          py: 2,
+        }}
+      >
       {/* =========================
           App header
          ========================= */}
@@ -209,5 +186,6 @@ export default function App() {
         error={adminError}
       />
     </Box>
+    </NotificationProvider>
   );
 }

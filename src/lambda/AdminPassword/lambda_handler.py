@@ -6,7 +6,6 @@ import bcrypt
 import jwt
 import datetime
 
-# Configure logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
@@ -41,7 +40,6 @@ def lambda_handler(event, context):
         route_key = event.get("routeKey", "")
         logger.info(f"Route key: {route_key}, Body: {body}")
 
-        # ---- Admin login ----
         if route_key == "POST /admin/login":
             pw_hash = get_password_hash()
             password = body.get("password", "")
@@ -57,7 +55,6 @@ def lambda_handler(event, context):
                 return {"statusCode": 200, "body": json.dumps({"token": token})}
             return {"statusCode": 401, "body": json.dumps({"error": "Invalid password"})}
         
-        # ---- Change password ----
         if route_key == "POST /admin/change-password":
             headers = event.get("headers", {})
             authorization = headers.get("authorization", "")
@@ -85,7 +82,6 @@ def lambda_handler(event, context):
             set_password_hash(new_hash)
             return {"statusCode": 200, "body": json.dumps({"success": True})}
 
-        # ---- Reset (Forgot) password ----
         if route_key == "POST/admin/reset-password":
             reset_token = event["headers"].get("X-Reset-Token", "")
             if not RESET_ENABLED:

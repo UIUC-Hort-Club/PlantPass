@@ -22,7 +22,6 @@ export async function deleteTransaction(transactionId) {
       );
     }
 
-    // Lambda returns 204 No Content, so just return true
     return true;
   } catch (err) {
     console.error("Error deleting transaction:", err);

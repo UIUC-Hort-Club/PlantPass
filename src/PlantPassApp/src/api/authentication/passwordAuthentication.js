@@ -1,8 +1,5 @@
 import { API_URL } from "../config";
 
-// -------------------------
-// Authenticate admin
-// -------------------------
 export async function authenticateAdmin(password) {
   try {
     const response = await fetch(`${API_URL}/admin/login`, {
@@ -18,10 +15,8 @@ export async function authenticateAdmin(password) {
     }
 
     const data = await response.json();
-    // Expected response: { token: "<JWT>" }
     const { token } = data;
 
-    // Store token in localStorage for subsequent requests
     localStorage.setItem("admin_token", token);
 
     return token;
@@ -31,9 +26,6 @@ export async function authenticateAdmin(password) {
   }
 }
 
-// -------------------------
-// Change admin password
-// -------------------------
 export async function changePassword(oldPassword, newPassword) {
   try {
     const token = localStorage.getItem("admin_token");

@@ -1,14 +1,11 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Container,
   Button,
   Typography,
-  Snackbar,
-  Alert,
   Stack,
   Box,
   TextField,
-  CircularProgress,
 } from "@mui/material";
 import { InputAdornment } from "@mui/material";
 import ItemsTable from "./SubComponents/ItemsTable";
@@ -17,11 +14,18 @@ import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
 import Receipt from "./SubComponents/Receipt";
 import Scanner from "./SubComponents/Scanner";
 import { createTransaction } from "../../api/transaction_interface/createTransaction";
+import { updateTransaction } from "../../api/transaction_interface/updateTransaction";
 import { getAllProducts } from "../../api/products_interface/getAllProducts";
 import { getAllDiscounts } from "../../api/discounts_interface/getAllDiscounts";
 import ShowTransactionID from "./SubComponents/ShowTransactionID";
+import { useNotification } from "../../contexts/NotificationContext";
+import { transformProductsData, initializeProductQuantities } from "../../utils/productTransformer";
+import { transformDiscountsForOrder } from "../../utils/discountTransformer";
+import LoadingSpinner from "../common/LoadingSpinner";
 
 function OrderEntry({ product_listings }) {
+  const { showSuccess, showWarning, showError } = useNotification();
+  
   const [products, setProducts] = useState([]);
   const [discounts, setDiscounts] = useState([]);
   const [quantities, setQuantities] = useState({});
@@ -33,13 +37,11 @@ function OrderEntry({ product_listings }) {
     grandTotal: 0,
   });
   const [voucher, setVoucher] = useState("");
-  const [showNotification, setShowNotification] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [currentTransactionID, setCurrentTransactionID] = useState("");
   const [transactionIDDialogOpen, setTransactionIDDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Compute subtotal safely
   const computedSubtotal = Object.values(subtotals)
     .reduce((sum, val) => sum + (parseFloat(val) || 0), 0)
     .toFixed(2);
@@ -60,8 +62,8 @@ function OrderEntry({ product_listings }) {
         [sku]: (scannedProduct.Price * newQuantity).toFixed(2),
       }));
     } else {
-      alert(
-        `Internal Error: Item with SKU "${scannedProduct?.SKU}" not found, but should have been found...`,
+      showError(
+        `Internal Error: Item with SKU "${scannedProduct?.SKU}" not found, but should have been found...`
       );
     }
   };
@@ -71,8 +73,8 @@ function OrderEntry({ product_listings }) {
   };
 
   const handleNewOrder = () => {
-    loadProducts(); // Reload products from database
-    loadDiscounts(); // Reload discounts from database
+    loadProducts();
+    loadDiscounts();
     setCurrentTransactionID("");
     setTransactionIDDialogOpen(false);
     setSelectedDiscounts([]);
@@ -88,38 +90,20 @@ function OrderEntry({ product_listings }) {
       setLoading(true);
       const productsData = await getAllProducts();
       
-      // Transform API data to match expected format
-      const transformedProducts = productsData.map(product => ({
-        SKU: product.SKU,
-        Name: product.item,
-        Price: product.price_ea
-      }));
-      
+      const transformedProducts = transformProductsData(productsData);
       setProducts(transformedProducts);
       
-      // Initialize quantities and subtotals
-      const initialQuantities = {};
-      const initialSubtotals = {};
-      transformedProducts.forEach((item) => {
-        initialQuantities[item.SKU] = "";
-        initialSubtotals[item.SKU] = "0.00";
-      });
+      const { initialQuantities, initialSubtotals } = initializeProductQuantities(transformedProducts);
       setQuantities(initialQuantities);
       setSubtotals(initialSubtotals);
       setVoucher("");
     } catch (error) {
       console.error("Error loading products from database:", error);
-      // Fallback to static file if API fails
       try {
         const response = await fetch(product_listings);
         const data = await response.json();
         setProducts(data);
-        const initialQuantities = {};
-        const initialSubtotals = {};
-        data.forEach((item) => {
-          initialQuantities[item.SKU] = "";
-          initialSubtotals[item.SKU] = "0.00";
-        });
+        const { initialQuantities, initialSubtotals } = initializeProductQuantities(data);
         setQuantities(initialQuantities);
         setSubtotals(initialSubtotals);
         setVoucher("");
@@ -137,7 +121,7 @@ function OrderEntry({ product_listings }) {
       setDiscounts(discountsData);
     } catch (error) {
       console.error("Error loading discounts from database:", error);
-      setDiscounts([]); // Set empty array on error
+      setDiscounts([]);
     }
   };
 
@@ -150,17 +134,14 @@ function OrderEntry({ product_listings }) {
     const value = e.target.value;
     const item = products.find((i) => i.SKU === sku);
 
-    // Allow empty input
     if (value === "") {
       setQuantities((prev) => ({ ...prev, [sku]: "" }));
       setSubtotals((prev) => ({ ...prev, [sku]: "0.00" }));
       return;
     }
 
-    // Only allow whole numbers (integers)
     const numericValue = parseInt(value);
     
-    // If not a valid integer or negative, ignore the input
     if (isNaN(numericValue) || numericValue < 0) {
       return;
     }
@@ -176,30 +157,29 @@ function OrderEntry({ product_listings }) {
   };
 
   const handleEnterOrder = () => {
-    // Get selected discount objects
-    const selectedDiscountObjects = discounts.filter(discount => 
-      selectedDiscounts.includes(discount.name)
-    );
+    const discountsWithSelection = transformDiscountsForOrder(discounts, selectedDiscounts);
 
     const transaction = {
-      timestamp: Date.now(),
-      items: Object.entries(quantities).map(([sku, quantity]) => {
-        const product = products.find((p) => p.SKU === sku);
-        return {
-          SKU: sku,
-          item: product.Name,
-          quantity: parseInt(quantity) || 0, // Ensure integer quantity
-          price_ea: product.Price,
-        };
-      }),
-      discounts: selectedDiscountObjects.map(discount => ({
-        name: discount.name,
-        type: discount.type,
-        percent_off: discount.percent_off,
-        value_off: discount.value_off
-      })),
+      timestamp: Math.floor(Date.now() / 1000),
+      items: Object.entries(quantities)
+        .filter(([sku, quantity]) => quantity && parseInt(quantity) > 0)
+        .map(([sku, quantity]) => {
+          const product = products.find((p) => p.SKU === sku);
+          return {
+            SKU: sku,
+            item: product.Name,
+            quantity: parseInt(quantity),
+            price_ea: product.Price,
+          };
+        }),
+      discounts: discountsWithSelection,
       voucher: Number(voucher) || 0,
     };
+
+    if (transaction.items.length === 0) {
+      showWarning("Please add items to your order before submitting.");
+      return;
+    }
 
     createTransaction(transaction)
       .then((response) => {
@@ -210,31 +190,70 @@ function OrderEntry({ product_listings }) {
           discount: response.receipt.discount,
           grandTotal: response.receipt.total,
         });
-        setShowNotification(true);
+        showSuccess("Your order has been successfully recorded.");
         setTransactionIDDialogOpen(true);
       })
       .catch((error) => {
         console.error("Error recording transaction:", error);
-        alert("An error occurred while recording the transaction...");
+        showError("An error occurred while recording the transaction. Please try again.");
+      });
+  };
+
+  const handleUpdateOrder = () => {
+    if (!currentTransactionID) {
+      showWarning("No current transaction to update.");
+      return;
+    }
+
+    const discountsWithSelection = discounts.map(discount => ({
+      name: discount.name,
+      type: discount.type,
+      percent_off: discount.percent_off || 0,
+      value_off: discount.value_off || 0,
+      selected: selectedDiscounts.includes(discount.name)
+    }));
+
+    const updateData = {
+      items: Object.entries(quantities)
+        .filter(([sku, quantity]) => quantity && parseInt(quantity) > 0)
+        .map(([sku, quantity]) => {
+          const product = products.find((p) => p.SKU === sku);
+          return {
+            SKU: sku,
+            item: product.Name,
+            quantity: parseInt(quantity),
+            price_ea: product.Price,
+          };
+        }),
+      discounts: discountsWithSelection,
+      voucher: Number(voucher) || 0,
+    };
+
+    if (updateData.items.length === 0) {
+      showWarning("Please add items to your order before updating.");
+      return;
+    }
+
+    updateTransaction(currentTransactionID, updateData)
+      .then((response) => {
+        console.log("Transaction updated successfully:", response);
+        setTotals({
+          subtotal: response.receipt.subtotal,
+          discount: response.receipt.discount,
+          grandTotal: response.receipt.total,
+        });
+        showSuccess(`Order ${currentTransactionID} has been updated!`);
+      })
+      .catch((error) => {
+        console.error("Error updating transaction:", error);
+        showError("An error occurred while updating the transaction. Please try again.");
       });
   };
 
   if (loading) {
     return (
       <Container maxWidth="md">
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            minHeight: '300px',
-            gap: 2
-          }}
-        >
-          <CircularProgress />
-          <Typography>Loading products...</Typography>
-        </Box>
+        <LoadingSpinner message="Loading products..." />
       </Container>
     );
   }
@@ -271,7 +290,9 @@ function OrderEntry({ product_listings }) {
               }
 
               const numeric = Math.max(0, Math.floor(Number(value)));
-              setVoucher(numeric);
+              if (!Number.isNaN(numeric)) {
+                setVoucher(numeric);
+              }
             }}
             InputProps={{
               startAdornment: (
@@ -331,6 +352,7 @@ function OrderEntry({ product_listings }) {
               color="primary"
               onClick={handleEnterOrder}
               size="small"
+              disabled={!!currentTransactionID}
             >
               Enter
             </Button>
@@ -340,13 +362,23 @@ function OrderEntry({ product_listings }) {
 
       {currentTransactionID && (
         <>
-          <Receipt totals={totals} transactionId={currentTransactionID} />
+          <Receipt 
+            totals={totals} 
+            transactionId={currentTransactionID}
+            discounts={discounts.map(discount => ({
+              name: discount.name,
+              amount_off: selectedDiscounts.includes(discount.name) ? 
+                (discount.type === "dollar" ? discount.value_off : 
+                 (Number(totals.subtotal) * discount.percent_off / 100)) : 0
+            }))}
+            voucher={Number(voucher) || 0}
+          />
 
           <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mt: 2 }}>
             <Button
               variant="contained"
               color="success"
-              onClick={console.log('Implement update current order in case user changes mind after order entry')}
+              onClick={handleUpdateOrder}
               size="small"
             >
               Update This Order
@@ -364,16 +396,6 @@ function OrderEntry({ product_listings }) {
       )}
 
       <div style={{ height: "1rem" }} />
-
-      <Snackbar
-        open={showNotification}
-        autoHideDuration={4000}
-        onClose={() => setShowNotification(false)}
-      >
-        <Alert severity="success" onClose={() => setShowNotification(false)}>
-          Your order has been successfully recorded.
-        </Alert>
-      </Snackbar>
 
       <Scanner
         opened={scannerOpen}

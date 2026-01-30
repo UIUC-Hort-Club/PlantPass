@@ -1,9 +1,28 @@
+import os
+import json
+import logging
+from datetime import datetime, timezone, timedelta
+from decimal import Decimal
+import boto3
+from botocore.exceptions import ClientError
 from utils import generate_random_id, validate_transaction_id
 
-# TODO @maahum: Implement the record creation for this function.
-#               All fields in the full transaction data should
-#               be stored in the database, or be able to be
-#               derived from it.
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table(os.environ.get('TRANSACTIONS_TABLE', 'transactions'))
+
+def decimal_to_float(obj):
+    """Convert Decimal objects to float for JSON serialization"""
+    if isinstance(obj, Decimal):
+        return float(obj)
+    elif isinstance(obj, dict):
+        return {k: decimal_to_float(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [decimal_to_float(v) for v in obj]
+    return obj
+
 def create_transaction(transaction):
     """
     Create the transaction in the database
@@ -18,182 +37,398 @@ def create_transaction(transaction):
             "item": "Plant A",
             "quantity": 2,
             "price_ea": 10.00
-        },
+        }],
+        "discounts": [
+        {
+            "name": "discount name",
+            "type": "percent" | "dollar",
+            "percent_off": 0,
+            "value_off": 0.0,
+            "selected": true
+        }],
         "voucher": 10     // This is the dollar amount of the voucher, not a percentage
     }
 
     ----------
     Returns the full transaction data from the backend, which includes discounts applied, etc.
-
-    Example of full transaction data returned:
-    {
-        "payment": {
-            "method": "string",
-            "paid": true
-        },
-        "timestamp": 0,
-        "purchase_id": "string",
-        "items": [
-            {
-            "SKU": "SKU123",
-            "item": "item name",
-            "quantity": 0,
-            "price_ea": 0.0
-            }
-        ],
-        "discounts": [
-            {
-            "name": "discount name",
-            "percent_off": 0,
-            "amount_off": 0.0
-            }
-        ],
-        "club_voucher": 0.0,
-        "receipt": {
-            "subtotal": 0.0,
-            "discount": 0.0,
-            "total": 0.0
-        }
-    }
     """
-    # Initialize blank transaction object and populate with expected fields
-    transaction_created = {}
+    try:
+        transaction_created = {}
 
-    # Init payment info - will be updated after payment processing
-    transaction_created["payment"] = {
-        "method": "",
-        "paid": False
-    }
-
-    # Copy over timestamp and items from input transaction
-    transaction_created["timestamp"] = transaction.get("timestamp", 0)
-
-    # Generate a unique purchase ID using capital letters (in the form ___-___. For example, ABC-DEF)
-    while True:
-        purchase_id = generate_random_id()
-        if validate_transaction_id(purchase_id):
-            break
-    transaction_created["purchase_id"] = purchase_id
-
-    # Add items to the transaction
-    transaction_created["items"] = transaction.get("items", [])
-
-    # Compute subtotal first (needed for discount calculations)
-    subtotal = sum(item["quantity"] * item["price_ea"] for item in transaction_created["items"])
-
-    # Add discounts
-    #
-    # Note: We pull these from the discounts endpoint and store them with this record in the off chance
-    # that the discount details change in the future. This way we can always know exactly what discounts
-    # were applied at the time of purchase. This is the same reason the product price is stored with the
-    # transaction record instead of being pulled from the product database when needed.
-    input_discounts = transaction.get("discounts", [])
-    transaction_created["discounts"] = []
-    
-    # Process each discount and calculate amount_off
-    for discount in input_discounts:
-        discount_type = discount.get("type")
-        discount_record = {
-            "name": discount.get("name"),
-            "type": discount_type,
-            "percent_off": discount.get("percent_off"),
-            "value_off": discount.get("value_off")
+        transaction_created["payment"] = {
+            "method": "",
+            "paid": False
         }
+
+        transaction_created["timestamp"] = transaction.get("timestamp", int(datetime.now(timezone.utc).timestamp()))
+
+        while True:
+            purchase_id = generate_random_id()
+            if validate_transaction_id(purchase_id):
+                break
+        transaction_created["purchase_id"] = purchase_id
+
+        transaction_created["items"] = transaction.get("items", [])
+
+        subtotal = sum(item["quantity"] * item["price_ea"] for item in transaction_created["items"])
+
+        # Add discounts
+        # Note: We pull these from the discounts endpoint and store them with this record in the off chance
+        # that the discount details change in the future. This way we can always know exactly what discounts
+        # were applied at the time of purchase. This is the same reason the product price is stored with the
+        # transaction record instead of being pulled from the product database when needed.
+        input_discounts = transaction.get("discounts", [])
+        transaction_created["discounts"] = []
         
-        # Calculate amount_off based on discount type
-        if discount_type == "dollar":
-            discount_record["amount_off"] = discount.get("value_off")
-        else:  # percent
-            discount_record["amount_off"] = (subtotal * discount.get("percent_off")) / 100
+        for discount in input_discounts:
+            discount_type = discount.get("type")
+            selected = discount.get("selected", False)
+            
+            discount_record = {
+                "name": discount.get("name"),
+                "type": discount_type,
+                "percent_off": discount.get("percent_off", 0),
+                "value_off": discount.get("value_off", 0.0)
+            }
+            
+            if selected:
+                if discount_type == "dollar":
+                    discount_record["amount_off"] = discount.get("value_off", 0)
+                else:
+                    discount_record["amount_off"] = (subtotal * discount.get("percent_off", 0)) / 100
+            else:
+                discount_record["amount_off"] = 0
+            
+            transaction_created["discounts"].append(discount_record)
+
+        transaction_created["club_voucher"] = transaction.get("voucher", 0)
+
+        total_discount = sum(discount.get("amount_off", 0) for discount in transaction_created["discounts"]) + transaction_created["club_voucher"]
+        total = max(subtotal - total_discount, 0)
+        transaction_created["receipt"] = {
+            "subtotal": subtotal,
+            "discount": total_discount,
+            "total": total
+        }
+
+        db_item = json.loads(json.dumps(transaction_created), parse_float=Decimal)
         
-        transaction_created["discounts"].append(discount_record)
+        table.put_item(Item=db_item)
+        logger.info(f"Transaction created successfully: {purchase_id}")
+        
+        return transaction_created
 
-    # Add club voucher amount
-    transaction_created["club_voucher"] = transaction.get("voucher", 0)
+    except ClientError as e:
+        logger.error(f"DynamoDB error creating transaction: {e}")
+        raise Exception(f"Failed to create transaction: {e}")
+    except Exception as e:
+        logger.error(f"Error creating transaction: {e}")
+        raise
 
-    # Compute receipt (subtotal, discount, total)
-    total_discount = sum(discount.get("amount_off", 0) for discount in transaction_created["discounts"]) + transaction_created["club_voucher"]
-    total = max(subtotal - total_discount, 0)  # Total should not be negative
-    transaction_created["receipt"] = {
-        "subtotal": subtotal,
-        "discount": total_discount,
-        "total": total
-    }
-
-    return transaction_created
-
-# TODO @maahum: Implement the database read logic for this function.
-#               Be sure to return the transaction in the same format as described in create_transaction, with all fields populated.
 def read_transaction(transaction_id):
     """
     Retrieve a transaction by its ID.
     """
-    return {}  # Replace with DB read logic
+    try:
+        response = table.get_item(Key={'purchase_id': transaction_id})
+        
+        if 'Item' not in response:
+            logger.warning(f"Transaction not found: {transaction_id}")
+            return None
+            
+        transaction = decimal_to_float(response['Item'])
+        logger.info(f"Transaction retrieved successfully: {transaction_id}")
+        return transaction
+        
+    except ClientError as e:
+        logger.error(f"DynamoDB error reading transaction {transaction_id}: {e}")
+        raise Exception(f"Failed to read transaction: {e}")
+    except Exception as e:
+        logger.error(f"Error reading transaction {transaction_id}: {e}")
+        raise
 
-# TODO @maahum: Implement the database update logic for this function.
-#               The use case here is that after order lookup, the customer
-#               may choose to update the order or it was found that the
-#               order details were incorrect and need to be updated. In
-#               this case, we want to update the existing record in the
-#               database with the new transaction data.
 def update_transaction(transaction_id, updated_transaction):
     """
     Update an existing transaction with new data.
+    
+    IMPORTANT: This function preserves historical pricing and discount rates.
+    Only quantities, discount selections, voucher amounts, and payment info can be updated.
+    Original prices and discount rates are preserved to maintain transaction integrity.
     """
-    return {}  # Replace with DB update logic
+    try:
+        existing = read_transaction(transaction_id)
+        if not existing:
+            raise Exception(f"Transaction {transaction_id} not found")
+        
+        # Handle items update - preserve historical prices
+        if "items" in updated_transaction:
+            updated_items = updated_transaction["items"]
+            preserved_items = []
+            
+            for updated_item in updated_items:
+                sku = updated_item["SKU"]
+                # Find the original item to preserve its historical price
+                original_item = next((item for item in existing["items"] if item["SKU"] == sku), None)
+                
+                if original_item:
+                    # Preserve original price and item name, only update quantity
+                    preserved_items.append({
+                        "SKU": sku,
+                        "item": original_item["item"],  # Keep original item name
+                        "quantity": updated_item["quantity"],
+                        "price_ea": original_item["price_ea"]  # Keep original price
+                    })
+                else:
+                    # New item - use provided data (this handles adding new items)
+                    preserved_items.append(updated_item)
+            
+            existing["items"] = preserved_items
+            
+        # Handle discounts update - preserve historical discount rates
+        if "discounts" in updated_transaction:
+            updated_discounts = updated_transaction["discounts"]
+            preserved_discounts = []
+            
+            for updated_discount in updated_discounts:
+                discount_name = updated_discount["name"]
+                # Find the original discount to preserve its historical rates
+                original_discount = next((d for d in existing["discounts"] if d["name"] == discount_name), None)
+                
+                if original_discount:
+                    # Preserve original discount rates, only update selection
+                    discount_record = {
+                        "name": discount_name,
+                        "type": original_discount["type"],
+                        "percent_off": original_discount["percent_off"],
+                        "value_off": original_discount["value_off"]
+                    }
+                    
+                    # Recalculate amount_off based on selection and original rates
+                    selected = updated_discount.get("selected", False)
+                    if selected:
+                        if original_discount["type"] == "dollar":
+                            discount_record["amount_off"] = original_discount["value_off"]
+                        else:  # percent
+                            # Recalculate based on new subtotal but original percentage
+                            subtotal = sum(item["quantity"] * item["price_ea"] for item in existing["items"])
+                            discount_record["amount_off"] = (subtotal * original_discount["percent_off"]) / 100
+                    else:
+                        discount_record["amount_off"] = 0
+                    
+                    preserved_discounts.append(discount_record)
+                else:
+                    # New discount - use provided data (this handles new discounts)
+                    preserved_discounts.append(updated_discount)
+            
+            existing["discounts"] = preserved_discounts
+            
+        # Handle voucher update
+        if "voucher" in updated_transaction:
+            existing["club_voucher"] = updated_transaction["voucher"]
+            
+        # Handle payment update
+        if "payment" in updated_transaction:
+            existing["payment"].update(updated_transaction["payment"])
+        
+        # Recalculate receipt if items, discounts, or voucher changed
+        if "items" in updated_transaction or "discounts" in updated_transaction or "voucher" in updated_transaction:
+            subtotal = sum(item["quantity"] * item["price_ea"] for item in existing["items"])
+            total_discount = sum(discount.get("amount_off", 0) for discount in existing["discounts"]) + existing.get("club_voucher", 0)
+            total = max(subtotal - total_discount, 0)
+            
+            existing["receipt"] = {
+                "subtotal": subtotal,
+                "discount": total_discount,
+                "total": total
+            }
+        
+        # Convert to DynamoDB format
+        db_item = json.loads(json.dumps(existing), parse_float=Decimal)
+        
+        # Update in database
+        table.put_item(Item=db_item)
+        logger.info(f"Transaction updated successfully: {transaction_id}")
+        
+        return existing
+        
+    except ClientError as e:
+        logger.error(f"DynamoDB error updating transaction {transaction_id}: {e}")
+        raise Exception(f"Failed to update transaction: {e}")
+    except Exception as e:
+        logger.error(f"Error updating transaction {transaction_id}: {e}")
+        raise
 
-# TODO @maahum: Implement the database delete logic for this function.
 def delete_transaction(transaction_id):
     """
     Delete a transaction by its ID.
     """
-    pass  # Replace with DB delete logic
+    try:
+        table.delete_item(Key={'purchase_id': transaction_id})
+        logger.info(f"Transaction deleted successfully: {transaction_id}")
+        
+    except ClientError as e:
+        logger.error(f"DynamoDB error deleting transaction {transaction_id}: {e}")
+        raise Exception(f"Failed to delete transaction: {e}")
+    except Exception as e:
+        logger.error(f"Error deleting transaction {transaction_id}: {e}")
+        raise
 
-# TODO @maahum: Implement the analytics computation logic for this function.
-#
-# The return should look like the following:
-# {
-#     "total_sales": 0.0,
-#     "total_orders": 0,
-#     "total_units_sold": 0,
-#     "average_items_per_order": 0.0,
-#     "average_order_value": 0.0,
-#     "sales_over_time": {  
-#         (See note(1) below...)
-#     },
-#     "transactions": {
-#         (See note(2) below...) 
-#     }
-# }
-# 
-# Note(1): For sales_over_time, group transactions into fixed 30-minute time blocks
-#          aligned to clock boundaries (HH:00–HH:29, HH:30–HH:59), using UTC timestamps
-#          internally.
-#
-#          Buckets should span from the earliest to the latest transaction timestamp and
-#          include empty blocks with zero sales.
-#
-#          For each block, return the total sales amount within that block.
-#          Format the final output timestamps for display only (e.g.
-#          {"01-10-2026 10:00 AM": 100.00}).
-#
-# Note(2): For transactions, return a list of all transactions. Each transaction object
-#          should have high level transaction data such as purchase_id, total_quantity,
-#          timestamp, grand_total, etc.
 def compute_sales_analytics():
     """
     Compute sales analytics such as total sales, average order value, etc.
+    
+    Returns analytics grouped into 30-minute time blocks aligned to clock boundaries.
     """
-    return {}  # Replace with actual computation logic
+    try:
+        response = table.scan()
+        transactions = response['Items']
+        
+        while 'LastEvaluatedKey' in response:
+            response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+            transactions.extend(response['Items'])
+        
+        if not transactions:
+            return {
+                "total_sales": 0.0,
+                "total_orders": 0,
+                "total_units_sold": 0,
+                "average_items_per_order": 0.0,
+                "average_order_value": 0.0,
+                "sales_over_time": {},
+                "transactions": []
+            }
+        
+        transactions = decimal_to_float(transactions)
+        
+        total_sales = 0.0
+        total_orders = len(transactions)
+        total_units_sold = 0
+        sales_by_time_bucket = {}
+        transaction_summaries = []
+        
+        for transaction in transactions:
+            receipt = transaction.get("receipt", {})
+            total = receipt.get("total", 0)
+            total_sales += total
+            
+            items = transaction.get("items", [])
+            transaction_units = sum(item.get("quantity", 0) for item in items)
+            total_units_sold += transaction_units
+            
+            transaction_summaries.append({
+                "purchase_id": transaction.get("purchase_id"),
+                "timestamp": transaction.get("timestamp"),
+                "total_quantity": transaction_units,
+                "grand_total": total
+            })
+            
+            timestamp = transaction.get("timestamp", 0)
+            if timestamp:
+                dt = datetime.fromtimestamp(timestamp, tz=timezone.utc)
+                minute = 0 if dt.minute < 30 else 30
+                bucket_time = dt.replace(minute=minute, second=0, microsecond=0)
+                bucket_key = bucket_time.strftime("%m-%d-%Y %I:%M %p")
+                
+                if bucket_key not in sales_by_time_bucket:
+                    sales_by_time_bucket[bucket_key] = 0.0
+                sales_by_time_bucket[bucket_key] += total
+        
+        average_items_per_order = total_units_sold / total_orders if total_orders > 0 else 0.0
+        average_order_value = total_sales / total_orders if total_orders > 0 else 0.0
+        
+        if transactions:
+            timestamps = [t.get("timestamp", 0) for t in transactions if t.get("timestamp")]
+            if timestamps:
+                min_time = min(timestamps)
+                max_time = max(timestamps)
+                
+                current_time = datetime.fromtimestamp(min_time, tz=timezone.utc)
+                end_time = datetime.fromtimestamp(max_time, tz=timezone.utc)
+                
+                while current_time <= end_time:
+                    minute = 0 if current_time.minute < 30 else 30
+                    bucket_time = current_time.replace(minute=minute, second=0, microsecond=0)
+                    bucket_key = bucket_time.strftime("%m-%d-%Y %I:%M %p")
+                    
+                    if bucket_key not in sales_by_time_bucket:
+                        sales_by_time_bucket[bucket_key] = 0.0
+                    
+                    current_time += timedelta(minutes=30)
+        
+        analytics = {
+            "total_sales": round(total_sales, 2),
+            "total_orders": total_orders,
+            "total_units_sold": total_units_sold,
+            "average_items_per_order": round(average_items_per_order, 2),
+            "average_order_value": round(average_order_value, 2),
+            "sales_over_time": sales_by_time_bucket,
+            "transactions": transaction_summaries
+        }
+        
+        logger.info(f"Analytics computed for {total_orders} transactions")
+        return analytics
+        
+    except ClientError as e:
+        logger.error(f"DynamoDB error computing analytics: {e}")
+        raise Exception(f"Failed to compute analytics: {e}")
+    except Exception as e:
+        logger.error(f"Error computing analytics: {e}")
+        raise
 
-# TODO @maahum/joe: Implement the export data logic for this function.
-#                   This should return a list of all transactions in a
-#                   format suitable for export.
-#
-# Note: Not a priority for MVP. May need discovery since we need to push to s3 and
-#       generate a presigned url for download instead of returning the data directly from this function if the data is large.
 def export_transaction_data():
     """
     Export all transaction data in a format suitable for export (e.g., CSV, JSON).
+    Note: For MVP, returning JSON data directly. For production, consider S3 + presigned URLs.
     """
-    return []  # Replace with actual export logic
+    try:
+        response = table.scan()
+        transactions = response['Items']
+        
+        while 'LastEvaluatedKey' in response:
+            response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+            transactions.extend(response['Items'])
+        
+        transactions = decimal_to_float(transactions)
+        
+        logger.info(f"Exported {len(transactions)} transactions")
+        return transactions
+        
+    except ClientError as e:
+        logger.error(f"DynamoDB error exporting data: {e}")
+        raise Exception(f"Failed to export data: {e}")
+    except Exception as e:
+        logger.error(f"Error exporting data: {e}")
+        raise
+
+def clear_all_transactions():
+    """
+    Clear all transactions from the database.
+    
+    Returns the number of transactions that were deleted.
+    """
+    try:
+        response = table.scan()
+        transactions = response['Items']
+        
+        while 'LastEvaluatedKey' in response:
+            response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+            transactions.extend(response['Items'])
+        
+        if not transactions:
+            logger.info("No transactions found to clear")
+            return 0
+        
+        with table.batch_writer() as batch:
+            for transaction in transactions:
+                batch.delete_item(Key={'purchase_id': transaction['purchase_id']})
+        
+        cleared_count = len(transactions)
+        logger.info(f"Successfully cleared {cleared_count} transactions")
+        return cleared_count
+        
+    except ClientError as e:
+        logger.error(f"DynamoDB error clearing transactions: {e}")
+        raise Exception(f"Failed to clear transactions: {e}")
+    except Exception as e:
+        logger.error(f"Error clearing transactions: {e}")
+        raise
