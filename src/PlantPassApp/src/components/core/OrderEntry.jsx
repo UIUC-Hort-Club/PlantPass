@@ -290,7 +290,9 @@ function OrderEntry({ product_listings }) {
               }
 
               const numeric = Math.max(0, Math.floor(Number(value)));
-              setVoucher(numeric);
+              if (!Number.isNaN(numeric)) {
+                setVoucher(numeric);
+              }
             }}
             InputProps={{
               startAdornment: (
