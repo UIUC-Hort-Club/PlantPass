@@ -2,9 +2,7 @@ import json
 import logging
 from database_interface import (
     get_all_discounts,
-    create_discount,
-    update_discount,
-    delete_discount
+    replace_all_discounts
 )
 
 # Configure logging
@@ -16,10 +14,9 @@ def lambda_handler(event, context):
     
     try:
         route_key = event.get("routeKey", "")
-        path_params = event.get("pathParameters") or {}
         body = json.loads(event.get("body", "{}")) if event.get("body") else {}
 
-        logger.info(f"Route: {route_key}, Path params: {path_params}, Body: {body}")
+        logger.info(f"Route: {route_key}, Body: {body}")
 
         # ---- Get all discounts ----
         if route_key == "GET /discounts":
@@ -27,35 +24,19 @@ def lambda_handler(event, context):
             logger.info(f"Retrieved {len(discounts)} discounts")
             return response(200, discounts)
 
-        # ---- Create discount ----
-        elif route_key == "POST /discounts":
+        # ---- Replace all discounts ----
+        elif route_key == "PUT /discounts":
             try:
-                discount = create_discount(body)
-                logger.info(f"Discount created: {discount}")
-                return response(201, {"message": "Discount created successfully", "discount": discount})
+                # Expect body to contain a list of discounts
+                if not isinstance(body, list):
+                    return response(400, {"message": "Request body must be a list of discounts"})
+                
+                result = replace_all_discounts(body)
+                logger.info(f"Replaced discounts: {result}")
+                return response(200, {"message": "Discounts replaced successfully", "result": result})
             except Exception as e:
-                logger.error(f"Error creating discount: {e}", exc_info=True)
-                return response(500, {"message": "Error creating discount", "error": str(e)})
-
-        # ---- Update discount ----
-        elif route_key == "PUT /discounts/{name}":
-            name = path_params.get("name")
-            if not name:
-                return response(400, {"message": "Discount name required"})
-            
-            updated_discount = update_discount(name, body)
-            logger.info(f"Discount updated: {updated_discount}")
-            return response(200, {"discount": updated_discount})
-
-        # ---- Delete discount ----
-        elif route_key == "DELETE /discounts/{name}":
-            name = path_params.get("name")
-            if not name:
-                return response(400, {"message": "Discount name required"})
-            
-            delete_discount(name)
-            logger.info(f"Discount deleted: {name}")
-            return response(204, {})  # 204 No Content
+                logger.error(f"Error replacing discounts: {e}", exc_info=True)
+                return response(500, {"message": "Error replacing discounts", "error": str(e)})
 
         # ---- Unknown route ----
         else:
@@ -71,7 +52,7 @@ def response(status_code, body):
         "statusCode": status_code,
         "headers": {
             "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+            "Access-Control-Allow-Methods": "GET,PUT,OPTIONS",
             "Access-Control-Allow-Headers": "Content-Type"
         },
         "body": json.dumps(body)

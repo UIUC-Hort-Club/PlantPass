@@ -2,9 +2,7 @@ import json
 import logging
 from database_interface import (
     get_all_products,
-    create_product,
-    update_product,
-    delete_product
+    replace_all_products
 )
 
 # Configure logging
@@ -14,7 +12,6 @@ logger.setLevel(logging.INFO)
 def lambda_handler(event, context):    
     try:
         route_key = event.get("routeKey", "")
-        path_params = event.get("pathParameters") or {}
         body = json.loads(event.get("body", "{}")) if event.get("body") else {}
 
         # ---- Get all products ----
@@ -23,35 +20,19 @@ def lambda_handler(event, context):
             logger.info(f"Retrieved {len(products)} products")
             return response(200, products)
 
-        # ---- Create product ----
-        elif route_key == "POST /products":
+        # ---- Replace all products ----
+        elif route_key == "PUT /products":
             try:
-                product = create_product(body)
-                logger.info(f"Product created: {product}")
-                return response(201, {"message": "Product created successfully", "product": product})
+                # Expect body to contain a list of products
+                if not isinstance(body, list):
+                    return response(400, {"message": "Request body must be a list of products"})
+                
+                result = replace_all_products(body)
+                logger.info(f"Replaced products: {result}")
+                return response(200, {"message": "Products replaced successfully", "result": result})
             except Exception as e:
-                logger.error(f"Error creating product: {e}", exc_info=True)
-                return response(500, {"message": "Error creating product", "error": str(e)})
-
-        # ---- Update product ----
-        elif route_key == "PUT /products/{SKU}":
-            SKU = path_params.get("SKU")
-            if not SKU:
-                return response(400, {"message": "SKU required"})
-
-            updated_product = update_product(SKU, body)
-            logger.info(f"Product updated: {updated_product}")
-            return response(200, {"product": updated_product})
-
-        # ---- Delete product ----
-        elif route_key == "DELETE /products/{SKU}":
-            SKU = path_params.get("SKU")
-            if not SKU:
-                return response(400, {"message": "SKU required"})
-
-            delete_product(SKU)
-            logger.info(f"Product deleted: {SKU}")
-            return response(204, {})  # 204 No Content
+                logger.error(f"Error replacing products: {e}", exc_info=True)
+                return response(500, {"message": "Error replacing products", "error": str(e)})
 
         # ---- Unknown route ----
         else:
@@ -67,7 +48,7 @@ def response(status_code, body):
         "statusCode": status_code,
         "headers": {
             "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+            "Access-Control-Allow-Methods": "GET,PUT,OPTIONS",
             "Access-Control-Allow-Headers": "Content-Type"
         },
         "body": json.dumps(body)

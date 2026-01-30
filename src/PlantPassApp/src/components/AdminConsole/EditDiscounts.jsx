@@ -25,10 +25,7 @@ import PercentIcon from '@mui/icons-material/Percent';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { getAllDiscounts } from "../../api/discounts_interface/getAllDiscounts";
-import { createDiscount } from "../../api/discounts_interface/createDiscount";
-import { updateDiscount } from "../../api/discounts_interface/updateDiscount";
-import { deleteDiscount } from "../../api/discounts_interface/deleteDiscount";
-import { updateDiscountOrder } from "../../api/discounts_interface/updateDiscountOrder";
+import { replaceAllDiscounts } from "../../api/discounts_interface/replaceAllDiscounts";
 
 export default function DiscountTable() {
   const [rows, setRows] = useState([]);
@@ -254,78 +251,23 @@ export default function DiscountTable() {
 
     setSaving(true);
     try {
-      // Process deleted discounts first
-      for (const deletedDiscount of deletedRows) {
-        await deleteDiscount(deletedDiscount.originalName || deletedDiscount.name);
-      }
+      // Filter out empty rows and prepare data for bulk replace
+      const validDiscounts = rows
+        .filter(row => row.name && row.name.trim() !== '')
+        .map(row => ({
+          name: row.name,
+          type: row.type,
+          percent_off: row.type === 'percent' ? parseFloat(row.percent) || 0 : 0,
+          value_off: row.type === 'dollar' ? parseFloat(row.value) || 0 : 0,
+          sort_order: row.sortOrder
+        }));
 
-      // Process new discounts
-      const newDiscounts = rows.filter(row => row.isNew && row.name.trim() !== "");
-      for (const discount of newDiscounts) {
-        const discountData = {
-          name: discount.name,
-          type: discount.type,
-          sort_order: discount.sortOrder
-        };
-        
-        if (discount.type === 'percent') {
-          discountData.percent_off = parseFloat(discount.percent) || 0;
-        } else {
-          discountData.value_off = parseFloat(discount.value) || 0;
-        }
-        
-        await createDiscount(discountData);
-      }
-
-      // Process updated discounts
-      const updatedDiscounts = rows.filter(row => {
-        if (row.isNew) return false;
-        const original = originalRows.find(orig => orig.id === row.id);
-        return original && (row.name !== original.name || 
-                           row.percent !== original.percent ||
-                           row.value !== original.value ||
-                           row.type !== original.type ||
-                           row.sortOrder !== original.sortOrder);
-      });
-
-      for (const discount of updatedDiscounts) {
-        const updateData = {
-          type: discount.type,
-          sort_order: discount.sortOrder
-        };
-        
-        if (discount.type === 'percent') {
-          updateData.percent_off = parseFloat(discount.percent) || 0;
-          updateData.value_off = 0; // Clear dollar value when switching to percent
-        } else {
-          updateData.value_off = parseFloat(discount.value) || 0;
-          updateData.percent_off = 0; // Clear percent value when switching to dollar
-        }
-        
-        await updateDiscount(discount.originalName || discount.name, updateData);
-      }
-
-      // Update sort orders for all existing discounts if order changed
-      const orderChanges = rows.filter(row => {
-        if (row.isNew) return false;
-        const original = originalRows.find(orig => orig.id === row.id);
-        return original && row.sortOrder !== original.sortOrder;
-      });
-
-      if (orderChanges.length > 0) {
-        const orderUpdates = rows
-          .filter(row => !row.isNew)
-          .map(row => ({
-            name: row.name,
-            sort_order: row.sortOrder
-          }));
-        
-        await updateDiscountOrder(orderUpdates);
-      }
+      // Replace all discounts in database
+      await replaceAllDiscounts(validDiscounts);
 
       // Reload data to get fresh state
       await loadDiscounts();
-      showNotification(`Discounts saved successfully${deletedRows.length > 0 ? ` (${deletedRows.length} deleted)` : ''}`);
+      showNotification(`Discounts saved successfully (${validDiscounts.length} discounts)`);
     } catch (error) {
       console.error("Error saving discounts:", error);
       showNotification("Error saving discounts", "error");
