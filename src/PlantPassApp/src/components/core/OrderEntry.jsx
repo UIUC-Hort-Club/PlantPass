@@ -24,7 +24,7 @@ import { transformDiscountsForOrder } from "../../utils/discountTransformer";
 import LoadingSpinner from "../common/LoadingSpinner";
 
 function OrderEntry({ product_listings }) {
-  const { showSuccess } = useNotification();
+  const { showSuccess, showWarning, showError } = useNotification();
   
   const [products, setProducts] = useState([]);
   const [discounts, setDiscounts] = useState([]);
@@ -62,8 +62,8 @@ function OrderEntry({ product_listings }) {
         [sku]: (scannedProduct.Price * newQuantity).toFixed(2),
       }));
     } else {
-      alert(
-        `Internal Error: Item with SKU "${scannedProduct?.SKU}" not found, but should have been found...`,
+      showError(
+        `Internal Error: Item with SKU "${scannedProduct?.SKU}" not found, but should have been found...`
       );
     }
   };
@@ -177,7 +177,7 @@ function OrderEntry({ product_listings }) {
     };
 
     if (transaction.items.length === 0) {
-      alert("Please add items to your order before submitting.");
+      showWarning("Please add items to your order before submitting.");
       return;
     }
 
@@ -195,13 +195,13 @@ function OrderEntry({ product_listings }) {
       })
       .catch((error) => {
         console.error("Error recording transaction:", error);
-        alert("An error occurred while recording the transaction. Please try again.");
+        showError("An error occurred while recording the transaction. Please try again.");
       });
   };
 
   const handleUpdateOrder = () => {
     if (!currentTransactionID) {
-      alert("No current transaction to update.");
+      showWarning("No current transaction to update.");
       return;
     }
 
@@ -230,7 +230,7 @@ function OrderEntry({ product_listings }) {
     };
 
     if (updateData.items.length === 0) {
-      alert("Please add items to your order before updating.");
+      showWarning("Please add items to your order before updating.");
       return;
     }
 
@@ -246,7 +246,7 @@ function OrderEntry({ product_listings }) {
       })
       .catch((error) => {
         console.error("Error updating transaction:", error);
-        alert("An error occurred while updating the transaction. Please try again.");
+        showError("An error occurred while updating the transaction. Please try again.");
       });
   };
 
