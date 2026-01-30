@@ -14,6 +14,8 @@ import {
   Typography,
   Snackbar,
   Alert,
+  CircularProgress,
+  Box,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
@@ -169,7 +171,19 @@ export default function DiscountTable() {
   if (loading) {
     return (
       <Paper sx={{ p: 2 }}>
-        <Typography>Loading discounts...</Typography>
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            minHeight: '200px',
+            gap: 2
+          }}
+        >
+          <CircularProgress />
+          <Typography>Loading discounts...</Typography>
+        </Box>
       </Paper>
     );
   }
