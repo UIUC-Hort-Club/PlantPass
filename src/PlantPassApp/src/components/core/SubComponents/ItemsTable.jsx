@@ -8,6 +8,7 @@ import {
   TableRow,
   TextField,
   Box,
+  Typography,
 } from "@mui/material";
 
 export default function ItemsTable({
@@ -18,6 +19,9 @@ export default function ItemsTable({
 }) {
   return (
     <Box sx={{ maxHeight: 800, overflowY: "auto" }}>
+        <Typography variant="h6" sx={{ mb: 1 }}>
+          Product Listings
+        </Typography>
       <Table size="small">
         <TableHead>
           <TableRow>

@@ -12,17 +12,21 @@ import {
 } from "@mui/material";
 import { InputAdornment } from "@mui/material";
 import ItemsTable from "./SubComponents/ItemsTable";
+import DiscountsTable from "./SubComponents/DiscountsTable";
 import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
 import Receipt from "./SubComponents/Receipt";
 import Scanner from "./SubComponents/Scanner";
 import { createTransaction } from "../../api/transaction_interface/createTransaction";
 import { getAllProducts } from "../../api/products_interface/getAllProducts";
+import { getAllDiscounts } from "../../api/discounts_interface/getAllDiscounts";
 import ShowTransactionID from "./SubComponents/ShowTransactionID";
 
 function OrderEntry({ product_listings }) {
   const [products, setProducts] = useState([]);
+  const [discounts, setDiscounts] = useState([]);
   const [quantities, setQuantities] = useState({});
   const [subtotals, setSubtotals] = useState({});
+  const [selectedDiscounts, setSelectedDiscounts] = useState([]);
   const [totals, setTotals] = useState({
     subtotal: 0,
     discount: 0,
@@ -68,8 +72,10 @@ function OrderEntry({ product_listings }) {
 
   const handleNewOrder = () => {
     loadProducts(); // Reload products from database
+    loadDiscounts(); // Reload discounts from database
     setCurrentTransactionID("");
     setTransactionIDDialogOpen(false);
+    setSelectedDiscounts([]);
     setTotals({
       subtotal: 0,
       discount: 0,
@@ -125,8 +131,19 @@ function OrderEntry({ product_listings }) {
     }
   };
 
+  const loadDiscounts = async () => {
+    try {
+      const discountsData = await getAllDiscounts();
+      setDiscounts(discountsData);
+    } catch (error) {
+      console.error("Error loading discounts from database:", error);
+      setDiscounts([]); // Set empty array on error
+    }
+  };
+
   useEffect(() => {
     loadProducts();
+    loadDiscounts();
   }, []);
 
   const handleQuantityChange = (e, sku) => {
@@ -154,7 +171,16 @@ function OrderEntry({ product_listings }) {
     setSubtotals((prev) => ({ ...prev, [sku]: subtotal }));
   };
 
+  const handleDiscountToggle = (selectedDiscountNames) => {
+    setSelectedDiscounts(selectedDiscountNames);
+  };
+
   const handleEnterOrder = () => {
+    // Get selected discount objects
+    const selectedDiscountObjects = discounts.filter(discount => 
+      selectedDiscounts.includes(discount.name)
+    );
+
     const transaction = {
       timestamp: Date.now(),
       items: Object.entries(quantities).map(([sku, quantity]) => {
@@ -166,6 +192,10 @@ function OrderEntry({ product_listings }) {
           price_ea: product.Price,
         };
       }),
+      discounts: selectedDiscountObjects.map(discount => ({
+        name: discount.name,
+        percent_off: discount.percent_off
+      })),
       voucher: Number(voucher) || 0,
     };
 
@@ -214,6 +244,12 @@ function OrderEntry({ product_listings }) {
         quantities={quantities}
         subtotals={subtotals}
         onQuantityChange={handleQuantityChange}
+      />
+
+      <DiscountsTable
+        discounts={discounts}
+        selectedDiscounts={selectedDiscounts}
+        onDiscountToggle={handleDiscountToggle}
       />
 
       <Box sx={{ mt: 2 }}>

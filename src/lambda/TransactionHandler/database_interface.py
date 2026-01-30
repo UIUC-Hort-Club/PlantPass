@@ -78,19 +78,31 @@ def create_transaction(transaction):
     # Add items to the transaction
     transaction_created["items"] = transaction.get("items", [])
 
+    # Compute subtotal first (needed for discount calculations)
+    subtotal = sum(item["quantity"] * item["price_ea"] for item in transaction_created["items"])
+
     # Add discounts
     #
     # Note: We pull these from the discounts endpoint and store them with this record in the off chance
     # that the discount details change in the future. This way we can always know exactly what discounts
     # were applied at the time of purchase. This is the same reason the product price is stored with the
     # transaction record instead of being pulled from the product database when needed.
+    input_discounts = transaction.get("discounts", [])
     transaction_created["discounts"] = []
+    
+    # Process each discount and calculate amount_off
+    for discount in input_discounts:
+        discount_record = {
+            "name": discount.get("name", ""),
+            "percent_off": discount.get("percent_off", 0),
+            "amount_off": (subtotal * discount.get("percent_off", 0)) / 100
+        }
+        transaction_created["discounts"].append(discount_record)
 
     # Add club voucher amount
     transaction_created["club_voucher"] = transaction.get("voucher", 0)
 
     # Compute receipt (subtotal, discount, total)
-    subtotal = sum(item["quantity"] * item["price_ea"] for item in transaction_created["items"])
     total_discount = sum(discount.get("amount_off", 0) for discount in transaction_created["discounts"]) + transaction_created["club_voucher"]
     total = max(subtotal - total_discount, 0)  # Total should not be negative
     transaction_created["receipt"] = {
