@@ -24,17 +24,77 @@ import { createProduct } from "../../api/products_interface/createProduct";
 import { updateProduct } from "../../api/products_interface/updateProduct";
 import { deleteProduct } from "../../api/products_interface/deleteProduct";
 
+// SKU generation utility function
+// Same thing in the lambda - this is OG
+const generateSKU = (itemName, existingProducts) => {
+  // Extract first two letters, convert to uppercase
+  const prefix = itemName.replace(/[^a-zA-Z]/g, '').slice(0, 2).toUpperCase();
+  
+  if (prefix.length < 2) {
+    // If less than 2 letters, pad with 'X'
+    const paddedPrefix = (prefix + 'XX').slice(0, 2);
+    return findNextAvailableNumber(paddedPrefix, existingProducts);
+  }
+  
+  return findNextAvailableNumber(prefix, existingProducts);
+};
+
+const findNextAvailableNumber = (prefix, existingProducts) => {
+  // Find existing SKUs with this prefix
+  const existingSKUs = existingProducts
+    .map(product => product.sku)
+    .filter(sku => sku && sku.startsWith(prefix) && sku.length === 5);
+  
+  // Extract numbers from existing SKUs
+  const numbers = existingSKUs
+    .map(sku => parseInt(sku.slice(2)))
+    .filter(num => !isNaN(num));
+  
+  // Find next available number
+  let nextNum = 1;
+  while (numbers.includes(nextNum)) {
+    nextNum++;
+  }
+  
+  return `${prefix}${nextNum.toString().padStart(3, '0')}`;
+};
+
+// Validation function to check for duplicate SKUs
+const validateSKUs = (rows) => {
+  const skuCounts = {};
+  const duplicates = new Set();
+  
+  rows.forEach(row => {
+    if (row.sku && row.sku.trim() !== '' && row.sku !== 'Auto-generated') {
+      const sku = row.sku.trim().toUpperCase();
+      skuCounts[sku] = (skuCounts[sku] || 0) + 1;
+      if (skuCounts[sku] > 1) {
+        duplicates.add(sku);
+      }
+    }
+  });
+  
+  return duplicates;
+};
+
 export default function ProductTable() {
   const [rows, setRows] = useState([]);
   const [originalRows, setOriginalRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [notification, setNotification] = useState({ open: false, message: "", severity: "success" });
+  const [duplicateSKUs, setDuplicateSKUs] = useState(new Set());
 
   // Load products from API on component mount
   useEffect(() => {
     loadProducts();
   }, []);
+
+  // Validate SKUs whenever rows change
+  useEffect(() => {
+    const duplicates = validateSKUs(rows);
+    setDuplicateSKUs(duplicates);
+  }, [rows]);
 
   const loadProducts = async () => {
     try {
@@ -65,7 +125,7 @@ export default function ProductTable() {
   const handleAddRow = () => {
     const newRow = {
       id: `new-${Date.now()}`,
-      sku: "Auto-generated",
+      sku: "",
       name: "",
       price: 0,
       isNew: true,
@@ -95,6 +155,28 @@ export default function ProductTable() {
 
   const handleEdit = (id, field, value) => {
     setRows(rows.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
+  };
+
+  const handleSKUBlur = (id) => {
+    const row = rows.find(r => r.id === id);
+    if (!row) return;
+
+    // If SKU is empty and name is filled, generate SKU
+    if ((!row.sku || row.sku.trim() === '') && row.name && row.name.trim() !== '') {
+      const generatedSKU = generateSKU(row.name, rows);
+      setRows(rows.map((r) => (r.id === id ? { ...r, sku: generatedSKU } : r)));
+    }
+  };
+
+  const handleNameBlur = (id) => {
+    const row = rows.find(r => r.id === id);
+    if (!row) return;
+
+    // If name is filled and SKU is empty, generate SKU
+    if (row.name && row.name.trim() !== '' && (!row.sku || row.sku.trim() === '')) {
+      const generatedSKU = generateSKU(row.name, rows);
+      setRows(rows.map((r) => (r.id === id ? { ...r, sku: generatedSKU } : r)));
+    }
   };
 
   const handleReset = () => {
@@ -135,12 +217,29 @@ export default function ProductTable() {
       return;
     }
 
+    // Check for duplicate SKUs before saving
+    if (duplicateSKUs.size > 0) {
+      showNotification("Please fix duplicate SKUs before saving", "error");
+      return;
+    }
+
+    // Check for empty SKUs in rows that have names
+    const invalidRows = rows.filter(row => 
+      row.name && row.name.trim() !== '' && (!row.sku || row.sku.trim() === '')
+    );
+    
+    if (invalidRows.length > 0) {
+      showNotification("All products must have a SKU", "error");
+      return;
+    }
+
     setSaving(true);
     try {
       // Process new products
-      const newProducts = rows.filter(row => row.isNew && row.name.trim() !== "");
+      const newProducts = rows.filter(row => row.isNew && row.name.trim() !== "" && row.sku.trim() !== "");
       for (const product of newProducts) {
         await createProduct({
+          SKU: product.sku.toUpperCase(),
           item: product.name,
           price_ea: parseFloat(product.price) || 0
         });
@@ -150,11 +249,12 @@ export default function ProductTable() {
       const updatedProducts = rows.filter(row => {
         if (row.isNew) return false;
         const original = originalRows.find(orig => orig.id === row.id);
-        return original && (row.name !== original.name || row.price !== original.price);
+        return original && (row.name !== original.name || row.price !== original.price || row.sku !== original.sku);
       });
 
       for (const product of updatedProducts) {
         await updateProduct(product.originalSku || product.sku, {
+          SKU: product.sku.toUpperCase(),
           item: product.name,
           price_ea: parseFloat(product.price) || 0
         });
@@ -276,12 +376,13 @@ export default function ProductTable() {
                               fullWidth
                               size="small"
                               value={row.sku}
-                              disabled={true}
-                              sx={{ 
-                                "& .MuiInputBase-input.Mui-disabled": {
-                                  WebkitTextFillColor: "#666",
-                                }
-                              }}
+                              onChange={(e) =>
+                                handleEdit(row.id, "sku", e.target.value.toUpperCase())
+                              }
+                              onBlur={() => handleSKUBlur(row.id)}
+                              error={duplicateSKUs.has(row.sku?.toUpperCase())}
+                              helperText={duplicateSKUs.has(row.sku?.toUpperCase()) ? "Duplicate SKU Found" : ""}
+                              placeholder="Auto-generated"
                             />
                           </TableCell>
 
@@ -293,6 +394,7 @@ export default function ProductTable() {
                               onChange={(e) =>
                                 handleEdit(row.id, "name", e.target.value)
                               }
+                              onBlur={() => handleNameBlur(row.id)}
                             />
                           </TableCell>
 

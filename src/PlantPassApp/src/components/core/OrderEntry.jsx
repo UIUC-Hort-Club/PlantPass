@@ -186,7 +186,19 @@ function OrderEntry({ product_listings }) {
   if (loading) {
     return (
       <Container maxWidth="md">
-        <Typography>Loading products...</Typography>
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            minHeight: '300px',
+            gap: 2
+          }}
+        >
+          <CircularProgress />
+          <Typography>Loading products...</Typography>
+        </Box>
       </Container>
     );
   }

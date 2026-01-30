@@ -2,15 +2,16 @@ import { API_URL } from "../config";
 
 /**
  * Creates a new product in the backend.
- * SKU will be generated automatically from the item name.
+ * SKU can be provided or will be generated automatically from the item name.
  *
  * @param {object} productData - Product object with structure:
  * {
+ *   "SKU": "SI001", // Optional - if not provided, will be auto-generated
  *   "item": "Six Pack",
  *   "price_ea": 12.50
  * }
  *
- * @returns {object} The created product object from backend (includes generated SKU)
+ * @returns {object} The created product object from backend
  */
 export async function createProduct(productData) {
   try {

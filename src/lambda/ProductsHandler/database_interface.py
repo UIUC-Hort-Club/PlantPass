@@ -21,6 +21,8 @@ def generate_sku(item_name):
 
     Requires O(n) time but speed is not a concern here - updates to this table are not time sensitive
 
+    This is a backup function because SKU should come from frontend
+
     Takes first two letters and adds a three-digit number.
     If the two letters already exist, increment the number.
 
@@ -87,7 +89,7 @@ def create_product(product_data):
     product_data must include at least:
     - item: str
     - price_ea: float
-    SKU will be generated automatically from the item name.
+    - SKU: str (optional - if not provided, will be auto-generated)
     """
     try:
         # Validate required fields
@@ -97,21 +99,17 @@ def create_product(product_data):
         item_name = product_data['item']
         price_ea = Decimal(str(product_data['price_ea']))
         
-        # Generate SKU
-        sku = generate_sku(item_name)
+        # Use provided SKU or generate one
+        if 'SKU' in product_data and product_data['SKU'].strip():
+            sku = product_data['SKU'].strip().upper()
+        else:
+            sku = generate_sku(item_name)
         
-        # Check if SKU already exists (should be rare but possible)
+        # Check if SKU already exists
         try:
             existing = table.get_item(Key={'SKU': sku})
             if 'Item' in existing:
-                # This should be very rare, but if it happens, try a few more times
-                for i in range(10):
-                    sku = generate_sku(item_name + str(i))
-                    existing = table.get_item(Key={'SKU': sku})
-                    if 'Item' not in existing:
-                        break
-                else:
-                    raise ValueError(f"Unable to generate unique SKU for item '{item_name}'")
+                raise ValueError(f"Product with SKU '{sku}' already exists")
         except ClientError as e:
             if e.response['Error']['Code'] != 'ResourceNotFoundException':
                 raise
@@ -150,39 +148,71 @@ def update_product(sku, update_data):
                 raise ValueError(f"Product with SKU '{sku}' not found")
             raise
         
-        # Build update expression
-        update_expression = "SET "
-        expression_attribute_values = {}
-        update_parts = []
-        
-        if 'item' in update_data:
-            update_parts.append("item = :item")
-            expression_attribute_values[':item'] = update_data['item']
-        
-        if 'price_ea' in update_data:
-            update_parts.append("price_ea = :price_ea")
-            expression_attribute_values[':price_ea'] = Decimal(str(update_data['price_ea']))
-        
-        if not update_parts:
-            raise ValueError("No valid fields to update")
-        
-        update_expression += ", ".join(update_parts)
-        
-        # Update the item
-        response = table.update_item(
-            Key={'SKU': sku},
-            UpdateExpression=update_expression,
-            ExpressionAttributeValues=expression_attribute_values,
-            ReturnValues='ALL_NEW'
-        )
-        
-        updated_item = response['Attributes']
-        # Convert Decimal to float for JSON serialization
-        if 'price_ea' in updated_item:
-            updated_item['price_ea'] = float(updated_item['price_ea'])
-        
-        logger.info(f"Updated product: {updated_item}")
-        return updated_item
+        # If SKU is being updated, we need to create a new item and delete the old one
+        if 'SKU' in update_data and update_data['SKU'] != sku:
+            new_sku = update_data['SKU'].strip().upper()
+            
+            # Check if new SKU already exists
+            try:
+                existing_new = table.get_item(Key={'SKU': new_sku})
+                if 'Item' in existing_new:
+                    raise ValueError(f"Product with SKU '{new_sku}' already exists")
+            except ClientError as e:
+                if e.response['Error']['Code'] != 'ResourceNotFoundException':
+                    raise
+            
+            # Get current item data
+            current_item = existing['Item']
+            
+            # Create new item with updated data
+            new_item = {
+                'SKU': new_sku,
+                'item': update_data.get('item', current_item['item']),
+                'price_ea': Decimal(str(update_data.get('price_ea', current_item['price_ea'])))
+            }
+            
+            # Create new item and delete old one
+            table.put_item(Item=new_item)
+            table.delete_item(Key={'SKU': sku})
+            
+            # Return the new item with float conversion
+            new_item['price_ea'] = float(new_item['price_ea'])
+            logger.info(f"Updated product SKU from {sku} to {new_sku}: {new_item}")
+            return new_item
+        else:
+            # Regular update without SKU change
+            update_expression = "SET "
+            expression_attribute_values = {}
+            update_parts = []
+            
+            if 'item' in update_data:
+                update_parts.append("item = :item")
+                expression_attribute_values[':item'] = update_data['item']
+            
+            if 'price_ea' in update_data:
+                update_parts.append("price_ea = :price_ea")
+                expression_attribute_values[':price_ea'] = Decimal(str(update_data['price_ea']))
+            
+            if not update_parts:
+                raise ValueError("No valid fields to update")
+            
+            update_expression += ", ".join(update_parts)
+            
+            # Update the item
+            response = table.update_item(
+                Key={'SKU': sku},
+                UpdateExpression=update_expression,
+                ExpressionAttributeValues=expression_attribute_values,
+                ReturnValues='ALL_NEW'
+            )
+            
+            updated_item = response['Attributes']
+            # Convert Decimal to float for JSON serialization
+            if 'price_ea' in updated_item:
+                updated_item['price_ea'] = float(updated_item['price_ea'])
+            
+            logger.info(f"Updated product: {updated_item}")
+            return updated_item
         
     except ValueError as e:
         logger.error(f"Validation error updating product: {e}")

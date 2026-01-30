@@ -6,6 +6,7 @@ import { API_URL } from "../config";
  * @param {string} sku - The SKU of the product to update
  * @param {object} updateData - Fields to update:
  * {
+ *   "SKU": "SI001", // Optional - if provided, will change the SKU
  *   "item": "updated six pack name",
  *   "price_ea": 15.00
  * }
