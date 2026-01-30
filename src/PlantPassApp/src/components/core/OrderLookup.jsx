@@ -103,6 +103,23 @@ function OrderLookup() {
     setTotals({ subtotal: 0, discount: 0, grandTotal: 0 });
   };
 
+  const formatOrderId = (input) => {
+    const cleanInput = input.replace(/[^a-zA-Z]/g, '').toUpperCase();
+    
+    const limitedInput = cleanInput.slice(0, 6);
+    
+    if (limitedInput.length > 3) {
+      return `${limitedInput.slice(0, 3)}-${limitedInput.slice(3)}`;
+    }
+    
+    return limitedInput;
+  };
+
+  const handleOrderIdChange = (e) => {
+    const formattedValue = formatOrderId(e.target.value);
+    setOrderId(formattedValue);
+  };
+
   const handleQuantityChange = (e, sku) => {
     if (isOrderCompleted) return; // Prevent changes if order is completed
     
@@ -311,11 +328,15 @@ function OrderLookup() {
           label="Order ID"
           size="small"
           value={orderId}
-          onChange={(e) => setOrderId(e.target.value)}
+          onChange={handleOrderIdChange}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               handleLookup();
             }
+          }}
+          inputProps={{
+            maxLength: 7,
+            style: { textTransform: 'uppercase' }
           }}
         />
         <Button variant="contained" size="small" onClick={handleLookup}>
