@@ -321,6 +321,9 @@ function OrderLookup() {
         <Button variant="contained" size="small" onClick={handleLookup}>
           Lookup
         </Button>
+        <Button variant="contained" size="small" onClick={resetToInitialState}>
+          Reset
+        </Button>
       </Stack>
 
       {error && (
