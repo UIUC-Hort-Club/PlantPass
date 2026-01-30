@@ -35,7 +35,7 @@ export async function createTransaction(transactionData) {
     }
 
     const data = await response.json();
-    return data.transaction; // Return only the transaction object
+    return data.transaction;
   } catch (err) {
     console.error("Error writing transaction:", err);
     throw err;

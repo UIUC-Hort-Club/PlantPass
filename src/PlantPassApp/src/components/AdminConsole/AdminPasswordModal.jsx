@@ -55,12 +55,12 @@ export default function AdminPasswordModal({ open, onClose, onSubmit, error }) {
     setSubmitting(true);
 
     try {
-      await onSubmit(password); // wait for result
-      setPassword(""); // clear input only if successful
+      await onSubmit(password);
+      setPassword("");
     } catch (err) {
       console.error("Admin authentication error:", err);
     } finally {
-      setSubmitting(false); // hide progress bar after result
+      setSubmitting(false);
     }
   };
 

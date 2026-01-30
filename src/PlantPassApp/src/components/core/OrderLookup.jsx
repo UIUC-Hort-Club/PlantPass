@@ -42,7 +42,6 @@ function OrderLookup() {
   const [paymentMethod, setPaymentMethod] = useState(""); // Initialize to empty
   const [transactionLoaded, setTransactionLoaded] = useState(false);
 
-  // Load products and discounts on component mount
   useEffect(() => {
     loadProducts();
     loadDiscounts();
@@ -58,7 +57,6 @@ function OrderLookup() {
       }));
       setProducts(transformedProducts);
       
-      // Initialize quantities and subtotals
       const initialQuantities = {};
       const initialSubtotals = {};
       transformedProducts.forEach((item) => {
@@ -88,10 +86,9 @@ function OrderLookup() {
     setOrderId("");
     setSelectedDiscounts([]);
     setVoucher("");
-    setPaymentMethod(""); // Reset to empty
+    setPaymentMethod("");
     setError("");
     
-    // Reset quantities and subtotals
     const resetQuantities = {};
     const resetSubtotals = {};
     products.forEach((product) => {
@@ -108,17 +105,14 @@ function OrderLookup() {
     const value = e.target.value;
     const item = products.find((i) => i.SKU === sku);
 
-    // Allow empty input
     if (value === "") {
       setQuantities((prev) => ({ ...prev, [sku]: "" }));
       setSubtotals((prev) => ({ ...prev, [sku]: "0.00" }));
       return;
     }
 
-    // Only allow whole numbers (integers)
     const numericValue = parseInt(value);
     
-    // If not a valid integer or negative, ignore the input
     if (isNaN(numericValue) || numericValue < 0) {
       return;
     }
@@ -134,8 +128,7 @@ function OrderLookup() {
 
   const handleLookup = async () => {
     setError("");
-    setTransactionLoaded(false); // Reset transaction loaded state
-    
+    setTransactionLoaded(false);
     if (!orderId.trim()) {
       setError("Please enter an Order ID");
       return;
@@ -146,24 +139,21 @@ function OrderLookup() {
       
       if (!transaction) {
         setError("Transaction not found!");
-        setTransactionLoaded(false); // Ensure UI elements stay hidden
+        setTransactionLoaded(false);
         return;
       }
 
       setCurrentTransactionID(transaction.purchase_id);
       setTransactionLoaded(true);
 
-      // Populate quantities from transaction
       const newQuantities = {};
       const newSubtotals = {};
       
-      // Initialize all products to 0
       products.forEach((product) => {
         newQuantities[product.SKU] = 0;
         newSubtotals[product.SKU] = "0.00";
       });
 
-      // Set quantities from transaction items
       transaction.items?.forEach((item) => {
         newQuantities[item.SKU] = item.quantity;
         newSubtotals[item.SKU] = (item.quantity * item.price_ea).toFixed(2);
@@ -172,33 +162,29 @@ function OrderLookup() {
       setQuantities(newQuantities);
       setSubtotals(newSubtotals);
 
-      // Set selected discounts (those with amount_off > 0)
       const selectedDiscountNames = transaction.discounts
         ?.filter(discount => discount.amount_off > 0)
         .map(discount => discount.name) || [];
       setSelectedDiscounts(selectedDiscountNames);
 
-      // Set voucher
       setVoucher(transaction.club_voucher || 0);
 
-      // Set totals from receipt
       setTotals({
         subtotal: transaction.receipt?.subtotal || 0,
         discount: transaction.receipt?.discount || 0,
         grandTotal: transaction.receipt?.total || 0,
       });
 
-      // Set payment method if already paid, otherwise keep empty
       if (transaction.payment?.method && transaction.payment?.paid) {
         setPaymentMethod(transaction.payment.method);
       } else {
-        setPaymentMethod(""); // Keep empty for unpaid transactions
+        setPaymentMethod("");
       }
 
     } catch (err) {
       console.error("Error looking up transaction:", err);
       setError("Transaction not found!");
-      setTransactionLoaded(false); // Ensure UI elements stay hidden
+      setTransactionLoaded(false);
     }
   };
 
@@ -209,7 +195,6 @@ function OrderLookup() {
     }
 
     try {
-      // Get all discounts with selection status
       const discountsWithSelection = discounts.map(discount => ({
         name: discount.name,
         type: discount.type,
@@ -295,7 +280,6 @@ function OrderLookup() {
       showSuccess(`Order ${currentTransactionID} has been completed!`);
       setError("");
       
-      // Reset to initial state after successful completion
       resetToInitialState();
       
     } catch (err) {

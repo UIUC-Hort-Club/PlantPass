@@ -40,7 +40,6 @@ function OrderEntry({ product_listings }) {
   const [transactionIDDialogOpen, setTransactionIDDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Compute subtotal safely
   const computedSubtotal = Object.values(subtotals)
     .reduce((sum, val) => sum + (parseFloat(val) || 0), 0)
     .toFixed(2);
@@ -72,8 +71,8 @@ function OrderEntry({ product_listings }) {
   };
 
   const handleNewOrder = () => {
-    loadProducts(); // Reload products from database
-    loadDiscounts(); // Reload discounts from database
+    loadProducts();
+    loadDiscounts();
     setCurrentTransactionID("");
     setTransactionIDDialogOpen(false);
     setSelectedDiscounts([]);
@@ -89,7 +88,6 @@ function OrderEntry({ product_listings }) {
       setLoading(true);
       const productsData = await getAllProducts();
       
-      // Transform API data to match expected format
       const transformedProducts = productsData.map(product => ({
         SKU: product.SKU,
         Name: product.item,
@@ -98,7 +96,6 @@ function OrderEntry({ product_listings }) {
       
       setProducts(transformedProducts);
       
-      // Initialize quantities and subtotals
       const initialQuantities = {};
       const initialSubtotals = {};
       transformedProducts.forEach((item) => {
@@ -110,7 +107,6 @@ function OrderEntry({ product_listings }) {
       setVoucher("");
     } catch (error) {
       console.error("Error loading products from database:", error);
-      // Fallback to static file if API fails
       try {
         const response = await fetch(product_listings);
         const data = await response.json();
@@ -138,7 +134,7 @@ function OrderEntry({ product_listings }) {
       setDiscounts(discountsData);
     } catch (error) {
       console.error("Error loading discounts from database:", error);
-      setDiscounts([]); // Set empty array on error
+      setDiscounts([]);
     }
   };
 
@@ -151,17 +147,14 @@ function OrderEntry({ product_listings }) {
     const value = e.target.value;
     const item = products.find((i) => i.SKU === sku);
 
-    // Allow empty input
     if (value === "") {
       setQuantities((prev) => ({ ...prev, [sku]: "" }));
       setSubtotals((prev) => ({ ...prev, [sku]: "0.00" }));
       return;
     }
 
-    // Only allow whole numbers (integers)
     const numericValue = parseInt(value);
     
-    // If not a valid integer or negative, ignore the input
     if (isNaN(numericValue) || numericValue < 0) {
       return;
     }
@@ -177,7 +170,6 @@ function OrderEntry({ product_listings }) {
   };
 
   const handleEnterOrder = () => {
-    // Get all discounts with selection status
     const discountsWithSelection = discounts.map(discount => ({
       name: discount.name,
       type: discount.type,
@@ -203,7 +195,6 @@ function OrderEntry({ product_listings }) {
       voucher: Number(voucher) || 0,
     };
 
-    // Only proceed if there are items in the order
     if (transaction.items.length === 0) {
       alert("Please add items to your order before submitting.");
       return;
@@ -233,7 +224,6 @@ function OrderEntry({ product_listings }) {
       return;
     }
 
-    // Get all discounts with selection status
     const discountsWithSelection = discounts.map(discount => ({
       name: discount.name,
       type: discount.type,
@@ -258,7 +248,6 @@ function OrderEntry({ product_listings }) {
       voucher: Number(voucher) || 0,
     };
 
-    // Only proceed if there are items in the order
     if (updateData.items.length === 0) {
       alert("Please add items to your order before updating.");
       return;

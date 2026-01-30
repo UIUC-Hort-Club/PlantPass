@@ -22,14 +22,10 @@ import { getAllProducts } from "../../api/products_interface/getAllProducts";
 import { replaceAllProducts } from "../../api/products_interface/replaceAllProducts";
 import { useNotification } from "../../contexts/NotificationContext";
 
-// SKU generation utility function
-// Same thing in the lambda - this is OG
 const generateSKU = (itemName, existingProducts) => {
-  // Extract first two letters, convert to uppercase
   const prefix = itemName.replace(/[^a-zA-Z]/g, '').slice(0, 2).toUpperCase();
   
   if (prefix.length < 2) {
-    // If less than 2 letters, pad with 'X'
     const paddedPrefix = (prefix + 'XX').slice(0, 2);
     return findNextAvailableNumber(paddedPrefix, existingProducts);
   }
@@ -38,17 +34,14 @@ const generateSKU = (itemName, existingProducts) => {
 };
 
 const findNextAvailableNumber = (prefix, existingProducts) => {
-  // Find existing SKUs with this prefix
   const existingSKUs = existingProducts
     .map(product => product.sku)
     .filter(sku => sku && sku.startsWith(prefix) && sku.length === 5);
   
-  // Extract numbers from existing SKUs
   const numbers = existingSKUs
     .map(sku => parseInt(sku.slice(2)))
     .filter(num => !isNaN(num));
   
-  // Find next available number
   let nextNum = 1;
   while (numbers.includes(nextNum)) {
     nextNum++;
@@ -57,7 +50,6 @@ const findNextAvailableNumber = (prefix, existingProducts) => {
   return `${prefix}${nextNum.toString().padStart(3, '0')}`;
 };
 
-// Validation function to check for duplicate SKUs
 const validateSKUs = (rows) => {
   const skuCounts = {};
   const duplicates = new Set();
@@ -85,12 +77,10 @@ export default function ProductTable() {
   const [saving, setSaving] = useState(false);
   const [duplicateSKUs, setDuplicateSKUs] = useState(new Set());
 
-  // Load products from API on component mount
   useEffect(() => {
     loadProducts();
   }, []);
 
-  // Validate SKUs whenever rows change
   useEffect(() => {
     const duplicates = validateSKUs(rows);
     setDuplicateSKUs(duplicates);
@@ -111,8 +101,7 @@ export default function ProductTable() {
       }));
       setRows(formattedRows);
       setOriginalRows(JSON.parse(JSON.stringify(formattedRows)));
-      setDeletedRows([]); // Clear deleted rows when loading fresh data
-    } catch (error) {
+      setDeletedRows([]);
       console.error("Error loading products:", error);
       showError("Error loading products");
     } finally {
@@ -137,10 +126,8 @@ export default function ProductTable() {
     const row = rows.find(r => r.id === id);
     
     if (row.isNew) {
-      // Just remove from UI if it's a new row (never saved to database)
       setRows(rows.filter((r) => r.id !== id));
     } else {
-      // Mark existing row for deletion and remove from UI
       setDeletedRows(prev => [...prev, row]);
       setRows(rows.filter((r) => r.id !== id));
     }
@@ -148,7 +135,6 @@ export default function ProductTable() {
 
   const handleEdit = (id, field, value) => {
     if (field === 'price') {
-      // Handle price formatting
       const formattedPrice = formatPriceInput(value);
       setRows(rows.map((r) => (r.id === id ? { ...r, [field]: formattedPrice } : r)));
     } else {
@@ -157,32 +143,26 @@ export default function ProductTable() {
   };
 
   const formatPriceInput = (value) => {
-    // Remove any non-digit and non-decimal characters
     let cleaned = value.replace(/[^\d.]/g, '');
     
-    // Ensure only one decimal point
     const parts = cleaned.split('.');
     if (parts.length > 2) {
       cleaned = parts[0] + '.' + parts.slice(1).join('');
     }
     
-    // Limit to 2 decimal places
     if (parts.length === 2 && parts[1].length > 2) {
       cleaned = parts[0] + '.' + parts[1].substring(0, 2);
     }
     
-    // Convert to number and back to ensure valid format
     const numValue = parseFloat(cleaned);
     if (isNaN(numValue)) {
       return '';
     }
     
-    // Return the cleaned string (not formatted to 2 decimals yet to allow typing)
     return cleaned;
   };
 
   const formatPriceDisplay = (price) => {
-    // Format for display with 2 decimal places
     const numPrice = parseFloat(price);
     if (isNaN(numPrice)) return '0.00';
     return numPrice.toFixed(2);
@@ -192,7 +172,6 @@ export default function ProductTable() {
     const row = rows.find(r => r.id === id);
     if (!row) return;
     
-    // Format to 2 decimal places on blur
     const formattedPrice = formatPriceDisplay(row.price);
     setRows(rows.map((r) => (r.id === id ? { ...r, price: formattedPrice } : r)));
   };
@@ -201,7 +180,6 @@ export default function ProductTable() {
     const row = rows.find(r => r.id === id);
     if (!row) return;
 
-    // If SKU is empty and name is filled, generate SKU
     if ((!row.sku || row.sku.trim() === '') && row.name && row.name.trim() !== '') {
       const generatedSKU = generateSKU(row.name, rows);
       setRows(rows.map((r) => (r.id === id ? { ...r, sku: generatedSKU } : r)));
@@ -212,7 +190,6 @@ export default function ProductTable() {
     const row = rows.find(r => r.id === id);
     if (!row) return;
 
-    // If name is filled and SKU is empty, generate SKU
     if (row.name && row.name.trim() !== '' && (!row.sku || row.sku.trim() === '')) {
       const generatedSKU = generateSKU(row.name, rows);
       setRows(rows.map((r) => (r.id === id ? { ...r, sku: generatedSKU } : r)));
@@ -221,11 +198,10 @@ export default function ProductTable() {
 
   const handleReset = () => {
     setRows(JSON.parse(JSON.stringify(originalRows)));
-    setDeletedRows([]); // Clear deleted rows on reset
+    setDeletedRows([]);
   };
 
   const handleClear = () => {
-    // Mark all existing rows for deletion, keep only new unsaved rows
     const existingRows = rows.filter(row => !row.isNew);
     setDeletedRows(prev => [...prev, ...existingRows]);
     setRows(rows.filter(row => row.isNew));
@@ -238,7 +214,6 @@ export default function ProductTable() {
     const [moved] = updated.splice(result.source.index, 1);
     updated.splice(result.destination.index, 0, moved);
 
-    // Update sort orders based on new positions
     const reorderedRows = updated.map((row, index) => ({
       ...row,
       sortOrder: index + 1
@@ -247,12 +222,9 @@ export default function ProductTable() {
     setRows(reorderedRows);
   };
 
-  // Check if there are changes to save
   const hasChanges = () => {
-    // Check if there are deleted rows
     if (deletedRows.length > 0) return true;
     
-    // Check if row count changed (excluding deleted rows)
     if (rows.length !== originalRows.length) return true;
     
     return rows.some(row => {
@@ -274,13 +246,11 @@ export default function ProductTable() {
       return;
     }
 
-    // Check for duplicate SKUs before saving
     if (duplicateSKUs.size > 0) {
       showError("Please fix duplicate SKUs before saving");
       return;
     }
 
-    // Check for empty SKUs in rows that have names
     const invalidRows = rows.filter(row => 
       row.name && row.name.trim() !== '' && (!row.sku || row.sku.trim() === '')
     );
@@ -290,7 +260,6 @@ export default function ProductTable() {
       return;
     }
 
-    // Check for invalid prices
     const invalidPrices = rows.filter(row => 
       row.name && row.name.trim() !== '' && (isNaN(parseFloat(row.price)) || parseFloat(row.price) < 0)
     );
@@ -302,7 +271,6 @@ export default function ProductTable() {
 
     setSaving(true);
     try {
-      // Filter out empty rows and prepare data for bulk replace
       const validProducts = rows
         .filter(row => row.name && row.name.trim() !== '' && row.sku && row.sku.trim() !== '')
         .map(row => ({
@@ -312,10 +280,8 @@ export default function ProductTable() {
           sort_order: row.sortOrder
         }));
 
-      // Replace all products in database
       await replaceAllProducts(validProducts);
 
-      // Reload data to get fresh state
       await loadProducts();
       showSuccess(`Products saved successfully (${validProducts.length} products)`);
     } catch (error) {
