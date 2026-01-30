@@ -41,6 +41,7 @@ function OrderLookup() {
   const [error, setError] = useState("");
   const [paymentMethod, setPaymentMethod] = useState(""); // Initialize to empty
   const [transactionLoaded, setTransactionLoaded] = useState(false);
+  const [isOrderCompleted, setIsOrderCompleted] = useState(false);
 
   useEffect(() => {
     loadProducts();
@@ -83,6 +84,7 @@ function OrderLookup() {
   const resetToInitialState = () => {
     setCurrentTransactionID("");
     setTransactionLoaded(false);
+    setIsOrderCompleted(false);
     setOrderId("");
     setSelectedDiscounts([]);
     setVoucher("");
@@ -102,6 +104,8 @@ function OrderLookup() {
   };
 
   const handleQuantityChange = (e, sku) => {
+    if (isOrderCompleted) return; // Prevent changes if order is completed
+    
     const value = e.target.value;
     const item = products.find((i) => i.SKU === sku);
 
@@ -123,6 +127,7 @@ function OrderLookup() {
   };
 
   const handleDiscountToggle = (selectedDiscountNames) => {
+    if (isOrderCompleted) return; // Prevent changes if order is completed
     setSelectedDiscounts(selectedDiscountNames);
   };
 
@@ -174,6 +179,10 @@ function OrderLookup() {
         discount: transaction.receipt?.discount || 0,
         grandTotal: transaction.receipt?.total || 0,
       });
+
+      // Check if order is completed
+      const orderCompleted = transaction.payment?.method && transaction.payment?.paid;
+      setIsOrderCompleted(orderCompleted);
 
       if (transaction.payment?.method && transaction.payment?.paid) {
         setPaymentMethod(transaction.payment.method);
@@ -320,6 +329,13 @@ function OrderLookup() {
         </Alert>
       )}
 
+      {/* Show completed order indicator */}
+      {transactionLoaded && isOrderCompleted && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          <strong>Order Completed:</strong> This order has been marked as completed and is now view-only.
+        </Alert>
+      )}
+
       {/* Only show content after transaction is loaded */}
       {transactionLoaded && (
         <>
@@ -329,6 +345,7 @@ function OrderLookup() {
             quantities={quantities}
             subtotals={subtotals}
             onQuantityChange={handleQuantityChange}
+            readOnly={isOrderCompleted}
           />
 
           {/* Discounts Table */}
@@ -336,6 +353,7 @@ function OrderLookup() {
             discounts={discounts}
             selectedDiscounts={selectedDiscounts}
             onDiscountToggle={handleDiscountToggle}
+            readOnly={isOrderCompleted}
           />
 
           {/* Voucher */}
@@ -346,6 +364,7 @@ function OrderLookup() {
               size="small"
               value={voucher}
               onChange={(e) => {
+                if (isOrderCompleted) return; // Prevent changes if order is completed
                 const value = e.target.value;
                 if (value === "") {
                   setVoucher("");
@@ -355,30 +374,33 @@ function OrderLookup() {
                 setVoucher(numeric);
               }}
               sx={{ width: 120 }}
+              disabled={isOrderCompleted}
             />
           </Stack>
 
-          {/* Update / Delete Buttons */}
-          <Box sx={{ mt: 2 }}>
-            <Stack direction="row" spacing={2} justifyContent="space-between">
-              <Button
-                variant="contained"
-                color="error"
-                size="small"
-                onClick={handleDelete}
-              >
-                Delete Order
-              </Button>
-              <Button
-                variant="contained"
-                color="primary"
-                size="small"
-                onClick={handleUpdate}
-              >
-                Update Order
-              </Button>
-            </Stack>
-          </Box>
+          {/* Update / Delete Buttons - Only show if order is not completed */}
+          {!isOrderCompleted && (
+            <Box sx={{ mt: 2 }}>
+              <Stack direction="row" spacing={2} justifyContent="space-between">
+                <Button
+                  variant="contained"
+                  color="error"
+                  size="small"
+                  onClick={handleDelete}
+                >
+                  Delete Order
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  onClick={handleUpdate}
+                >
+                  Update Order
+                </Button>
+              </Stack>
+            </Box>
+          )}
 
           {/* Receipt */}
           <Receipt 
@@ -393,35 +415,46 @@ function OrderLookup() {
             voucher={Number(voucher) || 0}
           />
 
-          {/* Payment & Complete */}
-          <Box sx={{ mt: 2, display: "flex", alignItems: "center", gap: 2, justifyContent: "center" }}>
-            <FormControl size="small" sx={{ minWidth: 150 }}>
-              <InputLabel>Payment Method *</InputLabel>
-              <Select
-                value={paymentMethod}
-                label="Payment Method *"
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                error={!paymentMethod}
+          {/* Payment & Complete - Only show if order is not completed */}
+          {!isOrderCompleted && (
+            <Box sx={{ mt: 2, display: "flex", alignItems: "center", gap: 2, justifyContent: "center" }}>
+              <FormControl size="small" sx={{ minWidth: 150 }}>
+                <InputLabel>Payment Method *</InputLabel>
+                <Select
+                  value={paymentMethod}
+                  label="Payment Method *"
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  error={!paymentMethod}
+                >
+                  <MenuItem value="">
+                    <em>Select Payment Method</em>
+                  </MenuItem>
+                  <MenuItem value="Cash">Cash</MenuItem>
+                  <MenuItem value="Credit/Debit">Credit/Debit</MenuItem>
+                  <MenuItem value="Check">Check</MenuItem>
+                  <MenuItem value="Other">Other</MenuItem>
+                </Select>
+              </FormControl>
+              <Button
+                variant="contained"
+                color="success"
+                size="small"
+                onClick={handleCompleteOrder}
+                disabled={!paymentMethod}
               >
-                <MenuItem value="">
-                  <em>Select Payment Method</em>
-                </MenuItem>
-                <MenuItem value="Cash">Cash</MenuItem>
-                <MenuItem value="Credit/Debit">Credit/Debit</MenuItem>
-                <MenuItem value="Check">Check</MenuItem>
-                <MenuItem value="Other">Other</MenuItem>
-              </Select>
-            </FormControl>
-            <Button
-              variant="contained"
-              color="success"
-              size="small"
-              onClick={handleCompleteOrder}
-              disabled={!paymentMethod}
-            >
-              Complete Order
-            </Button>
-          </Box>
+                Complete Order
+              </Button>
+            </Box>
+          )}
+
+          {/* Show payment method for completed orders */}
+          {isOrderCompleted && paymentMethod && (
+            <Box sx={{ mt: 2, display: "flex", justifyContent: "center" }}>
+              <Alert severity="success" sx={{ display: "inline-flex" }}>
+                <strong>Payment Method:</strong> {paymentMethod}
+              </Alert>
+            </Box>
+          )}
         </>
       )}
 

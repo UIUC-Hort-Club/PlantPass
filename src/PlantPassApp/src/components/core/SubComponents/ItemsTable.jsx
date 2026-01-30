@@ -16,11 +16,12 @@ export default function ItemsTable({
   quantities,
   subtotals,
   onQuantityChange,
+  readOnly = false,
 }) {
   return (
     <Box sx={{ maxHeight: 800, overflowY: "auto" }}>
         <Typography variant="h6" sx={{ mb: 1 }}>
-          Product Listings
+          Product Listings {readOnly && "(View Only)"}
         </Typography>
       <Table size="small">
         <TableHead>
@@ -64,6 +65,7 @@ export default function ItemsTable({
                   }}
                   size="small"
                   fullWidth
+                  disabled={readOnly}
                 />
               </TableCell>
               <TableCell sx={{ width: "20%" }}>

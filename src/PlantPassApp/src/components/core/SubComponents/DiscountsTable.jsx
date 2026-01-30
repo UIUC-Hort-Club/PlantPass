@@ -14,8 +14,11 @@ export default function DiscountsTable({
   discounts,
   selectedDiscounts,
   onDiscountToggle,
+  readOnly = false,
 }) {
   const handleIndividualToggle = (discountName) => {
+    if (readOnly) return; // Prevent changes if read-only
+    
     const isSelected = selectedDiscounts.includes(discountName);
     let newSelection;
     
@@ -37,7 +40,7 @@ export default function DiscountsTable({
   return (
     <Box sx={{ mt: 2 }}>
       <Typography variant="h6" sx={{ mb: 1 }}>
-        Available Discounts
+        Available Discounts {readOnly && "(View Only)"}
       </Typography>
       <Box sx={{ maxHeight: 300, overflowY: "auto" }}>
         <Table size="small">
@@ -62,6 +65,7 @@ export default function DiscountsTable({
                     checked={selectedDiscounts.includes(discount.name)}
                     onChange={() => handleIndividualToggle(discount.name)}
                     size="small"
+                    disabled={readOnly}
                   />
                 </TableCell>
                 <TableCell>{discount.name}</TableCell>
