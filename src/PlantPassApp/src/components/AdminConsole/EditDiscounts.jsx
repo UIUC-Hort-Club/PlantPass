@@ -43,7 +43,7 @@ export default function DiscountTable() {
       const formattedRows = discounts.map((discount, index) => ({
         id: `${discount.name}-${index}`,
         name: discount.name,
-        percent: discount.percent_off,
+        percent: discount.percent_off.toString(),
         isNew: false,
         originalName: discount.name,
       }));
@@ -65,7 +65,7 @@ export default function DiscountTable() {
     const newRow = {
       id: `new-${Date.now()}`,
       name: "",
-      percent: 0,
+      percent: "0",
       isNew: true,
     };
     setRows([...rows, newRow]);
@@ -92,7 +92,59 @@ export default function DiscountTable() {
   };
 
   const handleEdit = (id, field, value) => {
-    setRows(rows.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
+    if (field === 'percent') {
+      // Handle percent formatting
+      const formattedPercent = formatPercentInput(value);
+      setRows(rows.map((r) => (r.id === id ? { ...r, [field]: formattedPercent } : r)));
+    } else {
+      setRows(rows.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
+    }
+  };
+
+  const formatPercentInput = (value) => {
+    // Remove any non-digit and non-decimal characters
+    let cleaned = value.replace(/[^\d.]/g, '');
+    
+    // Ensure only one decimal point
+    const parts = cleaned.split('.');
+    if (parts.length > 2) {
+      cleaned = parts[0] + '.' + parts.slice(1).join('');
+    }
+    
+    // Limit to 2 decimal places
+    if (parts.length === 2 && parts[1].length > 2) {
+      cleaned = parts[0] + '.' + parts[1].substring(0, 2);
+    }
+    
+    // Convert to number and back to ensure valid format
+    const numValue = parseFloat(cleaned);
+    if (isNaN(numValue)) {
+      return '';
+    }
+    
+    // Limit to reasonable percentage (0-100)
+    if (numValue > 100) {
+      return '100';
+    }
+    
+    // Return the cleaned string
+    return cleaned;
+  };
+
+  const formatPercentDisplay = (percent) => {
+    // Format for display with up to 2 decimal places (remove trailing zeros)
+    const numPercent = parseFloat(percent);
+    if (isNaN(numPercent)) return '0';
+    return numPercent.toString();
+  };
+
+  const handlePercentBlur = (id) => {
+    const row = rows.find(r => r.id === id);
+    if (!row) return;
+    
+    // Format on blur
+    const formattedPercent = formatPercentDisplay(row.percent);
+    setRows(rows.map((r) => (r.id === id ? { ...r, percent: formattedPercent } : r)));
   };
 
   const handleReset = () => {
@@ -118,12 +170,12 @@ export default function DiscountTable() {
     if (rows.length !== originalRows.length) return true;
     
     return rows.some(row => {
-      if (row.isNew) return row.name.trim() !== "" || row.percent !== 0;
+      if (row.isNew) return row.name.trim() !== "" || parseFloat(row.percent) !== 0;
       
       const original = originalRows.find(orig => orig.id === row.id);
       if (!original) return true;
       
-      return row.name !== original.name || row.percent !== original.percent;
+      return row.name !== original.name || parseFloat(row.percent) !== parseFloat(original.percent);
     });
   };
 
@@ -214,6 +266,7 @@ export default function DiscountTable() {
                 backgroundColor: "error.main",
                 color: "white",
                 borderColor: "error.main",
+                borderWidth: 2
               },
             }}
             onClick={handleClear}
@@ -278,13 +331,18 @@ export default function DiscountTable() {
 
                           <TableCell>
                             <TextField
-                              type="number"
+                              type="text"
                               fullWidth
                               size="small"
                               value={row.percent}
                               onChange={(e) =>
                                 handleEdit(row.id, "percent", e.target.value)
                               }
+                              onBlur={() => handlePercentBlur(row.id)}
+                              inputProps={{
+                                inputMode: 'decimal',
+                                pattern: '[0-9]*\\.?[0-9]*'
+                              }}
                             />
                           </TableCell>
 

@@ -38,7 +38,7 @@ export default function ItemsTable({
         <TableBody>
           {stockItems.map((item) => (
             <TableRow key={item.SKU}>
-              <TableCell sx={{ width: "40%" }}>{item.Item}</TableCell>
+              <TableCell sx={{ width: "40%" }}>{item.Name}</TableCell>
               <TableCell sx={{ width: "20%" }}>
                 ${item.Price.toFixed(2)}
               </TableCell>

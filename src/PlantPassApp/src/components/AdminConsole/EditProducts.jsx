@@ -104,7 +104,7 @@ export default function ProductTable() {
         id: `${product.SKU}-${index}`,
         sku: product.SKU,
         name: product.item,
-        price: product.price_ea,
+        price: product.price_ea.toFixed(2),
         isNew: false,
         originalSku: product.SKU,
       }));
@@ -127,7 +127,7 @@ export default function ProductTable() {
       id: `new-${Date.now()}`,
       sku: "",
       name: "",
-      price: 0,
+      price: "0.00",
       isNew: true,
     };
     setRows([...rows, newRow]);
@@ -154,7 +154,54 @@ export default function ProductTable() {
   };
 
   const handleEdit = (id, field, value) => {
-    setRows(rows.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
+    if (field === 'price') {
+      // Handle price formatting
+      const formattedPrice = formatPriceInput(value);
+      setRows(rows.map((r) => (r.id === id ? { ...r, [field]: formattedPrice } : r)));
+    } else {
+      setRows(rows.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
+    }
+  };
+
+  const formatPriceInput = (value) => {
+    // Remove any non-digit and non-decimal characters
+    let cleaned = value.replace(/[^\d.]/g, '');
+    
+    // Ensure only one decimal point
+    const parts = cleaned.split('.');
+    if (parts.length > 2) {
+      cleaned = parts[0] + '.' + parts.slice(1).join('');
+    }
+    
+    // Limit to 2 decimal places
+    if (parts.length === 2 && parts[1].length > 2) {
+      cleaned = parts[0] + '.' + parts[1].substring(0, 2);
+    }
+    
+    // Convert to number and back to ensure valid format
+    const numValue = parseFloat(cleaned);
+    if (isNaN(numValue)) {
+      return '';
+    }
+    
+    // Return the cleaned string (not formatted to 2 decimals yet to allow typing)
+    return cleaned;
+  };
+
+  const formatPriceDisplay = (price) => {
+    // Format for display with 2 decimal places
+    const numPrice = parseFloat(price);
+    if (isNaN(numPrice)) return '0.00';
+    return numPrice.toFixed(2);
+  };
+
+  const handlePriceBlur = (id) => {
+    const row = rows.find(r => r.id === id);
+    if (!row) return;
+    
+    // Format to 2 decimal places on blur
+    const formattedPrice = formatPriceDisplay(row.price);
+    setRows(rows.map((r) => (r.id === id ? { ...r, price: formattedPrice } : r)));
   };
 
   const handleSKUBlur = (id) => {
@@ -202,12 +249,12 @@ export default function ProductTable() {
     if (rows.length !== originalRows.length) return true;
     
     return rows.some(row => {
-      if (row.isNew) return row.name.trim() !== "" || row.price !== 0;
+      if (row.isNew) return row.name.trim() !== "" || parseFloat(row.price) !== 0;
       
       const original = originalRows.find(orig => orig.id === row.id);
       if (!original) return true;
       
-      return row.name !== original.name || row.price !== original.price;
+      return row.name !== original.name || parseFloat(row.price) !== parseFloat(original.price) || row.sku !== original.sku;
     });
   };
 
@@ -230,6 +277,16 @@ export default function ProductTable() {
     
     if (invalidRows.length > 0) {
       showNotification("All products must have a SKU", "error");
+      return;
+    }
+
+    // Check for invalid prices
+    const invalidPrices = rows.filter(row => 
+      row.name && row.name.trim() !== '' && (isNaN(parseFloat(row.price)) || parseFloat(row.price) < 0)
+    );
+    
+    if (invalidPrices.length > 0) {
+      showNotification("All products must have a valid price", "error");
       return;
     }
 
@@ -317,6 +374,7 @@ export default function ProductTable() {
                 backgroundColor: "error.main",
                 color: "white",
                 borderColor: "error.main",
+                borderWidth: 2
               },
             }}
             onClick={handleClear}
@@ -382,7 +440,6 @@ export default function ProductTable() {
                               onBlur={() => handleSKUBlur(row.id)}
                               error={duplicateSKUs.has(row.sku?.toUpperCase())}
                               helperText={duplicateSKUs.has(row.sku?.toUpperCase()) ? "Duplicate SKU Found" : ""}
-                              placeholder="Auto-generated"
                             />
                           </TableCell>
 
@@ -400,13 +457,18 @@ export default function ProductTable() {
 
                           <TableCell>
                             <TextField
-                              type="number"
+                              type="text"
                               fullWidth
                               size="small"
                               value={row.price}
                               onChange={(e) =>
                                 handleEdit(row.id, "price", e.target.value)
                               }
+                              onBlur={() => handlePriceBlur(row.id)}
+                              inputProps={{
+                                inputMode: 'decimal',
+                                pattern: '[0-9]*\\.?[0-9]*'
+                              }}
                             />
                           </TableCell>
 
