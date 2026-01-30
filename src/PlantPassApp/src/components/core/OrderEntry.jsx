@@ -17,6 +17,7 @@ import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
 import Receipt from "./SubComponents/Receipt";
 import Scanner from "./SubComponents/Scanner";
 import { createTransaction } from "../../api/transaction_interface/createTransaction";
+import { updateTransaction } from "../../api/transaction_interface/updateTransaction";
 import { getAllProducts } from "../../api/products_interface/getAllProducts";
 import { getAllDiscounts } from "../../api/discounts_interface/getAllDiscounts";
 import ShowTransactionID from "./SubComponents/ShowTransactionID";
@@ -176,30 +177,37 @@ function OrderEntry({ product_listings }) {
   };
 
   const handleEnterOrder = () => {
-    // Get selected discount objects
-    const selectedDiscountObjects = discounts.filter(discount => 
-      selectedDiscounts.includes(discount.name)
-    );
+    // Get all discounts with selection status
+    const discountsWithSelection = discounts.map(discount => ({
+      name: discount.name,
+      type: discount.type,
+      percent_off: discount.percent_off || 0,
+      value_off: discount.value_off || 0,
+      selected: selectedDiscounts.includes(discount.name)
+    }));
 
     const transaction = {
-      timestamp: Date.now(),
-      items: Object.entries(quantities).map(([sku, quantity]) => {
-        const product = products.find((p) => p.SKU === sku);
-        return {
-          SKU: sku,
-          item: product.Name,
-          quantity: parseInt(quantity) || 0, // Ensure integer quantity
-          price_ea: product.Price,
-        };
-      }),
-      discounts: selectedDiscountObjects.map(discount => ({
-        name: discount.name,
-        type: discount.type,
-        percent_off: discount.percent_off,
-        value_off: discount.value_off
-      })),
+      timestamp: Math.floor(Date.now() / 1000), // Unix timestamp in seconds
+      items: Object.entries(quantities)
+        .filter(([sku, quantity]) => quantity && parseInt(quantity) > 0)
+        .map(([sku, quantity]) => {
+          const product = products.find((p) => p.SKU === sku);
+          return {
+            SKU: sku,
+            item: product.Name,
+            quantity: parseInt(quantity),
+            price_ea: product.Price,
+          };
+        }),
+      discounts: discountsWithSelection,
       voucher: Number(voucher) || 0,
     };
+
+    // Only proceed if there are items in the order
+    if (transaction.items.length === 0) {
+      alert("Please add items to your order before submitting.");
+      return;
+    }
 
     createTransaction(transaction)
       .then((response) => {
@@ -215,7 +223,60 @@ function OrderEntry({ product_listings }) {
       })
       .catch((error) => {
         console.error("Error recording transaction:", error);
-        alert("An error occurred while recording the transaction...");
+        alert("An error occurred while recording the transaction. Please try again.");
+      });
+  };
+
+  const handleUpdateOrder = () => {
+    if (!currentTransactionID) {
+      alert("No current transaction to update.");
+      return;
+    }
+
+    // Get all discounts with selection status
+    const discountsWithSelection = discounts.map(discount => ({
+      name: discount.name,
+      type: discount.type,
+      percent_off: discount.percent_off || 0,
+      value_off: discount.value_off || 0,
+      selected: selectedDiscounts.includes(discount.name)
+    }));
+
+    const updateData = {
+      items: Object.entries(quantities)
+        .filter(([sku, quantity]) => quantity && parseInt(quantity) > 0)
+        .map(([sku, quantity]) => {
+          const product = products.find((p) => p.SKU === sku);
+          return {
+            SKU: sku,
+            item: product.Name,
+            quantity: parseInt(quantity),
+            price_ea: product.Price,
+          };
+        }),
+      discounts: discountsWithSelection,
+      voucher: Number(voucher) || 0,
+    };
+
+    // Only proceed if there are items in the order
+    if (updateData.items.length === 0) {
+      alert("Please add items to your order before updating.");
+      return;
+    }
+
+    updateTransaction(currentTransactionID, updateData)
+      .then((response) => {
+        console.log("Transaction updated successfully:", response);
+        setTotals({
+          subtotal: response.receipt.subtotal,
+          discount: response.receipt.discount,
+          grandTotal: response.receipt.total,
+        });
+        setShowNotification(true);
+      })
+      .catch((error) => {
+        console.error("Error updating transaction:", error);
+        alert("An error occurred while updating the transaction. Please try again.");
       });
   };
 
@@ -340,13 +401,23 @@ function OrderEntry({ product_listings }) {
 
       {currentTransactionID && (
         <>
-          <Receipt totals={totals} transactionId={currentTransactionID} />
+          <Receipt 
+            totals={totals} 
+            transactionId={currentTransactionID}
+            discounts={discounts.map(discount => ({
+              name: discount.name,
+              amount_off: selectedDiscounts.includes(discount.name) ? 
+                (discount.type === "dollar" ? discount.value_off : 
+                 (Number(totals.subtotal) * discount.percent_off / 100)) : 0
+            }))}
+            voucher={Number(voucher) || 0}
+          />
 
           <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mt: 2 }}>
             <Button
               variant="contained"
               color="success"
-              onClick={console.log('Implement update current order in case user changes mind after order entry')}
+              onClick={handleUpdateOrder}
               size="small"
             >
               Update This Order

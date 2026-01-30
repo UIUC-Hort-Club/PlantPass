@@ -33,3 +33,30 @@ resource "aws_dynamodb_table" "products" {
     application = "plantpass"
   }
 }
+
+# Transactions Table
+resource "aws_dynamodb_table" "transactions" {
+  name         = "transactions"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "purchase_id"
+
+  attribute {
+    name = "purchase_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "timestamp"
+    type = "N"
+  }
+
+  # GSI for querying by timestamp (useful for analytics)
+  global_secondary_index {
+    name     = "timestamp-index"
+    hash_key = "timestamp"
+  }
+
+  tags = {
+    application = "plantpass"
+  }
+}

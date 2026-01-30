@@ -65,7 +65,9 @@ resource "aws_iam_role_policy" "lambda_dynamodb_access" {
         ]
         Resource = [
           aws_dynamodb_table.discounts.arn,
-          aws_dynamodb_table.products.arn
+          aws_dynamodb_table.products.arn,
+          aws_dynamodb_table.transactions.arn,
+          "${aws_dynamodb_table.transactions.arn}/index/*"
         ]
       }
     ]
@@ -125,6 +127,12 @@ resource "aws_lambda_function" "transaction_handler" {
   depends_on = [
     aws_cloudwatch_log_group.transaction_handler_logs
   ]
+
+  environment {
+    variables = {
+      TRANSACTIONS_TABLE = aws_dynamodb_table.transactions.name
+    }
+  }
 
   tags = {
     application = "plantpass"

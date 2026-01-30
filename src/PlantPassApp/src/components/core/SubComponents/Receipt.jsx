@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   Box,
   Container,
@@ -11,20 +11,10 @@ import {
   TableRow,
   Paper,
   Stack,
-  Tab,
   Alert,
 } from "@mui/material";
 
-function Receipt({ totals, transactionId }) {
-  const [discounts, setDiscounts] = useState([]);
-
-  useEffect(() => {
-    fetch(`${import.meta.env.BASE_URL}data/discounts.json`)
-      .then((res) => res.json())
-      .then((data) => setDiscounts(data))
-      .catch((err) => console.error("Error loading discounts.json:", err));
-  }, []);
-
+function Receipt({ totals, transactionId, discounts = [], voucher = 0 }) {
   return (
     <Container
       sx={{ mt: 3 }}
@@ -55,7 +45,7 @@ function Receipt({ totals, transactionId }) {
           color={"black"}
           align="right"
         >
-          Subtotal: ${totals.subtotal}
+          Subtotal: ${Number(totals.subtotal || 0).toFixed(2)}
         </Typography>
 
         <TableContainer component={Paper} elevation={0}>
@@ -73,15 +63,31 @@ function Receipt({ totals, transactionId }) {
             <TableBody>
               {discounts.map((discount, index) => (
                 <TableRow key={index}>
-                  <TableCell>{discount.discount_name}</TableCell>
-                  <TableCell>-${totals.discount}</TableCell>
+                  <TableCell 
+                    sx={{ 
+                      color: discount.amount_off > 0 ? 'black' : 'gray',
+                      fontStyle: discount.amount_off > 0 ? 'normal' : 'italic'
+                    }}
+                  >
+                    {discount.name}
+                  </TableCell>
+                  <TableCell 
+                    sx={{ 
+                      color: discount.amount_off > 0 ? 'black' : 'gray',
+                      fontStyle: discount.amount_off > 0 ? 'normal' : 'italic'
+                    }}
+                  >
+                    -${Number(discount.amount_off || 0).toFixed(2)}
+                  </TableCell>
                 </TableRow>
               ))}
 
-              <TableRow>
-                <TableCell>Club Voucher</TableCell>
-                <TableCell>-$0</TableCell>
-              </TableRow>
+              {voucher > 0 && (
+                <TableRow>
+                  <TableCell>Club Voucher</TableCell>
+                  <TableCell>-${Number(voucher).toFixed(2)}</TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </TableContainer>
@@ -99,7 +105,7 @@ function Receipt({ totals, transactionId }) {
             color="black"
             align="right"
           >
-            Grand Total: ${totals.grandTotal}
+            Grand Total: ${Number(totals.grandTotal || 0).toFixed(2)}
           </Typography>
         </Stack>
       </Box>
