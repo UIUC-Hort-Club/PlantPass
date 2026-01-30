@@ -37,6 +37,7 @@ function OrderLookup() {
   const [voucher, setVoucher] = useState("");
   const [currentTransactionID, setCurrentTransactionID] = useState("");
   const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState(""); // Add specific message state
   const [error, setError] = useState("");
   const [paymentMethod, setPaymentMethod] = useState(""); // Initialize to empty
   const [transactionLoaded, setTransactionLoaded] = useState(false);
@@ -133,6 +134,7 @@ function OrderLookup() {
 
   const handleLookup = async () => {
     setError("");
+    setTransactionLoaded(false); // Reset transaction loaded state
     
     if (!orderId.trim()) {
       setError("Please enter an Order ID");
@@ -143,7 +145,8 @@ function OrderLookup() {
       const transaction = await readTransaction(orderId.trim());
       
       if (!transaction) {
-        setError("Transaction not found");
+        setError("Transaction not found!");
+        setTransactionLoaded(false); // Ensure UI elements stay hidden
         return;
       }
 
@@ -194,7 +197,8 @@ function OrderLookup() {
 
     } catch (err) {
       console.error("Error looking up transaction:", err);
-      setError("Failed to load transaction. Please check the Order ID and try again.");
+      setError("Transaction not found!");
+      setTransactionLoaded(false); // Ensure UI elements stay hidden
     }
   };
 
