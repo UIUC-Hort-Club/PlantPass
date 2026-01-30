@@ -4,7 +4,6 @@ import {
   Button,
   Stack,
   Box,
-  Snackbar,
   Alert,
   TextField,
   Typography,
@@ -21,8 +20,11 @@ import { updateTransaction } from "../../api/transaction_interface/updateTransac
 import { deleteTransaction } from "../../api/transaction_interface/deleteTransaction";
 import { getAllProducts } from "../../api/products_interface/getAllProducts";
 import { getAllDiscounts } from "../../api/discounts_interface/getAllDiscounts";
+import { useNotification } from "../../contexts/NotificationContext";
 
 function OrderLookup() {
+  const { showSuccess, showError } = useNotification();
+  
   const [orderId, setOrderId] = useState("");
   const [products, setProducts] = useState([]);
   const [discounts, setDiscounts] = useState([]);
@@ -36,8 +38,6 @@ function OrderLookup() {
   });
   const [voucher, setVoucher] = useState("");
   const [currentTransactionID, setCurrentTransactionID] = useState("");
-  const [showNotification, setShowNotification] = useState(false);
-  const [notificationMessage, setNotificationMessage] = useState(""); // Add specific message state
   const [error, setError] = useState("");
   const [paymentMethod, setPaymentMethod] = useState(""); // Initialize to empty
   const [transactionLoaded, setTransactionLoaded] = useState(false);
@@ -90,7 +90,6 @@ function OrderLookup() {
     setVoucher("");
     setPaymentMethod(""); // Reset to empty
     setError("");
-    setNotificationMessage(""); // Reset notification message
     
     // Reset quantities and subtotals
     const resetQuantities = {};
@@ -243,9 +242,8 @@ function OrderLookup() {
         grandTotal: updatedTransaction.receipt.total,
       });
       
-      setNotificationMessage("Transaction details successfully updated!");
-      setShowNotification(true);
-      setError("");
+      showSuccess(`Order ${currentTransactionID} has been updated!`);
+      setError();
       
     } catch (err) {
       console.error("Error updating transaction:", err);
@@ -266,8 +264,7 @@ function OrderLookup() {
     try {
       await deleteTransaction(currentTransactionID);
       resetToInitialState();
-      setNotificationMessage("Transaction successfully deleted!");
-      setShowNotification(true);
+      showSuccess("Transaction successfully deleted!");
       
     } catch (err) {
       console.error("Error deleting transaction:", err);
@@ -295,8 +292,7 @@ function OrderLookup() {
       };
 
       await updateTransaction(currentTransactionID, paymentData);
-      setNotificationMessage(`Order ${currentTransactionID} has been completed!`);
-      setShowNotification(true);
+      showSuccess(`Order ${currentTransactionID} has been completed!`);
       setError("");
       
       // Reset to initial state after successful completion
@@ -323,7 +319,7 @@ function OrderLookup() {
           size="small"
           value={orderId}
           onChange={(e) => setOrderId(e.target.value)}
-          onKeyPress={(e) => {
+          onKeyDown={(e) => {
             if (e.key === 'Enter') {
               handleLookup();
             }
@@ -446,17 +442,6 @@ function OrderLookup() {
       )}
 
       <div style={{ height: "1rem" }} />
-
-      {/* Success Snackbar */}
-      <Snackbar
-        open={showNotification}
-        autoHideDuration={4000}
-        onClose={() => setShowNotification(false)}
-      >
-        <Alert severity="success" onClose={() => setShowNotification(false)}>
-          {notificationMessage || "Action completed successfully."}
-        </Alert>
-      </Snackbar>
     </Container>
   );
 }

@@ -33,6 +33,7 @@ import OrderLookup from "./components/core/OrderLookup";
 import AdminConsole from "./components/AdminConsole/AdminConsole";
 import AdminPasswordModal from "./components/AdminConsole/AdminPasswordModal";
 import NavigationMenu from "./components/Navigation/NavigationMenu";
+import { NotificationProvider } from "./contexts/NotificationContext";
 
 /* =========================
    Static data sources
@@ -119,18 +120,19 @@ export default function App() {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        width: "100%",
-        maxWidth: 800,
-        mx: "auto",
-        display: "flex",
-        flexDirection: "column",
-        backgroundColor: "white",
-        py: 2,
-      }}
-    >
+    <NotificationProvider>
+      <Box
+        sx={{
+          minHeight: "100vh",
+          width: "100%",
+          maxWidth: 800,
+          mx: "auto",
+          display: "flex",
+          flexDirection: "column",
+          backgroundColor: "white",
+          py: 2,
+        }}
+      >
       {/* =========================
           App header
          ========================= */}
@@ -209,5 +211,6 @@ export default function App() {
         error={adminError}
       />
     </Box>
+    </NotificationProvider>
   );
 }

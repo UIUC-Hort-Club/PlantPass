@@ -12,8 +12,6 @@ import {
   Button,
   Stack,
   Typography,
-  Snackbar,
-  Alert,
   CircularProgress,
   Box,
 } from "@mui/material";
@@ -22,6 +20,7 @@ import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { getAllProducts } from "../../api/products_interface/getAllProducts";
 import { replaceAllProducts } from "../../api/products_interface/replaceAllProducts";
+import { useNotification } from "../../contexts/NotificationContext";
 
 // SKU generation utility function
 // Same thing in the lambda - this is OG
@@ -77,12 +76,13 @@ const validateSKUs = (rows) => {
 };
 
 export default function ProductTable() {
+  const { showSuccess, showError, showInfo } = useNotification();
+  
   const [rows, setRows] = useState([]);
   const [originalRows, setOriginalRows] = useState([]);
   const [deletedRows, setDeletedRows] = useState([]); // Track deleted items
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [notification, setNotification] = useState({ open: false, message: "", severity: "success" });
   const [duplicateSKUs, setDuplicateSKUs] = useState(new Set());
 
   // Load products from API on component mount
@@ -114,14 +114,10 @@ export default function ProductTable() {
       setDeletedRows([]); // Clear deleted rows when loading fresh data
     } catch (error) {
       console.error("Error loading products:", error);
-      showNotification("Error loading products", "error");
+      showError("Error loading products");
     } finally {
       setLoading(false);
     }
-  };
-
-  const showNotification = (message, severity = "success") => {
-    setNotification({ open: true, message, severity });
   };
 
   const handleAddRow = () => {
@@ -274,13 +270,13 @@ export default function ProductTable() {
 
   const handleSave = async () => {
     if (!hasChanges()) {
-      showNotification("No changes to save", "info");
+      showInfo("No changes to save");
       return;
     }
 
     // Check for duplicate SKUs before saving
     if (duplicateSKUs.size > 0) {
-      showNotification("Please fix duplicate SKUs before saving", "error");
+      showError("Please fix duplicate SKUs before saving");
       return;
     }
 
@@ -290,7 +286,7 @@ export default function ProductTable() {
     );
     
     if (invalidRows.length > 0) {
-      showNotification("All products must have a SKU", "error");
+      showError("All products must have a SKU");
       return;
     }
 
@@ -300,7 +296,7 @@ export default function ProductTable() {
     );
     
     if (invalidPrices.length > 0) {
-      showNotification("All products must have a valid price", "error");
+      showError("All products must have a valid price");
       return;
     }
 
@@ -321,10 +317,10 @@ export default function ProductTable() {
 
       // Reload data to get fresh state
       await loadProducts();
-      showNotification(`Products saved successfully (${validProducts.length} products)`);
+      showSuccess(`Products saved successfully (${validProducts.length} products)`);
     } catch (error) {
       console.error("Error saving products:", error);
-      showNotification("Error saving products", "error");
+      showError("Error saving products");
     } finally {
       setSaving(false);
     }
@@ -543,19 +539,6 @@ export default function ProductTable() {
           {saving ? "Saving..." : "Save"}
         </Button>
       </Stack>
-
-      <Snackbar
-        open={notification.open}
-        autoHideDuration={4000}
-        onClose={() => setNotification({ ...notification, open: false })}
-      >
-        <Alert 
-          severity={notification.severity} 
-          onClose={() => setNotification({ ...notification, open: false })}
-        >
-          {notification.message}
-        </Alert>
-      </Snackbar>
     </Paper>
   );
 }

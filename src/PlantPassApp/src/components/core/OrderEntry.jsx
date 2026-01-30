@@ -3,8 +3,6 @@ import {
   Container,
   Button,
   Typography,
-  Snackbar,
-  Alert,
   Stack,
   Box,
   TextField,
@@ -21,8 +19,11 @@ import { updateTransaction } from "../../api/transaction_interface/updateTransac
 import { getAllProducts } from "../../api/products_interface/getAllProducts";
 import { getAllDiscounts } from "../../api/discounts_interface/getAllDiscounts";
 import ShowTransactionID from "./SubComponents/ShowTransactionID";
+import { useNotification } from "../../contexts/NotificationContext";
 
 function OrderEntry({ product_listings }) {
+  const { showSuccess } = useNotification();
+  
   const [products, setProducts] = useState([]);
   const [discounts, setDiscounts] = useState([]);
   const [quantities, setQuantities] = useState({});
@@ -34,7 +35,6 @@ function OrderEntry({ product_listings }) {
     grandTotal: 0,
   });
   const [voucher, setVoucher] = useState("");
-  const [showNotification, setShowNotification] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [currentTransactionID, setCurrentTransactionID] = useState("");
   const [transactionIDDialogOpen, setTransactionIDDialogOpen] = useState(false);
@@ -218,7 +218,7 @@ function OrderEntry({ product_listings }) {
           discount: response.receipt.discount,
           grandTotal: response.receipt.total,
         });
-        setShowNotification(true);
+        showSuccess("Your order has been successfully recorded.");
         setTransactionIDDialogOpen(true);
       })
       .catch((error) => {
@@ -272,7 +272,7 @@ function OrderEntry({ product_listings }) {
           discount: response.receipt.discount,
           grandTotal: response.receipt.total,
         });
-        setShowNotification(true);
+        showSuccess(`Order ${currentTransactionID} has been updated!`);
       })
       .catch((error) => {
         console.error("Error updating transaction:", error);
@@ -436,16 +436,6 @@ function OrderEntry({ product_listings }) {
       )}
 
       <div style={{ height: "1rem" }} />
-
-      <Snackbar
-        open={showNotification}
-        autoHideDuration={4000}
-        onClose={() => setShowNotification(false)}
-      >
-        <Alert severity="success" onClose={() => setShowNotification(false)}>
-          Your order has been successfully recorded.
-        </Alert>
-      </Snackbar>
 
       <Scanner
         opened={scannerOpen}
