@@ -19,12 +19,17 @@ def get_all_discounts():
         response = table.scan()
         discounts = response.get('Items', [])
         
-        # Convert Decimal to float for JSON serialization
+        # Convert all Decimal objects to appropriate types for JSON serialization
         for discount in discounts:
-            if 'percent_off' in discount:
+            # Convert percent_off from Decimal to float
+            if 'percent_off' in discount and isinstance(discount['percent_off'], Decimal):
                 discount['percent_off'] = float(discount['percent_off'])
-            # Ensure sort_order exists, default to 0 if missing
-            if 'sort_order' not in discount:
+            
+            # Convert sort_order from Decimal to int, default to 0 if missing
+            if 'sort_order' in discount:
+                if isinstance(discount['sort_order'], Decimal):
+                    discount['sort_order'] = int(discount['sort_order'])
+            else:
                 discount['sort_order'] = 0
         
         # Sort by sort_order
@@ -84,8 +89,9 @@ def create_discount(discount_data):
         
         table.put_item(Item=item)
         
-        # Return the created discount with float conversion
+        # Return the created discount with proper type conversion
         item['percent_off'] = float(item['percent_off'])
+        item['sort_order'] = int(item['sort_order'])
         logger.info(f"Created discount: {item}")
         return item
         
@@ -135,9 +141,11 @@ def update_discount(name, update_data):
         )
         
         updated_item = response['Attributes']
-        # Convert Decimal to float for JSON serialization
-        if 'percent_off' in updated_item:
+        # Convert Decimal objects to appropriate types for JSON serialization
+        if 'percent_off' in updated_item and isinstance(updated_item['percent_off'], Decimal):
             updated_item['percent_off'] = float(updated_item['percent_off'])
+        if 'sort_order' in updated_item and isinstance(updated_item['sort_order'], Decimal):
+            updated_item['sort_order'] = int(updated_item['sort_order'])
         
         logger.info(f"Updated discount: {updated_item}")
         return updated_item

@@ -72,12 +72,17 @@ def get_all_products():
         response = table.scan()
         products = response.get('Items', [])
         
-        # Convert Decimal to float for JSON serialization
+        # Convert all Decimal objects to appropriate types for JSON serialization
         for product in products:
-            if 'price_ea' in product:
+            # Convert price_ea from Decimal to float
+            if 'price_ea' in product and isinstance(product['price_ea'], Decimal):
                 product['price_ea'] = float(product['price_ea'])
-            # Ensure sort_order exists, default to 0 if missing
-            if 'sort_order' not in product:
+            
+            # Convert sort_order from Decimal to int, default to 0 if missing
+            if 'sort_order' in product:
+                if isinstance(product['sort_order'], Decimal):
+                    product['sort_order'] = int(product['sort_order'])
+            else:
                 product['sort_order'] = 0
         
         # Sort by sort_order
@@ -145,8 +150,9 @@ def create_product(product_data):
         
         table.put_item(Item=item)
         
-        # Return the created product with float conversion
+        # Return the created product with proper type conversion
         item['price_ea'] = float(item['price_ea'])
+        item['sort_order'] = int(item['sort_order'])
         logger.info(f"Created product: {item}")
         return item
         
@@ -198,8 +204,9 @@ def update_product(sku, update_data):
             table.put_item(Item=new_item)
             table.delete_item(Key={'SKU': sku})
             
-            # Return the new item with float conversion
+            # Return the new item with proper type conversion
             new_item['price_ea'] = float(new_item['price_ea'])
+            new_item['sort_order'] = int(new_item['sort_order'])
             logger.info(f"Updated product SKU from {sku} to {new_sku}: {new_item}")
             return new_item
         else:
@@ -234,9 +241,11 @@ def update_product(sku, update_data):
             )
             
             updated_item = response['Attributes']
-            # Convert Decimal to float for JSON serialization
-            if 'price_ea' in updated_item:
+            # Convert Decimal objects to appropriate types for JSON serialization
+            if 'price_ea' in updated_item and isinstance(updated_item['price_ea'], Decimal):
                 updated_item['price_ea'] = float(updated_item['price_ea'])
+            if 'sort_order' in updated_item and isinstance(updated_item['sort_order'], Decimal):
+                updated_item['sort_order'] = int(updated_item['sort_order'])
             
             logger.info(f"Updated product: {updated_item}")
             return updated_item
