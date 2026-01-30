@@ -362,9 +362,10 @@ export default function DiscountTable() {
       >
         <Typography variant="h6">Edit Discounts</Typography>
         <Typography variant="body1">
-          Discounts will resolve from top to bottom. For instance on a $100.00 order
-          that qualifies for a 5% discount, a $10.00 discount, another 5% discount,
-          and then a $3.00 voucher, it would be as follows: (((100 * 0.95) - 10) * 0.95) - 3 = 77.75
+          Discounts will resolve from top to bottom (for those that are selected for the current order) with
+          the club voucher amount applied last if it is non-zero. For instance on a $100.00 order that qualifies
+          for a 5% discount, a $10.00 discount, another 5% discount, and then a $3.00 voucher, it would be as
+          follows: (((100 * 0.95) - 10) * 0.95) - 3 = 77.75
         </Typography>
       </Stack>
 

@@ -342,7 +342,15 @@ function OrderEntry({ product_listings }) {
         <>
           <Receipt totals={totals} transactionId={currentTransactionID} />
 
-          <Stack direction="row" justifyContent="flex-end" sx={{ mt: 2 }}>
+          <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mt: 2 }}>
+            <Button
+              variant="contained"
+              color="success"
+              onClick={console.log('Implement update current order in case user changes mind after order entry')}
+              size="small"
+            >
+              Update This Order
+            </Button>
             <Button
               variant="contained"
               color="success"
