@@ -248,6 +248,62 @@ function OrderEntry({ product_listings }) {
         onQuantityChange={handleQuantityChange}
       />
 
+      <Stack
+        direction="column"
+        spacing={1}
+        sx={{mt: '15px'}}
+      >
+        <Stack
+          direction="row"
+          justifyContent="right"
+        >
+          <TextField
+            label="Voucher"
+            type="text"
+            size="small"
+            value={voucher}
+            onChange={(e) => {
+              const value = e.target.value;
+
+              if (value === "") {
+                setVoucher("");
+                return;
+              }
+
+              const numeric = Math.max(0, Math.floor(Number(value)));
+              setVoucher(numeric);
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Typography fontWeight={700}>$</Typography>
+                </InputAdornment>
+              ),
+            }}
+            sx={{ width: 120 }}
+          />            
+        </Stack>
+        <Stack
+          direction="row"
+          justifyContent="right"
+        >
+          <TextField
+            label="Subtotal"
+            size="small"
+            value={computedSubtotal}
+            InputProps={{
+              readOnly: true,
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Typography fontWeight={700}>$</Typography>
+                </InputAdornment>
+              ),
+            }}
+            sx={{ width: 140 }}
+          />            
+        </Stack>
+      </Stack>
+
       <DiscountsTable
         discounts={discounts}
         selectedDiscounts={selectedDiscounts}
@@ -256,89 +312,30 @@ function OrderEntry({ product_listings }) {
 
       <Box sx={{ mt: 2 }}>
         <Stack
-          direction="column"
-          spacing={1}
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
         >
-          <Stack
-            direction="row"
-            justifyContent="right"
+          <Button
+            variant="outlined"
+            startIcon={<QrCodeScannerIcon />}
+            onClick={() => setScannerOpen(true)}
+            size="small"
           >
-            <TextField
-              label="Voucher"
-              type="text"
-              size="small"
-              value={voucher}
-              onChange={(e) => {
-                const value = e.target.value;
+            Scan
+          </Button>
 
-                if (value === "") {
-                  setVoucher("");
-                  return;
-                }
-
-                const numeric = Math.max(0, Math.floor(Number(value)));
-                setVoucher(numeric);
-              }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Typography fontWeight={700}>$</Typography>
-                  </InputAdornment>
-                ),
-              }}
-              sx={{ width: 120 }}
-            />            
-          </Stack>
-          <Stack
-            direction="row"
-            justifyContent="right"
-          >
-            <TextField
-              label="Subtotal"
-              size="small"
-              value={computedSubtotal}
-              InputProps={{
-                readOnly: true,
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Typography fontWeight={700}>$</Typography>
-                  </InputAdornment>
-                ),
-              }}
-              sx={{ width: 140 }}
-            />            
-          </Stack>
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-          >
+          <Stack direction="row" spacing={1} alignItems="center">
             <Button
-              variant="outlined"
-              startIcon={<QrCodeScannerIcon />}
-              onClick={() => setScannerOpen(true)}
+              variant="contained"
+              color="primary"
+              onClick={handleEnterOrder}
               size="small"
             >
-              Scan
+              Enter
             </Button>
-
-            <Stack direction="row" spacing={1} alignItems="center">
-
-
-
-
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleEnterOrder}
-                size="small"
-              >
-                Enter
-              </Button>
-            </Stack>
-          </Stack>          
-        </Stack>
-
+          </Stack>
+        </Stack>          
       </Box>
 
       {currentTransactionID && (
