@@ -90,6 +90,7 @@ function OrderLookup() {
     setVoucher("");
     setPaymentMethod(""); // Reset to empty
     setError("");
+    setNotificationMessage(""); // Reset notification message
     
     // Reset quantities and subtotals
     const resetQuantities = {};
@@ -242,6 +243,7 @@ function OrderLookup() {
         grandTotal: updatedTransaction.receipt.total,
       });
       
+      setNotificationMessage("Transaction details successfully updated!");
       setShowNotification(true);
       setError("");
       
@@ -264,6 +266,7 @@ function OrderLookup() {
     try {
       await deleteTransaction(currentTransactionID);
       resetToInitialState();
+      setNotificationMessage("Transaction successfully deleted!");
       setShowNotification(true);
       
     } catch (err) {
@@ -292,6 +295,7 @@ function OrderLookup() {
       };
 
       await updateTransaction(currentTransactionID, paymentData);
+      setNotificationMessage(`Order ${currentTransactionID} has been completed!`);
       setShowNotification(true);
       setError("");
       
@@ -450,7 +454,7 @@ function OrderLookup() {
         onClose={() => setShowNotification(false)}
       >
         <Alert severity="success" onClose={() => setShowNotification(false)}>
-          Action completed successfully.
+          {notificationMessage || "Action completed successfully."}
         </Alert>
       </Snackbar>
     </Container>
