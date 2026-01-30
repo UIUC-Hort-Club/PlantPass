@@ -42,187 +42,60 @@ def get_all_discounts():
         logger.error(f"Error retrieving discounts: {e}")
         raise Exception(f"Failed to retrieve discounts: {e}")
 
-def create_discount(discount_data):
+def replace_all_discounts(discounts_data):
     """
-    Create a new discount.
-    discount_data must include at least:
+    Replace all discounts in the database with the provided list.
+    This will delete all existing discounts and create new ones.
+    
+    discounts_data: List of discount dictionaries with keys:
     - name: str
-    - percent_off: float (optional, for percent discounts)
-    - value_off: float (optional, for dollar discounts)
     - type: str ("percent" or "dollar")
-    - sort_order: int (optional - if not provided, will be set to next available)
+    - percent_off: float (for percent discounts)
+    - value_off: float (for dollar discounts)
+    - sort_order: int
     """
     try:
-        # Validate required fields
-        if 'name' not in discount_data or 'type' not in discount_data:
-            raise ValueError("Both 'name' and 'type' are required")
+        # First, get all existing discounts to delete them
+        existing_discounts = get_all_discounts()
         
-        name = discount_data['name']
-        discount_type = discount_data['type']
+        # Delete all existing discounts
+        with table.batch_writer() as batch:
+            for discount in existing_discounts:
+                batch.delete_item(Key={'name': discount['name']})
         
-        # Validate discount type
-        if discount_type not in ['percent', 'dollar']:
-            raise ValueError("Type must be 'percent' or 'dollar'")
+        logger.info(f"Deleted {len(existing_discounts)} existing discounts")
         
-        # Validate that appropriate value is provided
-        if discount_type == 'percent':
-            if 'percent_off' not in discount_data:
-                raise ValueError("percent_off is required for percent discounts")
-            percent_off = Decimal(str(discount_data['percent_off']))
-            value_off = Decimal('0')
-        else:  # dollar
-            if 'value_off' not in discount_data:
-                raise ValueError("value_off is required for dollar discounts")
-            value_off = Decimal(str(discount_data['value_off']))
-            percent_off = Decimal('0')
+        # Create new discounts
+        created_count = 0
+        with table.batch_writer() as batch:
+            for discount_data in discounts_data:
+                # Validate required fields
+                if 'name' not in discount_data or 'type' not in discount_data:
+                    logger.warning(f"Skipping invalid discount data: {discount_data}")
+                    continue
+                
+                # Validate discount type
+                if discount_data['type'] not in ['percent', 'dollar']:
+                    logger.warning(f"Skipping discount with invalid type: {discount_data}")
+                    continue
+                
+                item = {
+                    'name': discount_data['name'],
+                    'type': discount_data['type'],
+                    'percent_off': Decimal(str(discount_data.get('percent_off', 0))),
+                    'value_off': Decimal(str(discount_data.get('value_off', 0))),
+                    'sort_order': int(discount_data.get('sort_order', 0))
+                }
+                
+                batch.put_item(Item=item)
+                created_count += 1
         
-        # Set sort order
-        if 'sort_order' in discount_data:
-            sort_order = int(discount_data['sort_order'])
-        else:
-            # Get the highest sort_order and add 1
-            try:
-                response = table.scan(
-                    ProjectionExpression='sort_order'
-                )
-                existing_orders = [item.get('sort_order', 0) for item in response.get('Items', [])]
-                sort_order = max(existing_orders, default=0) + 1
-            except ClientError:
-                sort_order = 1
+        logger.info(f"Created {created_count} new discounts")
+        return {"deleted": len(existing_discounts), "created": created_count}
         
-        # Check if discount already exists
-        try:
-            existing = table.get_item(Key={'name': name})
-            if 'Item' in existing:
-                raise ValueError(f"Discount with name '{name}' already exists")
-        except ClientError as e:
-            if e.response['Error']['Code'] != 'ResourceNotFoundException':
-                raise
-        
-        # Create the discount
-        item = {
-            'name': name,
-            'type': discount_type,
-            'percent_off': percent_off,
-            'value_off': value_off,
-            'sort_order': sort_order
-        }
-        
-        table.put_item(Item=item)
-        
-        # Return the created discount with proper type conversion
-        item['percent_off'] = float(item['percent_off'])
-        item['value_off'] = float(item['value_off'])
-        item['sort_order'] = int(item['sort_order'])
-        logger.info(f"Created discount: {item}")
-        return item
-        
-    except ValueError as e:
-        logger.error(f"Validation error creating discount: {e}")
-        raise
     except ClientError as e:
-        logger.error(f"DynamoDB error creating discount: {e}")
-        raise Exception(f"Failed to create discount: {e}")
-
-def update_discount(name, update_data):
-    """Update an existing discount identified by name."""
-    try:
-        # Check if discount exists
-        try:
-            existing = table.get_item(Key={'name': name})
-            if 'Item' not in existing:
-                raise ValueError(f"Discount with name '{name}' not found")
-        except ClientError as e:
-            if e.response['Error']['Code'] == 'ResourceNotFoundException':
-                raise ValueError(f"Discount with name '{name}' not found")
-            raise
-        
-        # Build update expression
-        update_expression = "SET "
-        expression_attribute_values = {}
-        
-        if 'percent_off' in update_data:
-            if expression_attribute_values:
-                update_expression += ", "
-            update_expression += "percent_off = :percent_off"
-            expression_attribute_values[':percent_off'] = Decimal(str(update_data['percent_off']))
-        
-        if 'value_off' in update_data:
-            if expression_attribute_values:
-                update_expression += ", "
-            update_expression += "value_off = :value_off"
-            expression_attribute_values[':value_off'] = Decimal(str(update_data['value_off']))
-        
-        if 'type' in update_data:
-            if expression_attribute_values:
-                update_expression += ", "
-            update_expression += "#discount_type = :discount_type"
-            expression_attribute_values[':discount_type'] = update_data['type']
-            # Add expression attribute name for reserved word 'type'
-            expression_attribute_names = {'#discount_type': 'type'}
-        
-        if 'sort_order' in update_data:
-            if expression_attribute_values:
-                update_expression += ", "
-            update_expression += "sort_order = :sort_order"
-            expression_attribute_values[':sort_order'] = int(update_data['sort_order'])
-        
-        if not expression_attribute_values:
-            raise ValueError("No valid fields to update")
-        
-        # Update the item
-        update_params = {
-            'Key': {'name': name},
-            'UpdateExpression': update_expression,
-            'ExpressionAttributeValues': expression_attribute_values,
-            'ReturnValues': 'ALL_NEW'
-        }
-        
-        # Add expression attribute names if needed (for reserved words like 'type')
-        if 'type' in update_data:
-            update_params['ExpressionAttributeNames'] = {'#discount_type': 'type'}
-        
-        response = table.update_item(**update_params)
-        
-        updated_item = response['Attributes']
-        # Convert Decimal objects to appropriate types for JSON serialization
-        if 'percent_off' in updated_item and isinstance(updated_item['percent_off'], Decimal):
-            updated_item['percent_off'] = float(updated_item['percent_off'])
-        if 'value_off' in updated_item and isinstance(updated_item['value_off'], Decimal):
-            updated_item['value_off'] = float(updated_item['value_off'])
-        if 'sort_order' in updated_item and isinstance(updated_item['sort_order'], Decimal):
-            updated_item['sort_order'] = int(updated_item['sort_order'])
-        
-        logger.info(f"Updated discount: {updated_item}")
-        return updated_item
-        
-    except ValueError as e:
-        logger.error(f"Validation error updating discount: {e}")
-        raise
-    except ClientError as e:
-        logger.error(f"DynamoDB error updating discount: {e}")
-        raise Exception(f"Failed to update discount: {e}")
-
-def delete_discount(name):
-    """Delete a discount by name."""
-    try:
-        # Check if discount exists
-        try:
-            existing = table.get_item(Key={'name': name})
-            if 'Item' not in existing:
-                raise ValueError(f"Discount with name '{name}' not found")
-        except ClientError as e:
-            if e.response['Error']['Code'] == 'ResourceNotFoundException':
-                raise ValueError(f"Discount with name '{name}' not found")
-            raise
-        
-        # Delete the item
-        table.delete_item(Key={'name': name})
-        logger.info(f"Deleted discount: {name}")
-        
-    except ValueError as e:
-        logger.error(f"Validation error deleting discount: {e}")
-        raise
-    except ClientError as e:
-        logger.error(f"DynamoDB error deleting discount: {e}")
-        raise Exception(f"Failed to delete discount: {e}")
+        logger.error(f"DynamoDB error replacing discounts: {e}")
+        raise Exception(f"Failed to replace discounts: {e}")
+    except Exception as e:
+        logger.error(f"Error replacing discounts: {e}")
+        raise Exception(f"Failed to replace discounts: {e}")

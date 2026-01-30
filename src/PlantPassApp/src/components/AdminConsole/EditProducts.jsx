@@ -21,10 +21,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { getAllProducts } from "../../api/products_interface/getAllProducts";
-import { createProduct } from "../../api/products_interface/createProduct";
-import { updateProduct } from "../../api/products_interface/updateProduct";
-import { deleteProduct } from "../../api/products_interface/deleteProduct";
-import { updateProductOrder } from "../../api/products_interface/updateProductOrder";
+import { replaceAllProducts } from "../../api/products_interface/replaceAllProducts";
 
 // SKU generation utility function
 // Same thing in the lambda - this is OG
@@ -309,62 +306,22 @@ export default function ProductTable() {
 
     setSaving(true);
     try {
-      // Process deleted products first
-      for (const deletedProduct of deletedRows) {
-        await deleteProduct(deletedProduct.originalSku || deletedProduct.sku);
-      }
+      // Filter out empty rows and prepare data for bulk replace
+      const validProducts = rows
+        .filter(row => row.name && row.name.trim() !== '' && row.sku && row.sku.trim() !== '')
+        .map(row => ({
+          SKU: row.sku.toUpperCase(),
+          item: row.name,
+          price_ea: parseFloat(row.price) || 0,
+          sort_order: row.sortOrder
+        }));
 
-      // Process new products
-      const newProducts = rows.filter(row => row.isNew && row.name.trim() !== "" && row.sku.trim() !== "");
-      for (const product of newProducts) {
-        await createProduct({
-          SKU: product.sku.toUpperCase(),
-          item: product.name,
-          price_ea: parseFloat(product.price) || 0,
-          sort_order: product.sortOrder
-        });
-      }
-
-      // Process updated products
-      const updatedProducts = rows.filter(row => {
-        if (row.isNew) return false;
-        const original = originalRows.find(orig => orig.id === row.id);
-        return original && (row.name !== original.name || 
-                           row.price !== original.price || 
-                           row.sku !== original.sku ||
-                           row.sortOrder !== original.sortOrder);
-      });
-
-      for (const product of updatedProducts) {
-        await updateProduct(product.originalSku || product.sku, {
-          SKU: product.sku.toUpperCase(),
-          item: product.name,
-          price_ea: parseFloat(product.price) || 0,
-          sort_order: product.sortOrder
-        });
-      }
-
-      // Update sort orders for all existing products if order changed
-      const orderChanges = rows.filter(row => {
-        if (row.isNew) return false;
-        const original = originalRows.find(orig => orig.id === row.id);
-        return original && row.sortOrder !== original.sortOrder;
-      });
-
-      if (orderChanges.length > 0) {
-        const orderUpdates = rows
-          .filter(row => !row.isNew)
-          .map(row => ({
-            SKU: row.sku,
-            sort_order: row.sortOrder
-          }));
-        
-        await updateProductOrder(orderUpdates);
-      }
+      // Replace all products in database
+      await replaceAllProducts(validProducts);
 
       // Reload data to get fresh state
       await loadProducts();
-      showNotification(`Products saved successfully${deletedRows.length > 0 ? ` (${deletedRows.length} deleted)` : ''}`);
+      showNotification(`Products saved successfully (${validProducts.length} products)`);
     } catch (error) {
       console.error("Error saving products:", error);
       showNotification("Error saving products", "error");
