@@ -1,7 +1,7 @@
 import os
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 import boto3
 from botocore.exceptions import ClientError
@@ -353,7 +353,7 @@ def compute_sales_analytics():
                     if bucket_key not in sales_by_time_bucket:
                         sales_by_time_bucket[bucket_key] = 0.0
                     
-                    current_time += datetime.timedelta(minutes=30)
+                    current_time += timedelta(minutes=30)
         
         analytics = {
             "total_sales": round(total_sales, 2),
