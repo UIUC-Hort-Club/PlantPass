@@ -15,6 +15,7 @@ import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
 import Receipt from "./SubComponents/Receipt";
 import Scanner from "./SubComponents/Scanner";
 import { createTransaction } from "../../api/transaction_interface/createTransaction";
+import { getAllProducts } from "../../api/products_interface/getAllProducts";
 import ShowTransactionID from "./SubComponents/ShowTransactionID";
 
 function OrderEntry({ product_listings }) {
@@ -31,6 +32,7 @@ function OrderEntry({ product_listings }) {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [currentTransactionID, setCurrentTransactionID] = useState("");
   const [transactionIDDialogOpen, setTransactionIDDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Compute subtotal safely
   const computedSubtotal = Object.values(subtotals)
@@ -63,13 +65,46 @@ function OrderEntry({ product_listings }) {
   };
 
   const handleNewOrder = () => {
-    window.location.reload();
+    loadProducts(); // Reload products from database
+    setCurrentTransactionID("");
+    setTransactionIDDialogOpen(false);
+    setTotals({
+      subtotal: 0,
+      discount: 0,
+      grandTotal: 0,
+    });
   };
 
-  useEffect(() => {
-    fetch(product_listings)
-      .then((res) => res.json())
-      .then((data) => {
+  const loadProducts = async () => {
+    try {
+      setLoading(true);
+      const productsData = await getAllProducts();
+      
+      // Transform API data to match expected format
+      const transformedProducts = productsData.map(product => ({
+        SKU: product.SKU,
+        Name: product.item,
+        Price: product.price_ea
+      }));
+      
+      setProducts(transformedProducts);
+      
+      // Initialize quantities and subtotals
+      const initialQuantities = {};
+      const initialSubtotals = {};
+      transformedProducts.forEach((item) => {
+        initialQuantities[item.SKU] = "";
+        initialSubtotals[item.SKU] = "0.00";
+      });
+      setQuantities(initialQuantities);
+      setSubtotals(initialSubtotals);
+      setVoucher("");
+    } catch (error) {
+      console.error("Error loading products from database:", error);
+      // Fallback to static file if API fails
+      try {
+        const response = await fetch(product_listings);
+        const data = await response.json();
         setProducts(data);
         const initialQuantities = {};
         const initialSubtotals = {};
@@ -80,8 +115,16 @@ function OrderEntry({ product_listings }) {
         setQuantities(initialQuantities);
         setSubtotals(initialSubtotals);
         setVoucher("");
-      })
-      .catch((err) => console.error("Error loading stock.json:", err));
+      } catch (fallbackError) {
+        console.error("Error loading fallback products:", fallbackError);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProducts();
   }, []);
 
   const handleQuantityChange = (e, sku) => {
@@ -138,6 +181,14 @@ function OrderEntry({ product_listings }) {
         alert("An error occurred while recording the transaction...");
       });
   };
+
+  if (loading) {
+    return (
+      <Container maxWidth="md">
+        <Typography>Loading products...</Typography>
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="md">

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -12,32 +12,94 @@ import {
   Button,
   Stack,
   Typography,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { getAllDiscounts } from "../../api/discounts_interface/getAllDiscounts";
+import { createDiscount } from "../../api/discounts_interface/createDiscount";
+import { updateDiscount } from "../../api/discounts_interface/updateDiscount";
+import { deleteDiscount } from "../../api/discounts_interface/deleteDiscount";
 
 export default function DiscountTable() {
-  const defaultRows = [
-    { id: "1", name: "Holiday Sale", percent: 10 },
-    { id: "2", name: "VIP Discount", percent: 15 },
-  ];
+  const [rows, setRows] = useState([]);
+  const [originalRows, setOriginalRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [notification, setNotification] = useState({ open: false, message: "", severity: "success" });
 
-  const [rows, setRows] = useState(defaultRows);
+  // Load discounts from API on component mount
+  useEffect(() => {
+    loadDiscounts();
+  }, []);
 
-  const handleAddRow = () => {
-    setRows([...rows, { id: Date.now().toString(), name: "", percent: 0 }]);
+  const loadDiscounts = async () => {
+    try {
+      setLoading(true);
+      const discounts = await getAllDiscounts();
+      const formattedRows = discounts.map((discount, index) => ({
+        id: `${discount.name}-${index}`,
+        name: discount.name,
+        percent: discount.percent_off,
+        isNew: false,
+        originalName: discount.name,
+      }));
+      setRows(formattedRows);
+      setOriginalRows(JSON.parse(JSON.stringify(formattedRows)));
+    } catch (error) {
+      console.error("Error loading discounts:", error);
+      showNotification("Error loading discounts", "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDelete = (id) => {
-    setRows(rows.filter((r) => r.id !== id));
+  const showNotification = (message, severity = "success") => {
+    setNotification({ open: true, message, severity });
+  };
+
+  const handleAddRow = () => {
+    const newRow = {
+      id: `new-${Date.now()}`,
+      name: "",
+      percent: 0,
+      isNew: true,
+    };
+    setRows([...rows, newRow]);
+  };
+
+  const handleDelete = async (id) => {
+    const row = rows.find(r => r.id === id);
+    
+    if (row.isNew) {
+      // Just remove from UI if it's a new row
+      setRows(rows.filter((r) => r.id !== id));
+    } else {
+      // Delete from database
+      try {
+        await deleteDiscount(row.originalName || row.name);
+        setRows(rows.filter((r) => r.id !== id));
+        setOriginalRows(originalRows.filter((r) => r.id !== id));
+        showNotification("Discount deleted successfully");
+      } catch (error) {
+        console.error("Error deleting discount:", error);
+        showNotification("Error deleting discount", "error");
+      }
+    }
   };
 
   const handleEdit = (id, field, value) => {
     setRows(rows.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
   };
 
-  const handleReset = () => setRows(defaultRows);
-  const handleClear = () => setRows([]);
+  const handleReset = () => {
+    setRows(JSON.parse(JSON.stringify(originalRows)));
+  };
+
+  const handleClear = () => {
+    setRows([]);
+  };
 
   const handleDragEnd = (result) => {
     if (!result.destination) return;
@@ -48,6 +110,69 @@ export default function DiscountTable() {
 
     setRows(updated);
   };
+
+  // Check if there are changes to save
+  const hasChanges = () => {
+    if (rows.length !== originalRows.length) return true;
+    
+    return rows.some(row => {
+      if (row.isNew) return row.name.trim() !== "" || row.percent !== 0;
+      
+      const original = originalRows.find(orig => orig.id === row.id);
+      if (!original) return true;
+      
+      return row.name !== original.name || row.percent !== original.percent;
+    });
+  };
+
+  const handleSave = async () => {
+    if (!hasChanges()) {
+      showNotification("No changes to save", "info");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // Process new discounts
+      const newDiscounts = rows.filter(row => row.isNew && row.name.trim() !== "");
+      for (const discount of newDiscounts) {
+        await createDiscount({
+          name: discount.name,
+          percent_off: parseFloat(discount.percent) || 0
+        });
+      }
+
+      // Process updated discounts
+      const updatedDiscounts = rows.filter(row => {
+        if (row.isNew) return false;
+        const original = originalRows.find(orig => orig.id === row.id);
+        return original && (row.name !== original.name || row.percent !== original.percent);
+      });
+
+      for (const discount of updatedDiscounts) {
+        await updateDiscount(discount.originalName || discount.name, {
+          percent_off: parseFloat(discount.percent) || 0
+        });
+      }
+
+      // Reload data to get fresh state
+      await loadDiscounts();
+      showNotification("Discounts saved successfully");
+    } catch (error) {
+      console.error("Error saving discounts:", error);
+      showNotification("Error saving discounts", "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Paper sx={{ p: 2 }}>
+        <Typography>Loading discounts...</Typography>
+      </Paper>
+    );
+  }
 
   return (
     <Paper sx={{ p: 2 }}>
@@ -176,8 +301,27 @@ export default function DiscountTable() {
         justifyContent="right"
         sx={{ paddingTop: "10px" }}
       >
-        <Button variant="contained">Save</Button>
+        <Button 
+          variant="contained" 
+          onClick={handleSave}
+          disabled={!hasChanges() || saving}
+        >
+          {saving ? "Saving..." : "Save"}
+        </Button>
       </Stack>
+
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={4000}
+        onClose={() => setNotification({ ...notification, open: false })}
+      >
+        <Alert 
+          severity={notification.severity} 
+          onClose={() => setNotification({ ...notification, open: false })}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </Paper>
   );
 }
