@@ -392,6 +392,7 @@ function OrderEntry({ product_listings }) {
               color="primary"
               onClick={handleEnterOrder}
               size="small"
+              disabled={!!currentTransactionID}
             >
               Enter
             </Button>
