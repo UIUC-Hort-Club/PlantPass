@@ -30,9 +30,11 @@ import {
   Legend,
 } from "chart.js";
 import { fetchSalesAnalytics } from "../../api/transaction_interface/fetchSalesAnalytics";
+import { clearAllTransactions } from "../../api/transaction_interface/clearAllTransactions";
 import { useNotification } from "../../contexts/NotificationContext";
 import LoadingSpinner from "../common/LoadingSpinner";
 import MetricCard from "./MetricCard";
+import ConfirmationDialog from "../common/ConfirmationDialog";
 import { formatTimestamp } from "../../utils/dateFormatter";
 import { downloadJSON } from "../../utils/exportUtils";
 
@@ -60,6 +62,8 @@ function SalesAnalytics() {
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const [showClearDialog, setShowClearDialog] = useState(false);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(0);
   const rowsPerPage = 20;
@@ -118,15 +122,22 @@ function SalesAnalytics() {
   };
 
   const clearRecords = async () => {
-    if (!window.confirm("Are you sure you want to clear all transaction records? This action cannot be undone.")) {
-      return;
-    }
-    
+    setShowClearDialog(true);
+  };
+
+  const handleClearConfirm = async () => {
     try {
-      showError("Clear records functionality not yet implemented");
+      setClearing(true);
+      const result = await clearAllTransactions();
+      
+      await loadAnalytics();
+      
+      showSuccess(`Successfully cleared ${result.cleared_count} transaction records`);
     } catch (error) {
       console.error("Error clearing records:", error);
-      showError("Failed to clear records");
+      showError("Failed to clear transaction records");
+    } finally {
+      setClearing(false);
     }
   };
 
@@ -370,8 +381,9 @@ function SalesAnalytics() {
                 },
               }}
               onClick={clearRecords}
+              disabled={clearing}
             >
-              Clear Records
+              {clearing ? "Clearing..." : "Clear Records"}
             </Button>
           </Stack>
 
@@ -386,6 +398,19 @@ function SalesAnalytics() {
           />
         </Box>
       </TableContainer>
+
+      <ConfirmationDialog
+        open={showClearDialog}
+        onClose={() => setShowClearDialog(false)}
+        onConfirm={handleClearConfirm}
+        title="Clear All Transaction Records"
+        message="This action will permanently delete ALL transaction records and cannot be undone. All sales data, analytics history, and transaction details will be lost forever."
+        confirmText="Delete All Records"
+        cancelText="Cancel"
+        requireTextConfirmation={true}
+        confirmationText="DELETE ALL"
+        severity="error"
+      />
     </Container>
   );
 }

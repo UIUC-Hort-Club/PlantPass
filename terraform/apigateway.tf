@@ -99,6 +99,12 @@ resource "aws_apigatewayv2_route" "export_transactions" {
   target    = "integrations/${aws_apigatewayv2_integration.transaction_lambda_integration.id}"
 }
 
+resource "aws_apigatewayv2_route" "clear_transactions" {
+  api_id    = aws_apigatewayv2_api.frontend_api.id
+  route_key = "DELETE /transactions/clear-all"
+  target    = "integrations/${aws_apigatewayv2_integration.transaction_lambda_integration.id}"
+}
+
 # -------------------------
 # Admin Lambda Routes
 # -------------------------

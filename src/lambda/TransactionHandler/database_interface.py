@@ -399,3 +399,36 @@ def export_transaction_data():
     except Exception as e:
         logger.error(f"Error exporting data: {e}")
         raise
+
+def clear_all_transactions():
+    """
+    Clear all transactions from the database.
+    
+    Returns the number of transactions that were deleted.
+    """
+    try:
+        response = table.scan()
+        transactions = response['Items']
+        
+        while 'LastEvaluatedKey' in response:
+            response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+            transactions.extend(response['Items'])
+        
+        if not transactions:
+            logger.info("No transactions found to clear")
+            return 0
+        
+        with table.batch_writer() as batch:
+            for transaction in transactions:
+                batch.delete_item(Key={'purchase_id': transaction['purchase_id']})
+        
+        cleared_count = len(transactions)
+        logger.info(f"Successfully cleared {cleared_count} transactions")
+        return cleared_count
+        
+    except ClientError as e:
+        logger.error(f"DynamoDB error clearing transactions: {e}")
+        raise Exception(f"Failed to clear transactions: {e}")
+    except Exception as e:
+        logger.error(f"Error clearing transactions: {e}")
+        raise

@@ -6,7 +6,8 @@ from database_interface import (
     read_transaction,
     update_transaction,
     delete_transaction,
-    compute_sales_analytics
+    compute_sales_analytics,
+    clear_all_transactions
 )
 
 logger = logging.getLogger()
@@ -71,6 +72,11 @@ def lambda_handler(event, context):
             export_data = export_transaction_data()
             logger.info(f"Export data retrieved: {len(export_data)} records")
             return response(200, {"export_data": export_data})
+
+        elif route_key == "DELETE /transactions/clear-all":
+            cleared_count = clear_all_transactions()
+            logger.info(f"Cleared {cleared_count} transactions")
+            return response(200, {"message": f"Successfully cleared {cleared_count} transactions", "cleared_count": cleared_count})
 
         else:
             logger.warning(f"Unknown route: {route_key}")
