@@ -38,7 +38,7 @@ function OrderLookup() {
   const [currentTransactionID, setCurrentTransactionID] = useState("");
   const [showNotification, setShowNotification] = useState(false);
   const [error, setError] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("Cash");
+  const [paymentMethod, setPaymentMethod] = useState(""); // Initialize to empty
   const [transactionLoaded, setTransactionLoaded] = useState(false);
 
   // Load products and discounts on component mount
@@ -79,6 +79,28 @@ function OrderLookup() {
       console.error("Error loading discounts:", error);
       setDiscounts([]);
     }
+  };
+
+  const resetToInitialState = () => {
+    setCurrentTransactionID("");
+    setTransactionLoaded(false);
+    setOrderId("");
+    setSelectedDiscounts([]);
+    setVoucher("");
+    setPaymentMethod(""); // Reset to empty
+    setError("");
+    
+    // Reset quantities and subtotals
+    const resetQuantities = {};
+    const resetSubtotals = {};
+    products.forEach((product) => {
+      resetQuantities[product.SKU] = 0;
+      resetSubtotals[product.SKU] = "0.00";
+    });
+    setQuantities(resetQuantities);
+    setSubtotals(resetSubtotals);
+    
+    setTotals({ subtotal: 0, discount: 0, grandTotal: 0 });
   };
 
   const handleQuantityChange = (e, sku) => {
@@ -163,9 +185,11 @@ function OrderLookup() {
         grandTotal: transaction.receipt?.total || 0,
       });
 
-      // Set payment method if already paid
-      if (transaction.payment?.method) {
+      // Set payment method if already paid, otherwise keep empty
+      if (transaction.payment?.method && transaction.payment?.paid) {
         setPaymentMethod(transaction.payment.method);
+      } else {
+        setPaymentMethod(""); // Keep empty for unpaid transactions
       }
 
     } catch (err) {
@@ -235,27 +259,8 @@ function OrderLookup() {
 
     try {
       await deleteTransaction(currentTransactionID);
-      
-      // Reset state
-      setCurrentTransactionID("");
-      setTransactionLoaded(false);
-      setOrderId("");
-      setSelectedDiscounts([]);
-      setVoucher("");
-      
-      // Reset quantities and subtotals
-      const resetQuantities = {};
-      const resetSubtotals = {};
-      products.forEach((product) => {
-        resetQuantities[product.SKU] = 0;
-        resetSubtotals[product.SKU] = "0.00";
-      });
-      setQuantities(resetQuantities);
-      setSubtotals(resetSubtotals);
-      
-      setTotals({ subtotal: 0, discount: 0, grandTotal: 0 });
+      resetToInitialState();
       setShowNotification(true);
-      setError("");
       
     } catch (err) {
       console.error("Error deleting transaction:", err);
@@ -266,6 +271,11 @@ function OrderLookup() {
   const handleCompleteOrder = async () => {
     if (!currentTransactionID) {
       setError("No transaction loaded to complete");
+      return;
+    }
+
+    if (!paymentMethod) {
+      setError("Please select a payment method before completing the order");
       return;
     }
 
@@ -281,6 +291,9 @@ function OrderLookup() {
       setShowNotification(true);
       setError("");
       
+      // Reset to initial state after successful completion
+      resetToInitialState();
+      
     } catch (err) {
       console.error("Error completing order:", err);
       setError("Failed to complete order. Please try again.");
@@ -289,7 +302,7 @@ function OrderLookup() {
 
   return (
     <Container maxWidth="md">
-      {/* Lookup Header */}
+      {/* Lookup Header - Always visible */}
       <Stack
         direction="row"
         spacing={2}
@@ -319,110 +332,109 @@ function OrderLookup() {
         </Alert>
       )}
 
-      {/* Items Table */}
-      <ItemsTable
-        stockItems={products}
-        quantities={quantities}
-        subtotals={subtotals}
-        onQuantityChange={handleQuantityChange}
-        disabled={!transactionLoaded}
-      />
-
-      {/* Discounts Table */}
+      {/* Only show content after transaction is loaded */}
       {transactionLoaded && (
-        <DiscountsTable
-          discounts={discounts}
-          selectedDiscounts={selectedDiscounts}
-          onDiscountToggle={handleDiscountToggle}
-        />
-      )}
-
-      {/* Voucher */}
-      {transactionLoaded && (
-        <Stack direction="row" justifyContent="right" sx={{ mt: 2 }}>
-          <TextField
-            label="Voucher"
-            type="text"
-            size="small"
-            value={voucher}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (value === "") {
-                setVoucher("");
-                return;
-              }
-              const numeric = Math.max(0, Math.floor(Number(value)));
-              setVoucher(numeric);
-            }}
-            sx={{ width: 120 }}
+        <>
+          {/* Items Table */}
+          <ItemsTable
+            stockItems={products}
+            quantities={quantities}
+            subtotals={subtotals}
+            onQuantityChange={handleQuantityChange}
           />
-        </Stack>
-      )}
 
-      {/* Update / Delete Buttons */}
-      {transactionLoaded && (
-        <Box sx={{ mt: 2 }}>
-          <Stack direction="row" spacing={2} justifyContent="space-between">
-            <Button
-              variant="contained"
-              color="error"
+          {/* Discounts Table */}
+          <DiscountsTable
+            discounts={discounts}
+            selectedDiscounts={selectedDiscounts}
+            onDiscountToggle={handleDiscountToggle}
+          />
+
+          {/* Voucher */}
+          <Stack direction="row" justifyContent="right" sx={{ mt: 2 }}>
+            <TextField
+              label="Voucher"
+              type="text"
               size="small"
-              onClick={handleDelete}
-            >
-              Delete Order
-            </Button>
-            <Button
-              variant="contained"
-              color="primary"
-              size="small"
-              onClick={handleUpdate}
-            >
-              Update Order
-            </Button>
+              value={voucher}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === "") {
+                  setVoucher("");
+                  return;
+                }
+                const numeric = Math.max(0, Math.floor(Number(value)));
+                setVoucher(numeric);
+              }}
+              sx={{ width: 120 }}
+            />
           </Stack>
-        </Box>
-      )}
 
-      {/* Receipt */}
-      {transactionLoaded && (
-        <Receipt 
-          totals={totals} 
-          transactionId={currentTransactionID}
-          discounts={discounts.map(discount => ({
-            name: discount.name,
-            amount_off: selectedDiscounts.includes(discount.name) ? 
-              (discount.type === "dollar" ? discount.value_off : 
-               (Number(totals.subtotal) * discount.percent_off / 100)) : 0
-          }))}
-          voucher={Number(voucher) || 0}
-        />
-      )}
+          {/* Update / Delete Buttons */}
+          <Box sx={{ mt: 2 }}>
+            <Stack direction="row" spacing={2} justifyContent="space-between">
+              <Button
+                variant="contained"
+                color="error"
+                size="small"
+                onClick={handleDelete}
+              >
+                Delete Order
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={handleUpdate}
+              >
+                Update Order
+              </Button>
+            </Stack>
+          </Box>
 
-      {/* Payment & Complete */}
-      {transactionLoaded && (
-        <Box sx={{ mt: 2, display: "flex", alignItems: "center", gap: 2, justifyContent: "center" }}>
-          <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel>Payment Method</InputLabel>
-            <Select
-              value={paymentMethod}
-              label="Payment Method"
-              onChange={(e) => setPaymentMethod(e.target.value)}
+          {/* Receipt */}
+          <Receipt 
+            totals={totals} 
+            transactionId={currentTransactionID}
+            discounts={discounts.map(discount => ({
+              name: discount.name,
+              amount_off: selectedDiscounts.includes(discount.name) ? 
+                (discount.type === "dollar" ? discount.value_off : 
+                 (Number(totals.subtotal) * discount.percent_off / 100)) : 0
+            }))}
+            voucher={Number(voucher) || 0}
+          />
+
+          {/* Payment & Complete */}
+          <Box sx={{ mt: 2, display: "flex", alignItems: "center", gap: 2, justifyContent: "center" }}>
+            <FormControl size="small" sx={{ minWidth: 150 }}>
+              <InputLabel>Payment Method *</InputLabel>
+              <Select
+                value={paymentMethod}
+                label="Payment Method *"
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                error={!paymentMethod}
+              >
+                <MenuItem value="">
+                  <em>Select Payment Method</em>
+                </MenuItem>
+                <MenuItem value="Cash">Cash</MenuItem>
+                <MenuItem value="Credit/Debit">Credit/Debit</MenuItem>
+                <MenuItem value="Check">Check</MenuItem>
+                <MenuItem value="Other">Other</MenuItem>
+              </Select>
+            </FormControl>
+            <Button
+              variant="contained"
+              color="success"
+              size="small"
+              onClick={handleCompleteOrder}
+              disabled={!paymentMethod}
             >
-              <MenuItem value="Cash">Cash</MenuItem>
-              <MenuItem value="Credit/Debit">Credit/Debit</MenuItem>
-              <MenuItem value="Check">Check</MenuItem>
-              <MenuItem value="Other">Other</MenuItem>
-            </Select>
-          </FormControl>
-          <Button
-            variant="contained"
-            color="success"
-            size="small"
-            onClick={handleCompleteOrder}
-          >
-            Complete Order
-          </Button>
-        </Box>
+              Complete Order
+            </Button>
+          </Box>
+        </>
       )}
 
       <div style={{ height: "1rem" }} />
