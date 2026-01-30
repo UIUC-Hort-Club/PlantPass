@@ -7,11 +7,9 @@ import boto3
 from botocore.exceptions import ClientError
 from utils import generate_random_id, validate_transaction_id
 
-# Configure logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-# Initialize DynamoDB
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(os.environ.get('TRANSACTIONS_TABLE', 'transactions'))
 
@@ -55,29 +53,23 @@ def create_transaction(transaction):
     Returns the full transaction data from the backend, which includes discounts applied, etc.
     """
     try:
-        # Initialize blank transaction object and populate with expected fields
         transaction_created = {}
 
-        # Init payment info - will be updated after payment processing
         transaction_created["payment"] = {
             "method": "",
             "paid": False
         }
 
-        # Copy over timestamp and items from input transaction
         transaction_created["timestamp"] = transaction.get("timestamp", int(datetime.now(timezone.utc).timestamp()))
 
-        # Generate a unique purchase ID using capital letters (in the form ___-___. For example, ABC-DEF)
         while True:
             purchase_id = generate_random_id()
             if validate_transaction_id(purchase_id):
                 break
         transaction_created["purchase_id"] = purchase_id
 
-        # Add items to the transaction
         transaction_created["items"] = transaction.get("items", [])
 
-        # Compute subtotal first (needed for discount calculations)
         subtotal = sum(item["quantity"] * item["price_ea"] for item in transaction_created["items"])
 
         # Add discounts
@@ -88,7 +80,6 @@ def create_transaction(transaction):
         input_discounts = transaction.get("discounts", [])
         transaction_created["discounts"] = []
         
-        # Process each discount and calculate amount_off
         for discount in input_discounts:
             discount_type = discount.get("type")
             selected = discount.get("selected", False)
@@ -100,33 +91,28 @@ def create_transaction(transaction):
                 "value_off": discount.get("value_off", 0.0)
             }
             
-            # Calculate amount_off based on discount type and selection
             if selected:
                 if discount_type == "dollar":
                     discount_record["amount_off"] = discount.get("value_off", 0)
-                else:  # percent
+                else:
                     discount_record["amount_off"] = (subtotal * discount.get("percent_off", 0)) / 100
             else:
                 discount_record["amount_off"] = 0
             
             transaction_created["discounts"].append(discount_record)
 
-        # Add club voucher amount
         transaction_created["club_voucher"] = transaction.get("voucher", 0)
 
-        # Compute receipt (subtotal, discount, total)
         total_discount = sum(discount.get("amount_off", 0) for discount in transaction_created["discounts"]) + transaction_created["club_voucher"]
-        total = max(subtotal - total_discount, 0)  # Total should not be negative
+        total = max(subtotal - total_discount, 0)
         transaction_created["receipt"] = {
             "subtotal": subtotal,
             "discount": total_discount,
             "total": total
         }
 
-        # Convert to DynamoDB format (handle Decimals)
         db_item = json.loads(json.dumps(transaction_created), parse_float=Decimal)
         
-        # Save to database
         table.put_item(Item=db_item)
         logger.info(f"Transaction created successfully: {purchase_id}")
         
@@ -150,7 +136,6 @@ def read_transaction(transaction_id):
             logger.warning(f"Transaction not found: {transaction_id}")
             return None
             
-        # Convert Decimal objects to float for JSON serialization
         transaction = decimal_to_float(response['Item'])
         logger.info(f"Transaction retrieved successfully: {transaction_id}")
         return transaction
@@ -172,12 +157,10 @@ def update_transaction(transaction_id, updated_transaction):
     database with the new transaction data.
     """
     try:
-        # First, get the existing transaction
         existing = read_transaction(transaction_id)
         if not existing:
             raise Exception(f"Transaction {transaction_id} not found")
         
-        # Update fields that are provided
         if "items" in updated_transaction:
             existing["items"] = updated_transaction["items"]
             
@@ -190,7 +173,6 @@ def update_transaction(transaction_id, updated_transaction):
         if "payment" in updated_transaction:
             existing["payment"].update(updated_transaction["payment"])
         
-        # Recalculate receipt if items or discounts changed
         if "items" in updated_transaction or "discounts" in updated_transaction or "voucher" in updated_transaction:
             subtotal = sum(item["quantity"] * item["price_ea"] for item in existing["items"])
             total_discount = sum(discount.get("amount_off", 0) for discount in existing["discounts"]) + existing.get("club_voucher", 0)
@@ -202,10 +184,8 @@ def update_transaction(transaction_id, updated_transaction):
                 "total": total
             }
         
-        # Convert to DynamoDB format
         db_item = json.loads(json.dumps(existing), parse_float=Decimal)
         
-        # Update in database
         table.put_item(Item=db_item)
         logger.info(f"Transaction updated successfully: {transaction_id}")
         
@@ -240,11 +220,9 @@ def compute_sales_analytics():
     Returns analytics grouped into 30-minute time blocks aligned to clock boundaries.
     """
     try:
-        # Scan all transactions
         response = table.scan()
         transactions = response['Items']
         
-        # Continue scanning if there are more items
         while 'LastEvaluatedKey' in response:
             response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
             transactions.extend(response['Items'])
@@ -260,10 +238,8 @@ def compute_sales_analytics():
                 "transactions": []
             }
         
-        # Convert Decimal objects
         transactions = decimal_to_float(transactions)
         
-        # Calculate basic metrics
         total_sales = 0.0
         total_orders = len(transactions)
         total_units_sold = 0
@@ -275,12 +251,10 @@ def compute_sales_analytics():
             total = receipt.get("total", 0)
             total_sales += total
             
-            # Count total units sold
             items = transaction.get("items", [])
             transaction_units = sum(item.get("quantity", 0) for item in items)
             total_units_sold += transaction_units
             
-            # Create transaction summary
             transaction_summaries.append({
                 "purchase_id": transaction.get("purchase_id"),
                 "timestamp": transaction.get("timestamp"),
@@ -288,11 +262,9 @@ def compute_sales_analytics():
                 "grand_total": total
             })
             
-            # Group by 30-minute time buckets
             timestamp = transaction.get("timestamp", 0)
             if timestamp:
                 dt = datetime.fromtimestamp(timestamp, tz=timezone.utc)
-                # Align to 30-minute boundaries
                 minute = 0 if dt.minute < 30 else 30
                 bucket_time = dt.replace(minute=minute, second=0, microsecond=0)
                 bucket_key = bucket_time.strftime("%m-%d-%Y %I:%M %p")
@@ -301,11 +273,9 @@ def compute_sales_analytics():
                     sales_by_time_bucket[bucket_key] = 0.0
                 sales_by_time_bucket[bucket_key] += total
         
-        # Calculate averages
         average_items_per_order = total_units_sold / total_orders if total_orders > 0 else 0.0
         average_order_value = total_sales / total_orders if total_orders > 0 else 0.0
         
-        # Fill in empty time buckets if needed
         if transactions:
             timestamps = [t.get("timestamp", 0) for t in transactions if t.get("timestamp")]
             if timestamps:
@@ -351,16 +321,13 @@ def export_transaction_data():
     Note: For MVP, returning JSON data directly. For production, consider S3 + presigned URLs.
     """
     try:
-        # Scan all transactions
         response = table.scan()
         transactions = response['Items']
         
-        # Continue scanning if there are more items
         while 'LastEvaluatedKey' in response:
             response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
             transactions.extend(response['Items'])
         
-        # Convert Decimal objects
         transactions = decimal_to_float(transactions)
         
         logger.info(f"Exported {len(transactions)} transactions")

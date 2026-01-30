@@ -19,12 +19,9 @@ def validate_transaction_id(transaction_id):
         
         response = table.get_item(Key={'purchase_id': transaction_id})
         
-        # Return True if the ID doesn't exist (is available)
         return 'Item' not in response
         
     except ClientError:
-        # If there's an error accessing the database, assume ID is not valid
         return False
     except Exception:
-        # For any other error, assume ID is not valid
         return False
