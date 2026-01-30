@@ -92,11 +92,20 @@ def create_transaction(transaction):
     
     # Process each discount and calculate amount_off
     for discount in input_discounts:
+        discount_type = discount.get("type")
         discount_record = {
-            "name": discount.get("name", ""),
-            "percent_off": discount.get("percent_off", 0),
-            "amount_off": (subtotal * discount.get("percent_off", 0)) / 100
+            "name": discount.get("name"),
+            "type": discount_type,
+            "percent_off": discount.get("percent_off"),
+            "value_off": discount.get("value_off")
         }
+        
+        # Calculate amount_off based on discount type
+        if discount_type == "dollar":
+            discount_record["amount_off"] = discount.get("value_off")
+        else:  # percent
+            discount_record["amount_off"] = (subtotal * discount.get("percent_off")) / 100
+        
         transaction_created["discounts"].append(discount_record)
 
     # Add club voucher amount

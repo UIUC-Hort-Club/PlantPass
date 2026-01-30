@@ -194,7 +194,9 @@ function OrderEntry({ product_listings }) {
       }),
       discounts: selectedDiscountObjects.map(discount => ({
         name: discount.name,
-        percent_off: discount.percent_off
+        type: discount.type,
+        percent_off: discount.percent_off,
+        value_off: discount.value_off
       })),
       voucher: Number(voucher) || 0,
     };

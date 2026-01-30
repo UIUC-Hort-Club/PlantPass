@@ -73,7 +73,10 @@ export default function DiscountsTable({
                       fontWeight: 'medium'
                     }}
                   >
-                    -{discount.percent_off}%
+                    {discount.type === 'dollar' 
+                      ? `-$${discount.value_off.toFixed(2)}`
+                      : `-${discount.percent_off}%`
+                    }
                   </Typography>
                 </TableCell>
               </TableRow>

@@ -16,9 +16,13 @@ import {
   Alert,
   CircularProgress,
   Box,
+  ToggleButton,
+  ToggleButtonGroup,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
+import PercentIcon from '@mui/icons-material/Percent';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { getAllDiscounts } from "../../api/discounts_interface/getAllDiscounts";
 import { createDiscount } from "../../api/discounts_interface/createDiscount";
@@ -46,8 +50,10 @@ export default function DiscountTable() {
       const formattedRows = discounts.map((discount, index) => ({
         id: `${discount.name}-${index}`,
         name: discount.name,
+        type: discount.type,
         percent: discount.percent_off.toString(),
-        sortOrder: discount.sort_order || index,
+        value: discount.value_off.toFixed(2),
+        sortOrder: discount.sort_order,
         isNew: false,
         originalName: discount.name,
       }));
@@ -71,7 +77,9 @@ export default function DiscountTable() {
     const newRow = {
       id: `new-${Date.now()}`,
       name: "",
+      type: "percent",
       percent: "0",
+      value: "0.00",
       sortOrder: maxSortOrder + 1,
       isNew: true,
     };
@@ -92,13 +100,54 @@ export default function DiscountTable() {
   };
 
   const handleEdit = (id, field, value) => {
-    if (field === 'percent') {
-      // Handle percent formatting
-      const formattedPercent = formatPercentInput(value);
-      setRows(rows.map((r) => (r.id === id ? { ...r, [field]: formattedPercent } : r)));
+    if (field === 'percent' || field === 'value') {
+      // Handle value formatting for both percent and dollar amounts
+      const formattedValue = field === 'percent' ? formatPercentInput(value) : formatValueInput(value);
+      setRows(rows.map((r) => (r.id === id ? { ...r, [field]: formattedValue } : r)));
     } else {
       setRows(rows.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
     }
+  };
+
+  const formatValueInput = (value) => {
+    // Remove any non-digit and non-decimal characters
+    let cleaned = value.replace(/[^\d.]/g, '');
+    
+    // Ensure only one decimal point
+    const parts = cleaned.split('.');
+    if (parts.length > 2) {
+      cleaned = parts[0] + '.' + parts.slice(1).join('');
+    }
+    
+    // Limit to 2 decimal places
+    if (parts.length === 2 && parts[1].length > 2) {
+      cleaned = parts[0] + '.' + parts[1].substring(0, 2);
+    }
+    
+    // Convert to number and back to ensure valid format
+    const numValue = parseFloat(cleaned);
+    if (isNaN(numValue)) {
+      return '';
+    }
+    
+    // Return the cleaned string
+    return cleaned;
+  };
+
+  const formatValueDisplay = (value) => {
+    // Format for display with 2 decimal places
+    const numValue = parseFloat(value);
+    if (isNaN(numValue)) return '0.00';
+    return numValue.toFixed(2);
+  };
+
+  const handleValueBlur = (id) => {
+    const row = rows.find(r => r.id === id);
+    if (!row) return;
+    
+    // Format to 2 decimal places on blur
+    const formattedValue = formatValueDisplay(row.value);
+    setRows(rows.map((r) => (r.id === id ? { ...r, value: formattedValue } : r)));
   };
 
   const formatPercentInput = (value) => {
@@ -184,13 +233,15 @@ export default function DiscountTable() {
     if (rows.length !== originalRows.length) return true;
     
     return rows.some(row => {
-      if (row.isNew) return row.name.trim() !== "" || parseFloat(row.percent) !== 0;
+      if (row.isNew) return row.name.trim() !== "" || parseFloat(row.percent) !== 0 || parseFloat(row.value) !== 0;
       
       const original = originalRows.find(orig => orig.id === row.id);
       if (!original) return true;
       
       return row.name !== original.name || 
              parseFloat(row.percent) !== parseFloat(original.percent) ||
+             parseFloat(row.value) !== parseFloat(original.value) ||
+             row.type !== original.type ||
              row.sortOrder !== original.sortOrder;
     });
   };
@@ -211,11 +262,19 @@ export default function DiscountTable() {
       // Process new discounts
       const newDiscounts = rows.filter(row => row.isNew && row.name.trim() !== "");
       for (const discount of newDiscounts) {
-        await createDiscount({
+        const discountData = {
           name: discount.name,
-          percent_off: parseFloat(discount.percent) || 0,
+          type: discount.type,
           sort_order: discount.sortOrder
-        });
+        };
+        
+        if (discount.type === 'percent') {
+          discountData.percent_off = parseFloat(discount.percent) || 0;
+        } else {
+          discountData.value_off = parseFloat(discount.value) || 0;
+        }
+        
+        await createDiscount(discountData);
       }
 
       // Process updated discounts
@@ -224,14 +283,26 @@ export default function DiscountTable() {
         const original = originalRows.find(orig => orig.id === row.id);
         return original && (row.name !== original.name || 
                            row.percent !== original.percent ||
+                           row.value !== original.value ||
+                           row.type !== original.type ||
                            row.sortOrder !== original.sortOrder);
       });
 
       for (const discount of updatedDiscounts) {
-        await updateDiscount(discount.originalName || discount.name, {
-          percent_off: parseFloat(discount.percent) || 0,
+        const updateData = {
+          type: discount.type,
           sort_order: discount.sortOrder
-        });
+        };
+        
+        if (discount.type === 'percent') {
+          updateData.percent_off = parseFloat(discount.percent) || 0;
+          updateData.value_off = 0; // Clear dollar value when switching to percent
+        } else {
+          updateData.value_off = parseFloat(discount.value) || 0;
+          updateData.percent_off = 0; // Clear percent value when switching to dollar
+        }
+        
+        await updateDiscount(discount.originalName || discount.name, updateData);
       }
 
       // Update sort orders for all existing discounts if order changed
@@ -347,13 +418,16 @@ export default function DiscountTable() {
               >
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ width: "70%" }}>
+                    <TableCell sx={{ width: "50%" }}>
                       <strong>Discount Name</strong>
                     </TableCell>
-                    <TableCell sx={{ width: "25%" }}>
-                      <strong>Percent Off</strong>
+                    <TableCell sx={{ width: "15%" }}>
+                      <strong>Type</strong>
                     </TableCell>
-                    <TableCell sx={{ width: "5%" }}></TableCell>
+                    <TableCell sx={{ width: "20%" }}>
+                      <strong>Value</strong>
+                    </TableCell>
+                    <TableCell sx={{ width: "15%" }}></TableCell>
                   </TableRow>
                 </TableHead>
 
@@ -409,15 +483,41 @@ export default function DiscountTable() {
                           </TableCell>
 
                           <TableCell>
+                            <ToggleButtonGroup
+                              value={row.type}
+                              exclusive
+                              onChange={(e, newType) => {
+                                if (newType !== null) {
+                                  handleEdit(row.id, "type", newType);
+                                }
+                              }}
+                              size="small"
+                            >
+                              <ToggleButton value="percent" aria-label="percent">
+                                <PercentIcon fontSize="small" />
+                              </ToggleButton>
+                              <ToggleButton value="dollar" aria-label="dollar">
+                                <AttachMoneyIcon fontSize="small" />
+                              </ToggleButton>
+                            </ToggleButtonGroup>
+                          </TableCell>
+
+                          <TableCell>
                             <TextField
                               type="text"
                               fullWidth
                               size="small"
-                              value={row.percent}
+                              value={row.type === 'percent' ? row.percent : row.value}
                               onChange={(e) =>
-                                handleEdit(row.id, "percent", e.target.value)
+                                handleEdit(row.id, row.type === 'percent' ? 'percent' : 'value', e.target.value)
                               }
-                              onBlur={() => handlePercentBlur(row.id)}
+                              onBlur={() => {
+                                if (row.type === 'percent') {
+                                  handlePercentBlur(row.id);
+                                } else {
+                                  handleValueBlur(row.id);
+                                }
+                              }}
                               inputProps={{
                                 inputMode: 'decimal',
                                 pattern: '[0-9]*\\.?[0-9]*'

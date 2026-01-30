@@ -25,12 +25,13 @@ def get_all_discounts():
             if 'percent_off' in discount and isinstance(discount['percent_off'], Decimal):
                 discount['percent_off'] = float(discount['percent_off'])
             
-            # Convert sort_order from Decimal to int, default to 0 if missing
-            if 'sort_order' in discount:
-                if isinstance(discount['sort_order'], Decimal):
-                    discount['sort_order'] = int(discount['sort_order'])
-            else:
-                discount['sort_order'] = 0
+            # Convert value_off from Decimal to float
+            if 'value_off' in discount and isinstance(discount['value_off'], Decimal):
+                discount['value_off'] = float(discount['value_off'])
+            
+            # Convert sort_order from Decimal to int
+            if 'sort_order' in discount and isinstance(discount['sort_order'], Decimal):
+                discount['sort_order'] = int(discount['sort_order'])
         
         # Sort by sort_order
         discounts.sort(key=lambda x: x.get('sort_order', 0))
@@ -46,16 +47,34 @@ def create_discount(discount_data):
     Create a new discount.
     discount_data must include at least:
     - name: str
-    - percent_off: float
+    - percent_off: float (optional, for percent discounts)
+    - value_off: float (optional, for dollar discounts)
+    - type: str ("percent" or "dollar")
     - sort_order: int (optional - if not provided, will be set to next available)
     """
     try:
         # Validate required fields
-        if 'name' not in discount_data or 'percent_off' not in discount_data:
-            raise ValueError("Both 'name' and 'percent_off' are required")
+        if 'name' not in discount_data or 'type' not in discount_data:
+            raise ValueError("Both 'name' and 'type' are required")
         
         name = discount_data['name']
-        percent_off = Decimal(str(discount_data['percent_off']))
+        discount_type = discount_data['type']
+        
+        # Validate discount type
+        if discount_type not in ['percent', 'dollar']:
+            raise ValueError("Type must be 'percent' or 'dollar'")
+        
+        # Validate that appropriate value is provided
+        if discount_type == 'percent':
+            if 'percent_off' not in discount_data:
+                raise ValueError("percent_off is required for percent discounts")
+            percent_off = Decimal(str(discount_data['percent_off']))
+            value_off = Decimal('0')
+        else:  # dollar
+            if 'value_off' not in discount_data:
+                raise ValueError("value_off is required for dollar discounts")
+            value_off = Decimal(str(discount_data['value_off']))
+            percent_off = Decimal('0')
         
         # Set sort order
         if 'sort_order' in discount_data:
@@ -83,7 +102,9 @@ def create_discount(discount_data):
         # Create the discount
         item = {
             'name': name,
+            'type': discount_type,
             'percent_off': percent_off,
+            'value_off': value_off,
             'sort_order': sort_order
         }
         
@@ -91,6 +112,7 @@ def create_discount(discount_data):
         
         # Return the created discount with proper type conversion
         item['percent_off'] = float(item['percent_off'])
+        item['value_off'] = float(item['value_off'])
         item['sort_order'] = int(item['sort_order'])
         logger.info(f"Created discount: {item}")
         return item
@@ -120,8 +142,24 @@ def update_discount(name, update_data):
         expression_attribute_values = {}
         
         if 'percent_off' in update_data:
+            if expression_attribute_values:
+                update_expression += ", "
             update_expression += "percent_off = :percent_off"
             expression_attribute_values[':percent_off'] = Decimal(str(update_data['percent_off']))
+        
+        if 'value_off' in update_data:
+            if expression_attribute_values:
+                update_expression += ", "
+            update_expression += "value_off = :value_off"
+            expression_attribute_values[':value_off'] = Decimal(str(update_data['value_off']))
+        
+        if 'type' in update_data:
+            if expression_attribute_values:
+                update_expression += ", "
+            update_expression += "#discount_type = :discount_type"
+            expression_attribute_values[':discount_type'] = update_data['type']
+            # Add expression attribute name for reserved word 'type'
+            expression_attribute_names = {'#discount_type': 'type'}
         
         if 'sort_order' in update_data:
             if expression_attribute_values:
@@ -133,17 +171,25 @@ def update_discount(name, update_data):
             raise ValueError("No valid fields to update")
         
         # Update the item
-        response = table.update_item(
-            Key={'name': name},
-            UpdateExpression=update_expression,
-            ExpressionAttributeValues=expression_attribute_values,
-            ReturnValues='ALL_NEW'
-        )
+        update_params = {
+            'Key': {'name': name},
+            'UpdateExpression': update_expression,
+            'ExpressionAttributeValues': expression_attribute_values,
+            'ReturnValues': 'ALL_NEW'
+        }
+        
+        # Add expression attribute names if needed (for reserved words like 'type')
+        if 'type' in update_data:
+            update_params['ExpressionAttributeNames'] = {'#discount_type': 'type'}
+        
+        response = table.update_item(**update_params)
         
         updated_item = response['Attributes']
         # Convert Decimal objects to appropriate types for JSON serialization
         if 'percent_off' in updated_item and isinstance(updated_item['percent_off'], Decimal):
             updated_item['percent_off'] = float(updated_item['percent_off'])
+        if 'value_off' in updated_item and isinstance(updated_item['value_off'], Decimal):
+            updated_item['value_off'] = float(updated_item['value_off'])
         if 'sort_order' in updated_item and isinstance(updated_item['sort_order'], Decimal):
             updated_item['sort_order'] = int(updated_item['sort_order'])
         
