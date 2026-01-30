@@ -218,20 +218,13 @@ function OrderEntry({ product_listings }) {
 
       <Box sx={{ mt: 2 }}>
         <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
+          direction="column"
+          spacing={1}
         >
-          <Button
-            variant="outlined"
-            startIcon={<QrCodeScannerIcon />}
-            onClick={() => setScannerOpen(true)}
-            size="small"
+          <Stack
+            direction="row"
+            justifyContent="right"
           >
-            Scan
-          </Button>
-
-          <Stack direction="row" spacing={1} alignItems="center">
             <TextField
               label="Voucher"
               type="text"
@@ -256,8 +249,12 @@ function OrderEntry({ product_listings }) {
                 ),
               }}
               sx={{ width: 120 }}
-            />
-
+            />            
+          </Stack>
+          <Stack
+            direction="row"
+            justifyContent="right"
+          >
             <TextField
               label="Subtotal"
               size="small"
@@ -271,18 +268,39 @@ function OrderEntry({ product_listings }) {
                 ),
               }}
               sx={{ width: 140 }}
-            />
-
+            />            
+          </Stack>
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+          >
             <Button
-              variant="contained"
-              color="primary"
-              onClick={handleEnterOrder}
+              variant="outlined"
+              startIcon={<QrCodeScannerIcon />}
+              onClick={() => setScannerOpen(true)}
               size="small"
             >
-              Enter
+              Scan
             </Button>
-          </Stack>
+
+            <Stack direction="row" spacing={1} alignItems="center">
+
+
+
+
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleEnterOrder}
+                size="small"
+              >
+                Enter
+              </Button>
+            </Stack>
+          </Stack>          
         </Stack>
+
       </Box>
 
       {currentTransactionID && (
