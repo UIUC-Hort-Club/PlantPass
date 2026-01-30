@@ -45,6 +45,33 @@ resource "aws_iam_role_policy" "lambda_s3_access" {
   })
 }
 
+# DynamoDB access policy for Lambda functions
+resource "aws_iam_role_policy" "lambda_dynamodb_access" {
+  name = "LambdaDynamoDBAccess"
+  role = aws_iam_role.lambda_exec.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Scan",
+          "dynamodb:Query"
+        ]
+        Resource = [
+          aws_dynamodb_table.discounts.arn,
+          aws_dynamodb_table.products.arn
+        ]
+      }
+    ]
+  })
+}
+
 # -------------------------
 # CloudWatch Log Group
 # -------------------------
@@ -89,11 +116,11 @@ resource "aws_cloudwatch_log_group" "discounts_handler_logs" {
 # -------------------------
 # Transaction Lambda
 resource "aws_lambda_function" "transaction_handler" {
-  function_name = "TransactionHandler"
-  filename      = var.transaction_lambda_zip_path
-  handler       = "lambda_handler.lambda_handler"
-  runtime       = "python3.11"
-  role          = aws_iam_role.lambda_exec.arn
+  function_name    = "TransactionHandler"
+  filename         = var.transaction_lambda_zip_path
+  handler          = "lambda_handler.lambda_handler"
+  runtime          = "python3.11"
+  role             = aws_iam_role.lambda_exec.arn
   source_code_hash = filebase64sha256(var.transaction_lambda_zip_path)
   depends_on = [
     aws_cloudwatch_log_group.transaction_handler_logs
@@ -106,15 +133,15 @@ resource "aws_lambda_function" "transaction_handler" {
 
 # Admin Lambda
 resource "aws_lambda_function" "admin" {
-  function_name = "plantpass-admin"
-  filename      = var.admin_lambda_zip_path
-  handler       = "lambda_handler.lambda_handler"
-  runtime       = "python3.11"
-  role          = aws_iam_role.lambda_exec.arn
-  timeout       = 10
+  function_name    = "plantpass-admin"
+  filename         = var.admin_lambda_zip_path
+  handler          = "lambda_handler.lambda_handler"
+  runtime          = "python3.11"
+  role             = aws_iam_role.lambda_exec.arn
+  timeout          = 10
   source_code_hash = filebase64sha256(var.admin_lambda_zip_path)
 
-  layers = [ 
+  layers = [
     aws_lambda_layer_version.auth_deps.arn
   ]
 
@@ -125,12 +152,12 @@ resource "aws_lambda_function" "admin" {
       JWT_SECRET      = "super-secret-key"
 
       # Reset token configuration (used for password reset flow)
-      RESET_TOKEN_HASH  = var.reset_token_hash
-      RESET_ENABLED     = "true"
+      RESET_TOKEN_HASH = var.reset_token_hash
+      RESET_ENABLED    = "true"
     }
   }
 
-  depends_on = [ 
+  depends_on = [
     aws_cloudwatch_log_group.admin_logs
   ]
 
@@ -141,15 +168,21 @@ resource "aws_lambda_function" "admin" {
 
 # Products Lambda
 resource "aws_lambda_function" "products_handler" {
-  function_name = "ProductsHandler"
-  filename      = var.products_lambda_zip_path
-  handler       = "lambda_handler.lambda_handler"
-  runtime       = "python3.11"
-  role          = aws_iam_role.lambda_exec.arn
+  function_name    = "ProductsHandler"
+  filename         = var.products_lambda_zip_path
+  handler          = "lambda_handler.lambda_handler"
+  runtime          = "python3.11"
+  role             = aws_iam_role.lambda_exec.arn
   source_code_hash = filebase64sha256(var.products_lambda_zip_path)
   depends_on = [
     aws_cloudwatch_log_group.products_handler_logs
   ]
+
+  environment {
+    variables = {
+      PRODUCTS_TABLE = aws_dynamodb_table.products.name
+    }
+  }
 
   tags = {
     application = "plantpass"
@@ -158,15 +191,21 @@ resource "aws_lambda_function" "products_handler" {
 
 # Discounts Lambda
 resource "aws_lambda_function" "discounts_handler" {
-  function_name = "DiscountsHandler"
-  filename      = var.discounts_lambda_zip_path
-  handler       = "lambda_handler.lambda_handler"
-  runtime       = "python3.11"
-  role          = aws_iam_role.lambda_exec.arn
+  function_name    = "DiscountsHandler"
+  filename         = var.discounts_lambda_zip_path
+  handler          = "lambda_handler.lambda_handler"
+  runtime          = "python3.11"
+  role             = aws_iam_role.lambda_exec.arn
   source_code_hash = filebase64sha256(var.discounts_lambda_zip_path)
   depends_on = [
     aws_cloudwatch_log_group.discounts_handler_logs
   ]
+
+  environment {
+    variables = {
+      DISCOUNTS_TABLE = aws_dynamodb_table.discounts.name
+    }
+  }
 
   tags = {
     application = "plantpass"

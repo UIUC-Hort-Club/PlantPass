@@ -72,7 +72,7 @@ export default function Scanner({
               ...prev,
               {
                 id: uuidv4(),
-                message: `Found (${product.SKU}) ${product.Item}`,
+                message: `Found (${product.SKU}) ${product.Name}`,
                 severity: "success",
               },
             ]);
@@ -129,7 +129,7 @@ export default function Scanner({
       ...prev,
       {
         id: uuidv4(),
-        message: `Added Item: ${matchedProduct.Item} (Qty: ${newQuantity})`,
+        message: `Added Item: ${matchedProduct.Name} (Qty: ${newQuantity})`,
         severity: "info",
       },
     ]);
@@ -205,7 +205,7 @@ export default function Scanner({
               <Typography variant="body1">
                 Item:{" "}
                 <strong>
-                  {matchedProduct.Item} ({matchedProduct.SKU})
+                  {matchedProduct.Name} ({matchedProduct.SKU})
                 </strong>
               </Typography>
             </Box>

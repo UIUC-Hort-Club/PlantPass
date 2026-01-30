@@ -8,6 +8,7 @@ import {
   TableRow,
   TextField,
   Box,
+  Typography,
 } from "@mui/material";
 
 export default function ItemsTable({
@@ -18,6 +19,9 @@ export default function ItemsTable({
 }) {
   return (
     <Box sx={{ maxHeight: 800, overflowY: "auto" }}>
+        <Typography variant="h6" sx={{ mb: 1 }}>
+          Product Listings
+        </Typography>
       <Table size="small">
         <TableHead>
           <TableRow>
@@ -38,7 +42,7 @@ export default function ItemsTable({
         <TableBody>
           {stockItems.map((item) => (
             <TableRow key={item.SKU}>
-              <TableCell sx={{ width: "40%" }}>{item.Item}</TableCell>
+              <TableCell sx={{ width: "40%" }}>{item.Name}</TableCell>
               <TableCell sx={{ width: "20%" }}>
                 ${item.Price.toFixed(2)}
               </TableCell>
@@ -47,7 +51,17 @@ export default function ItemsTable({
                   type="number"
                   value={quantities[item.SKU]}
                   onChange={(e) => onQuantityChange(e, item.SKU)}
-                  inputProps={{ min: 0 }}
+                  inputProps={{ 
+                    min: 0,
+                    step: 1,
+                    pattern: "[0-9]*"
+                  }}
+                  onKeyDown={(e) => {
+                    // Prevent decimal point, minus sign, and 'e' (scientific notation)
+                    if (e.key === '.' || e.key === '-' || e.key === 'e' || e.key === 'E') {
+                      e.preventDefault();
+                    }
+                  }}
                   size="small"
                   fullWidth
                 />
