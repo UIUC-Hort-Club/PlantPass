@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Container,
   Button,
@@ -6,7 +6,6 @@ import {
   Stack,
   Box,
   TextField,
-  CircularProgress,
 } from "@mui/material";
 import { InputAdornment } from "@mui/material";
 import ItemsTable from "./SubComponents/ItemsTable";
@@ -20,6 +19,9 @@ import { getAllProducts } from "../../api/products_interface/getAllProducts";
 import { getAllDiscounts } from "../../api/discounts_interface/getAllDiscounts";
 import ShowTransactionID from "./SubComponents/ShowTransactionID";
 import { useNotification } from "../../contexts/NotificationContext";
+import { transformProductsData, initializeProductQuantities } from "../../utils/productTransformer";
+import { transformDiscountsForOrder } from "../../utils/discountTransformer";
+import LoadingSpinner from "../common/LoadingSpinner";
 
 function OrderEntry({ product_listings }) {
   const { showSuccess } = useNotification();
@@ -88,20 +90,10 @@ function OrderEntry({ product_listings }) {
       setLoading(true);
       const productsData = await getAllProducts();
       
-      const transformedProducts = productsData.map(product => ({
-        SKU: product.SKU,
-        Name: product.item,
-        Price: product.price_ea
-      }));
-      
+      const transformedProducts = transformProductsData(productsData);
       setProducts(transformedProducts);
       
-      const initialQuantities = {};
-      const initialSubtotals = {};
-      transformedProducts.forEach((item) => {
-        initialQuantities[item.SKU] = "";
-        initialSubtotals[item.SKU] = "0.00";
-      });
+      const { initialQuantities, initialSubtotals } = initializeProductQuantities(transformedProducts);
       setQuantities(initialQuantities);
       setSubtotals(initialSubtotals);
       setVoucher("");
@@ -111,12 +103,7 @@ function OrderEntry({ product_listings }) {
         const response = await fetch(product_listings);
         const data = await response.json();
         setProducts(data);
-        const initialQuantities = {};
-        const initialSubtotals = {};
-        data.forEach((item) => {
-          initialQuantities[item.SKU] = "";
-          initialSubtotals[item.SKU] = "0.00";
-        });
+        const { initialQuantities, initialSubtotals } = initializeProductQuantities(data);
         setQuantities(initialQuantities);
         setSubtotals(initialSubtotals);
         setVoucher("");
@@ -170,16 +157,10 @@ function OrderEntry({ product_listings }) {
   };
 
   const handleEnterOrder = () => {
-    const discountsWithSelection = discounts.map(discount => ({
-      name: discount.name,
-      type: discount.type,
-      percent_off: discount.percent_off || 0,
-      value_off: discount.value_off || 0,
-      selected: selectedDiscounts.includes(discount.name)
-    }));
+    const discountsWithSelection = transformDiscountsForOrder(discounts, selectedDiscounts);
 
     const transaction = {
-      timestamp: Math.floor(Date.now() / 1000), // Unix timestamp in seconds
+      timestamp: Math.floor(Date.now() / 1000),
       items: Object.entries(quantities)
         .filter(([sku, quantity]) => quantity && parseInt(quantity) > 0)
         .map(([sku, quantity]) => {
@@ -272,19 +253,7 @@ function OrderEntry({ product_listings }) {
   if (loading) {
     return (
       <Container maxWidth="md">
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            minHeight: '300px',
-            gap: 2
-          }}
-        >
-          <CircularProgress />
-          <Typography>Loading products...</Typography>
-        </Box>
+        <LoadingSpinner message="Loading products..." />
       </Container>
     );
   }

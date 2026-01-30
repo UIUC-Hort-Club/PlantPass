@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -12,7 +12,6 @@ import {
   Button,
   Stack,
   Typography,
-  CircularProgress,
   Box,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -21,69 +20,28 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { getAllProducts } from "../../api/products_interface/getAllProducts";
 import { replaceAllProducts } from "../../api/products_interface/replaceAllProducts";
 import { useNotification } from "../../contexts/NotificationContext";
-
-const generateSKU = (itemName, existingProducts) => {
-  const prefix = itemName.replace(/[^a-zA-Z]/g, '').slice(0, 2).toUpperCase();
-  
-  if (prefix.length < 2) {
-    const paddedPrefix = (prefix + 'XX').slice(0, 2);
-    return findNextAvailableNumber(paddedPrefix, existingProducts);
-  }
-  
-  return findNextAvailableNumber(prefix, existingProducts);
-};
-
-const findNextAvailableNumber = (prefix, existingProducts) => {
-  const existingSKUs = existingProducts
-    .map(product => product.sku)
-    .filter(sku => sku && sku.startsWith(prefix) && sku.length === 5);
-  
-  const numbers = existingSKUs
-    .map(sku => parseInt(sku.slice(2)))
-    .filter(num => !isNaN(num));
-  
-  let nextNum = 1;
-  while (numbers.includes(nextNum)) {
-    nextNum++;
-  }
-  
-  return `${prefix}${nextNum.toString().padStart(3, '0')}`;
-};
-
-const validateSKUs = (rows) => {
-  const skuCounts = {};
-  const duplicates = new Set();
-  
-  rows.forEach(row => {
-    if (row.sku && row.sku.trim() !== '' && row.sku !== 'Auto-generated') {
-      const sku = row.sku.trim().toUpperCase();
-      skuCounts[sku] = (skuCounts[sku] || 0) + 1;
-      if (skuCounts[sku] > 1) {
-        duplicates.add(sku);
-      }
-    }
-  });
-  
-  return duplicates;
-};
+import { generateSKU } from "../../utils/skuGenerator";
+import { validateSKUs } from "../../utils/skuValidator";
+import { formatPriceInput, formatPriceDisplay, handlePriceBlur } from "../../utils/priceFormatter";
+import LoadingSpinner from "../common/LoadingSpinner";
 
 export default function ProductTable() {
   const { showSuccess, showError, showInfo } = useNotification();
   
   const [rows, setRows] = useState([]);
   const [originalRows, setOriginalRows] = useState([]);
-  const [deletedRows, setDeletedRows] = useState([]); // Track deleted items
+  const [deletedRows, setDeletedRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [duplicateSKUs, setDuplicateSKUs] = useState(new Set());
+  const [duplicateSKUs, setDuplicateSKUs] = useState([]);
 
   useEffect(() => {
     loadProducts();
   }, []);
 
   useEffect(() => {
-    const duplicates = validateSKUs(rows);
-    setDuplicateSKUs(duplicates);
+    const errors = validateSKUs(rows);
+    setDuplicateSKUs(errors);
   }, [rows]);
 
   const loadProducts = async () => {
@@ -102,6 +60,7 @@ export default function ProductTable() {
       setRows(formattedRows);
       setOriginalRows(JSON.parse(JSON.stringify(formattedRows)));
       setDeletedRows([]);
+    } catch (error) {
       console.error("Error loading products:", error);
       showError("Error loading products");
     } finally {
@@ -142,37 +101,11 @@ export default function ProductTable() {
     }
   };
 
-  const formatPriceInput = (value) => {
-    let cleaned = value.replace(/[^\d.]/g, '');
-    
-    const parts = cleaned.split('.');
-    if (parts.length > 2) {
-      cleaned = parts[0] + '.' + parts.slice(1).join('');
-    }
-    
-    if (parts.length === 2 && parts[1].length > 2) {
-      cleaned = parts[0] + '.' + parts[1].substring(0, 2);
-    }
-    
-    const numValue = parseFloat(cleaned);
-    if (isNaN(numValue)) {
-      return '';
-    }
-    
-    return cleaned;
-  };
-
-  const formatPriceDisplay = (price) => {
-    const numPrice = parseFloat(price);
-    if (isNaN(numPrice)) return '0.00';
-    return numPrice.toFixed(2);
-  };
-
-  const handlePriceBlur = (id) => {
+  const handlePriceBlurEvent = (id) => {
     const row = rows.find(r => r.id === id);
     if (!row) return;
     
-    const formattedPrice = formatPriceDisplay(row.price);
+    const formattedPrice = handlePriceBlur(row.price);
     setRows(rows.map((r) => (r.id === id ? { ...r, price: formattedPrice } : r)));
   };
 
@@ -246,7 +179,7 @@ export default function ProductTable() {
       return;
     }
 
-    if (duplicateSKUs.size > 0) {
+    if (duplicateSKUs.length > 0) {
       showError("Please fix duplicate SKUs before saving");
       return;
     }
@@ -295,19 +228,7 @@ export default function ProductTable() {
   if (loading) {
     return (
       <Paper sx={{ p: 2 }}>
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            minHeight: '200px',
-            gap: 2
-          }}
-        >
-          <CircularProgress />
-          <Typography>Loading products...</Typography>
-        </Box>
+        <LoadingSpinner message="Loading products..." />
       </Paper>
     );
   }
@@ -434,8 +355,8 @@ export default function ProductTable() {
                                   handleEdit(row.id, "sku", e.target.value.toUpperCase())
                                 }
                                 onBlur={() => handleSKUBlur(row.id)}
-                                error={duplicateSKUs.has(row.sku?.toUpperCase())}
-                                helperText={duplicateSKUs.has(row.sku?.toUpperCase()) ? "Duplicate SKU Found" : ""}
+                                error={duplicateSKUs.some(err => err.includes(row.sku?.toUpperCase()))}
+                                helperText={duplicateSKUs.find(err => err.includes(row.sku?.toUpperCase())) || ""}
                                 placeholder="Auto-generated"
                               />
                             </Box>
@@ -462,7 +383,7 @@ export default function ProductTable() {
                               onChange={(e) =>
                                 handleEdit(row.id, "price", e.target.value)
                               }
-                              onBlur={() => handlePriceBlur(row.id)}
+                              onBlur={() => handlePriceBlurEvent(row.id)}
                               inputProps={{
                                 inputMode: 'decimal',
                                 pattern: '[0-9]*\\.?[0-9]*'

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Container,
   Button,
@@ -21,6 +21,8 @@ import { deleteTransaction } from "../../api/transaction_interface/deleteTransac
 import { getAllProducts } from "../../api/products_interface/getAllProducts";
 import { getAllDiscounts } from "../../api/discounts_interface/getAllDiscounts";
 import { useNotification } from "../../contexts/NotificationContext";
+import { transformProductsData, initializeProductQuantities } from "../../utils/productTransformer";
+import { formatOrderId } from "../../utils/orderIdFormatter";
 
 function OrderLookup() {
   const { showSuccess, showError } = useNotification();
@@ -51,20 +53,11 @@ function OrderLookup() {
   const loadProducts = async () => {
     try {
       const productsData = await getAllProducts();
-      const transformedProducts = productsData.map(product => ({
-        SKU: product.SKU,
-        Name: product.item,
-        Price: product.price_ea
-      }));
+      const transformedProducts = transformProductsData(productsData);
       setProducts(transformedProducts);
       
-      const initialQuantities = {};
-      const initialSubtotals = {};
-      transformedProducts.forEach((item) => {
-        initialQuantities[item.SKU] = 0;
-        initialSubtotals[item.SKU] = "0.00";
-      });
-      setQuantities(initialQuantities);
+      const { initialQuantities, initialSubtotals } = initializeProductQuantities(transformedProducts);
+      setQuantities({ ...initialQuantities, ...Object.fromEntries(Object.keys(initialQuantities).map(key => [key, 0])) });
       setSubtotals(initialSubtotals);
     } catch (error) {
       console.error("Error loading products:", error);
@@ -101,18 +94,6 @@ function OrderLookup() {
     setSubtotals(resetSubtotals);
     
     setTotals({ subtotal: 0, discount: 0, grandTotal: 0 });
-  };
-
-  const formatOrderId = (input) => {
-    const cleanInput = input.replace(/[^a-zA-Z]/g, '').toUpperCase();
-    
-    const limitedInput = cleanInput.slice(0, 6);
-    
-    if (limitedInput.length > 3) {
-      return `${limitedInput.slice(0, 3)}-${limitedInput.slice(3)}`;
-    }
-    
-    return limitedInput;
   };
 
   const handleOrderIdChange = (e) => {

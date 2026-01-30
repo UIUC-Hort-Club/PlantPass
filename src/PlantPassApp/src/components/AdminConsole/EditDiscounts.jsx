@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -12,9 +12,6 @@ import {
   Button,
   Stack,
   Typography,
-  Snackbar,
-  Alert,
-  CircularProgress,
   Box,
   ToggleButton,
   ToggleButtonGroup,
@@ -26,14 +23,19 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { getAllDiscounts } from "../../api/discounts_interface/getAllDiscounts";
 import { replaceAllDiscounts } from "../../api/discounts_interface/replaceAllDiscounts";
+import { useNotification } from "../../contexts/NotificationContext";
+import { formatPriceInput, formatPriceDisplay, handlePriceBlur } from "../../utils/priceFormatter";
+import { formatPercentInput, formatPercentDisplay, handlePercentBlur } from "../../utils/percentFormatter";
+import LoadingSpinner from "../common/LoadingSpinner";
 
 export default function DiscountTable() {
+  const { showSuccess, showError, showInfo } = useNotification();
+  
   const [rows, setRows] = useState([]);
   const [originalRows, setOriginalRows] = useState([]);
-  const [deletedRows, setDeletedRows] = useState([]); // Track deleted items
+  const [deletedRows, setDeletedRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [notification, setNotification] = useState({ open: false, message: "", severity: "success" });
 
   useEffect(() => {
     loadDiscounts();
@@ -58,14 +60,20 @@ export default function DiscountTable() {
       setDeletedRows([]);
     } catch (error) {
       console.error("Error loading discounts:", error);
-      showNotification("Error loading discounts", "error");
+      showError("Error loading discounts");
     } finally {
       setLoading(false);
     }
   };
 
   const showNotification = (message, severity = "success") => {
-    setNotification({ open: true, message, severity });
+    if (severity === "success") {
+      showSuccess(message);
+    } else if (severity === "error") {
+      showError(message);
+    } else {
+      showInfo(message);
+    }
   };
 
   const handleAddRow = () => {
@@ -94,83 +102,30 @@ export default function DiscountTable() {
   };
 
   const handleEdit = (id, field, value) => {
-    if (field === 'percent' || field === 'value') {
-      const formattedValue = field === 'percent' ? formatPercentInput(value) : formatValueInput(value);
+    if (field === 'percent') {
+      const formattedValue = formatPercentInput(value);
+      setRows(rows.map((r) => (r.id === id ? { ...r, [field]: formattedValue } : r)));
+    } else if (field === 'value') {
+      const formattedValue = formatPriceInput(value);
       setRows(rows.map((r) => (r.id === id ? { ...r, [field]: formattedValue } : r)));
     } else {
       setRows(rows.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
     }
   };
 
-  const formatValueInput = (value) => {
-    let cleaned = value.replace(/[^\d.]/g, '');
-    
-    const parts = cleaned.split('.');
-    if (parts.length > 2) {
-      cleaned = parts[0] + '.' + parts.slice(1).join('');
-    }
-    
-    if (parts.length === 2 && parts[1].length > 2) {
-      cleaned = parts[0] + '.' + parts[1].substring(0, 2);
-    }
-    
-    const numValue = parseFloat(cleaned);
-    if (isNaN(numValue)) {
-      return '';
-    }
-    
-    return cleaned;
-  };
-
-  const formatValueDisplay = (value) => {
-    const numValue = parseFloat(value);
-    if (isNaN(numValue)) return '0.00';
-    return numValue.toFixed(2);
-  };
-
-  const handleValueBlur = (id) => {
+  const handleValueBlurEvent = (id) => {
     const row = rows.find(r => r.id === id);
     if (!row) return;
     
-    const formattedValue = formatValueDisplay(row.value);
+    const formattedValue = handlePriceBlur(row.value);
     setRows(rows.map((r) => (r.id === id ? { ...r, value: formattedValue } : r)));
   };
 
-  const formatPercentInput = (value) => {
-    let cleaned = value.replace(/[^\d.]/g, '');
-    
-    const parts = cleaned.split('.');
-    if (parts.length > 2) {
-      cleaned = parts[0] + '.' + parts.slice(1).join('');
-    }
-    
-    if (parts.length === 2 && parts[1].length > 2) {
-      cleaned = parts[0] + '.' + parts[1].substring(0, 2);
-    }
-    
-    const numValue = parseFloat(cleaned);
-    if (isNaN(numValue)) {
-      return '';
-    }
-    
-    if (numValue > 100) {
-      return '100';
-    }
-    
-    return cleaned;
-  };
-
-  const formatPercentDisplay = (percent) => {
-    const numPercent = parseFloat(percent);
-    if (isNaN(numPercent)) return '0';
-    return numPercent.toString();
-  };
-
-  const handlePercentBlur = (id) => {
+  const handlePercentBlurEvent = (id) => {
     const row = rows.find(r => r.id === id);
     if (!row) return;
     
-    const formattedPercent = formatPercentDisplay(row.percent);
+    const formattedPercent = handlePercentBlur(row.percent);
     setRows(rows.map((r) => (r.id === id ? { ...r, percent: formattedPercent } : r)));
   };
 
@@ -252,19 +207,7 @@ export default function DiscountTable() {
   if (loading) {
     return (
       <Paper sx={{ p: 2 }}>
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            minHeight: '200px',
-            gap: 2
-          }}
-        >
-          <CircularProgress />
-          <Typography>Loading discounts...</Typography>
-        </Box>
+        <LoadingSpinner message="Loading discounts..." />
       </Paper>
     );
   }
@@ -429,9 +372,9 @@ export default function DiscountTable() {
                               }
                               onBlur={() => {
                                 if (row.type === 'percent') {
-                                  handlePercentBlur(row.id);
+                                  handlePercentBlurEvent(row.id);
                                 } else {
-                                  handleValueBlur(row.id);
+                                  handleValueBlurEvent(row.id);
                                 }
                               }}
                               inputProps={{
@@ -476,19 +419,6 @@ export default function DiscountTable() {
           {saving ? "Saving..." : "Save"}
         </Button>
       </Stack>
-
-      <Snackbar
-        open={notification.open}
-        autoHideDuration={4000}
-        onClose={() => setNotification({ ...notification, open: false })}
-      >
-        <Alert 
-          severity={notification.severity} 
-          onClose={() => setNotification({ ...notification, open: false })}
-        >
-          {notification.message}
-        </Alert>
-      </Snackbar>
     </Paper>
   );
 }
