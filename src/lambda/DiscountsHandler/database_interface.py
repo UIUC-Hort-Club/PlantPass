@@ -14,7 +14,7 @@ table_name = os.environ.get('DISCOUNTS_TABLE', 'discounts')
 table = dynamodb.Table(table_name)
 
 def get_all_discounts():
-    """Return a list of all discounts."""
+    """Return a list of all discounts ordered by sort_order."""
     try:
         response = table.scan()
         discounts = response.get('Items', [])
@@ -23,6 +23,12 @@ def get_all_discounts():
         for discount in discounts:
             if 'percent_off' in discount:
                 discount['percent_off'] = float(discount['percent_off'])
+            # Ensure sort_order exists, default to 0 if missing
+            if 'sort_order' not in discount:
+                discount['sort_order'] = 0
+        
+        # Sort by sort_order
+        discounts.sort(key=lambda x: x.get('sort_order', 0))
         
         logger.info(f"Retrieved {len(discounts)} discounts from database")
         return discounts
@@ -36,6 +42,7 @@ def create_discount(discount_data):
     discount_data must include at least:
     - name: str
     - percent_off: float
+    - sort_order: int (optional - if not provided, will be set to next available)
     """
     try:
         # Validate required fields
@@ -44,6 +51,20 @@ def create_discount(discount_data):
         
         name = discount_data['name']
         percent_off = Decimal(str(discount_data['percent_off']))
+        
+        # Set sort order
+        if 'sort_order' in discount_data:
+            sort_order = int(discount_data['sort_order'])
+        else:
+            # Get the highest sort_order and add 1
+            try:
+                response = table.scan(
+                    ProjectionExpression='sort_order'
+                )
+                existing_orders = [item.get('sort_order', 0) for item in response.get('Items', [])]
+                sort_order = max(existing_orders, default=0) + 1
+            except ClientError:
+                sort_order = 1
         
         # Check if discount already exists
         try:
@@ -57,7 +78,8 @@ def create_discount(discount_data):
         # Create the discount
         item = {
             'name': name,
-            'percent_off': percent_off
+            'percent_off': percent_off,
+            'sort_order': sort_order
         }
         
         table.put_item(Item=item)
@@ -94,6 +116,12 @@ def update_discount(name, update_data):
         if 'percent_off' in update_data:
             update_expression += "percent_off = :percent_off"
             expression_attribute_values[':percent_off'] = Decimal(str(update_data['percent_off']))
+        
+        if 'sort_order' in update_data:
+            if expression_attribute_values:
+                update_expression += ", "
+            update_expression += "sort_order = :sort_order"
+            expression_attribute_values[':sort_order'] = int(update_data['sort_order'])
         
         if not expression_attribute_values:
             raise ValueError("No valid fields to update")

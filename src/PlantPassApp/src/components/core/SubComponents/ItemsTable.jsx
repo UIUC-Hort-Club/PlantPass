@@ -47,7 +47,17 @@ export default function ItemsTable({
                   type="number"
                   value={quantities[item.SKU]}
                   onChange={(e) => onQuantityChange(e, item.SKU)}
-                  inputProps={{ min: 0 }}
+                  inputProps={{ 
+                    min: 0,
+                    step: 1,
+                    pattern: "[0-9]*"
+                  }}
+                  onKeyDown={(e) => {
+                    // Prevent decimal point, minus sign, and 'e' (scientific notation)
+                    if (e.key === '.' || e.key === '-' || e.key === 'e' || e.key === 'E') {
+                      e.preventDefault();
+                    }
+                  }}
                   size="small"
                   fullWidth
                 />

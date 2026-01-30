@@ -43,7 +43,8 @@ function OrderEntry({ product_listings }) {
   const handleScan = (scannedProduct) => {
     if (scannedProduct) {
       const sku = scannedProduct.SKU;
-      const newQuantity = (quantities[sku] || 0) + 1;
+      const currentQuantity = parseInt(quantities[sku]) || 0;
+      const newQuantity = currentQuantity + 1; // Always increment by 1 (whole number)
 
       setQuantities((prev) => ({
         ...prev,
@@ -139,14 +140,17 @@ function OrderEntry({ product_listings }) {
       return;
     }
 
-    const numericValue = parseFloat(value);
+    // Only allow whole numbers (integers)
+    const numericValue = parseInt(value);
+    
+    // If not a valid integer or negative, ignore the input
+    if (isNaN(numericValue) || numericValue < 0) {
+      return;
+    }
 
     setQuantities((prev) => ({ ...prev, [sku]: numericValue }));
 
-    const subtotal = isNaN(numericValue)
-      ? "0.00"
-      : (numericValue * item.Price).toFixed(2);
-
+    const subtotal = (numericValue * item.Price).toFixed(2);
     setSubtotals((prev) => ({ ...prev, [sku]: subtotal }));
   };
 
@@ -158,7 +162,7 @@ function OrderEntry({ product_listings }) {
         return {
           SKU: sku,
           item: product.Name,
-          quantity: Number(quantity) || 0,
+          quantity: parseInt(quantity) || 0, // Ensure integer quantity
           price_ea: product.Price,
         };
       }),

@@ -67,7 +67,7 @@ def generate_sku(item_name):
         return f"{prefix}001"
 
 def get_all_products():
-    """Return a list of all products."""
+    """Return a list of all products ordered by sort_order."""
     try:
         response = table.scan()
         products = response.get('Items', [])
@@ -76,6 +76,12 @@ def get_all_products():
         for product in products:
             if 'price_ea' in product:
                 product['price_ea'] = float(product['price_ea'])
+            # Ensure sort_order exists, default to 0 if missing
+            if 'sort_order' not in product:
+                product['sort_order'] = 0
+        
+        # Sort by sort_order
+        products.sort(key=lambda x: x.get('sort_order', 0))
         
         logger.info(f"Retrieved {len(products)} products from database")
         return products
@@ -90,6 +96,7 @@ def create_product(product_data):
     - item: str
     - price_ea: float
     - SKU: str (optional - if not provided, will be auto-generated)
+    - sort_order: int (optional - if not provided, will be set to next available)
     """
     try:
         # Validate required fields
@@ -105,6 +112,20 @@ def create_product(product_data):
         else:
             sku = generate_sku(item_name)
         
+        # Set sort order
+        if 'sort_order' in product_data:
+            sort_order = int(product_data['sort_order'])
+        else:
+            # Get the highest sort_order and add 1
+            try:
+                response = table.scan(
+                    ProjectionExpression='sort_order'
+                )
+                existing_orders = [item.get('sort_order', 0) for item in response.get('Items', [])]
+                sort_order = max(existing_orders, default=0) + 1
+            except ClientError:
+                sort_order = 1
+        
         # Check if SKU already exists
         try:
             existing = table.get_item(Key={'SKU': sku})
@@ -118,7 +139,8 @@ def create_product(product_data):
         item = {
             'SKU': sku,
             'item': item_name,
-            'price_ea': price_ea
+            'price_ea': price_ea,
+            'sort_order': sort_order
         }
         
         table.put_item(Item=item)
@@ -168,7 +190,8 @@ def update_product(sku, update_data):
             new_item = {
                 'SKU': new_sku,
                 'item': update_data.get('item', current_item['item']),
-                'price_ea': Decimal(str(update_data.get('price_ea', current_item['price_ea'])))
+                'price_ea': Decimal(str(update_data.get('price_ea', current_item['price_ea']))),
+                'sort_order': int(update_data.get('sort_order', current_item.get('sort_order', 0)))
             }
             
             # Create new item and delete old one
@@ -192,6 +215,10 @@ def update_product(sku, update_data):
             if 'price_ea' in update_data:
                 update_parts.append("price_ea = :price_ea")
                 expression_attribute_values[':price_ea'] = Decimal(str(update_data['price_ea']))
+            
+            if 'sort_order' in update_data:
+                update_parts.append("sort_order = :sort_order")
+                expression_attribute_values[':sort_order'] = int(update_data['sort_order'])
             
             if not update_parts:
                 raise ValueError("No valid fields to update")

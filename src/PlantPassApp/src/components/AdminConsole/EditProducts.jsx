@@ -18,11 +18,13 @@ import {
   Box,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { getAllProducts } from "../../api/products_interface/getAllProducts";
 import { createProduct } from "../../api/products_interface/createProduct";
 import { updateProduct } from "../../api/products_interface/updateProduct";
 import { deleteProduct } from "../../api/products_interface/deleteProduct";
+import { updateProductOrder } from "../../api/products_interface/updateProductOrder";
 
 // SKU generation utility function
 // Same thing in the lambda - this is OG
@@ -80,6 +82,7 @@ const validateSKUs = (rows) => {
 export default function ProductTable() {
   const [rows, setRows] = useState([]);
   const [originalRows, setOriginalRows] = useState([]);
+  const [deletedRows, setDeletedRows] = useState([]); // Track deleted items
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [notification, setNotification] = useState({ open: false, message: "", severity: "success" });
@@ -105,11 +108,13 @@ export default function ProductTable() {
         sku: product.SKU,
         name: product.item,
         price: product.price_ea.toFixed(2),
+        sortOrder: product.sort_order || index,
         isNew: false,
         originalSku: product.SKU,
       }));
       setRows(formattedRows);
       setOriginalRows(JSON.parse(JSON.stringify(formattedRows)));
+      setDeletedRows([]); // Clear deleted rows when loading fresh data
     } catch (error) {
       console.error("Error loading products:", error);
       showNotification("Error loading products", "error");
@@ -123,33 +128,28 @@ export default function ProductTable() {
   };
 
   const handleAddRow = () => {
+    const maxSortOrder = Math.max(...rows.map(r => r.sortOrder || 0), 0);
     const newRow = {
       id: `new-${Date.now()}`,
       sku: "",
       name: "",
       price: "0.00",
+      sortOrder: maxSortOrder + 1,
       isNew: true,
     };
     setRows([...rows, newRow]);
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = (id) => {
     const row = rows.find(r => r.id === id);
     
     if (row.isNew) {
-      // Just remove from UI if it's a new row
+      // Just remove from UI if it's a new row (never saved to database)
       setRows(rows.filter((r) => r.id !== id));
     } else {
-      // Delete from database
-      try {
-        await deleteProduct(row.originalSku || row.sku);
-        setRows(rows.filter((r) => r.id !== id));
-        setOriginalRows(originalRows.filter((r) => r.id !== id));
-        showNotification("Product deleted successfully");
-      } catch (error) {
-        console.error("Error deleting product:", error);
-        showNotification("Error deleting product", "error");
-      }
+      // Mark existing row for deletion and remove from UI
+      setDeletedRows(prev => [...prev, row]);
+      setRows(rows.filter((r) => r.id !== id));
     }
   };
 
@@ -228,10 +228,14 @@ export default function ProductTable() {
 
   const handleReset = () => {
     setRows(JSON.parse(JSON.stringify(originalRows)));
+    setDeletedRows([]); // Clear deleted rows on reset
   };
 
   const handleClear = () => {
-    setRows([]);
+    // Mark all existing rows for deletion, keep only new unsaved rows
+    const existingRows = rows.filter(row => !row.isNew);
+    setDeletedRows(prev => [...prev, ...existingRows]);
+    setRows(rows.filter(row => row.isNew));
   };
 
   const handleDragEnd = (result) => {
@@ -241,11 +245,21 @@ export default function ProductTable() {
     const [moved] = updated.splice(result.source.index, 1);
     updated.splice(result.destination.index, 0, moved);
 
-    setRows(updated);
+    // Update sort orders based on new positions
+    const reorderedRows = updated.map((row, index) => ({
+      ...row,
+      sortOrder: index + 1
+    }));
+
+    setRows(reorderedRows);
   };
 
   // Check if there are changes to save
   const hasChanges = () => {
+    // Check if there are deleted rows
+    if (deletedRows.length > 0) return true;
+    
+    // Check if row count changed (excluding deleted rows)
     if (rows.length !== originalRows.length) return true;
     
     return rows.some(row => {
@@ -254,7 +268,10 @@ export default function ProductTable() {
       const original = originalRows.find(orig => orig.id === row.id);
       if (!original) return true;
       
-      return row.name !== original.name || parseFloat(row.price) !== parseFloat(original.price) || row.sku !== original.sku;
+      return row.name !== original.name || 
+             parseFloat(row.price) !== parseFloat(original.price) || 
+             row.sku !== original.sku ||
+             row.sortOrder !== original.sortOrder;
     });
   };
 
@@ -292,13 +309,19 @@ export default function ProductTable() {
 
     setSaving(true);
     try {
+      // Process deleted products first
+      for (const deletedProduct of deletedRows) {
+        await deleteProduct(deletedProduct.originalSku || deletedProduct.sku);
+      }
+
       // Process new products
       const newProducts = rows.filter(row => row.isNew && row.name.trim() !== "" && row.sku.trim() !== "");
       for (const product of newProducts) {
         await createProduct({
           SKU: product.sku.toUpperCase(),
           item: product.name,
-          price_ea: parseFloat(product.price) || 0
+          price_ea: parseFloat(product.price) || 0,
+          sort_order: product.sortOrder
         });
       }
 
@@ -306,20 +329,42 @@ export default function ProductTable() {
       const updatedProducts = rows.filter(row => {
         if (row.isNew) return false;
         const original = originalRows.find(orig => orig.id === row.id);
-        return original && (row.name !== original.name || row.price !== original.price || row.sku !== original.sku);
+        return original && (row.name !== original.name || 
+                           row.price !== original.price || 
+                           row.sku !== original.sku ||
+                           row.sortOrder !== original.sortOrder);
       });
 
       for (const product of updatedProducts) {
         await updateProduct(product.originalSku || product.sku, {
           SKU: product.sku.toUpperCase(),
           item: product.name,
-          price_ea: parseFloat(product.price) || 0
+          price_ea: parseFloat(product.price) || 0,
+          sort_order: product.sortOrder
         });
+      }
+
+      // Update sort orders for all existing products if order changed
+      const orderChanges = rows.filter(row => {
+        if (row.isNew) return false;
+        const original = originalRows.find(orig => orig.id === row.id);
+        return original && row.sortOrder !== original.sortOrder;
+      });
+
+      if (orderChanges.length > 0) {
+        const orderUpdates = rows
+          .filter(row => !row.isNew)
+          .map(row => ({
+            SKU: row.sku,
+            sort_order: row.sortOrder
+          }));
+        
+        await updateProductOrder(orderUpdates);
       }
 
       // Reload data to get fresh state
       await loadProducts();
-      showNotification("Products saved successfully");
+      showNotification(`Products saved successfully${deletedRows.length > 0 ? ` (${deletedRows.length} deleted)` : ''}`);
     } catch (error) {
       console.error("Error saving products:", error);
       showNotification("Error saving products", "error");
@@ -395,20 +440,24 @@ export default function ProductTable() {
       <TableContainer component={Paper}>
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="products">
-            {(provided) => (
+            {(provided, snapshot) => (
               <Table
                 size="small"
-                sx={{ minWidth: 650 }}
+                sx={{ 
+                  minWidth: 650,
+                  backgroundColor: snapshot.isDraggingOver ? 'rgba(63, 81, 181, 0.04)' : 'inherit',
+                  transition: 'background-color 0.2s ease'
+                }}
                 aria-label="dense editable product table"
                 {...provided.droppableProps}
                 ref={provided.innerRef}
               >
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ width: "20%" }}>
+                    <TableCell sx={{ width: "25%" }}>
                       <strong>SKU</strong>
                     </TableCell>
-                    <TableCell sx={{ width: "50%" }}>
+                    <TableCell sx={{ width: "45%" }}>
                       <strong>Product Name</strong>
                     </TableCell>
                     <TableCell sx={{ width: "25%" }}>
@@ -421,29 +470,59 @@ export default function ProductTable() {
                 <TableBody>
                   {rows.map((row, index) => (
                     <Draggable key={row.id} draggableId={row.id} index={index}>
-                      {(provided) => (
+                      {(provided, snapshot) => (
                         <TableRow
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           sx={{
                             "&:last-child td, &:last-child th": { border: 0 },
+                            backgroundColor: snapshot.isDragging ? 'rgba(63, 81, 181, 0.08)' : 'inherit',
+                            boxShadow: snapshot.isDragging ? '0 4px 8px rgba(0,0,0,0.12)' : 'none',
+                            transform: snapshot.isDragging ? 'rotate(2deg)' : 'none',
+                            transition: 'all 0.2s ease',
+                            '&:hover': {
+                              backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                            }
                           }}
                         >
                           <TableCell>
-                            <TextField
-                              fullWidth
-                              size="small"
-                              value={row.sku}
-                              onChange={(e) =>
-                                handleEdit(row.id, "sku", e.target.value.toUpperCase())
-                              }
-                              onBlur={() => handleSKUBlur(row.id)}
-                              error={duplicateSKUs.has(row.sku?.toUpperCase())}
-                              helperText={duplicateSKUs.has(row.sku?.toUpperCase()) ? "Duplicate SKU Found" : ""}
-                            />
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Box
+                                {...provided.dragHandleProps}
+                                sx={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  cursor: 'grab',
+                                  color: 'text.disabled',
+                                  opacity: 0.3,
+                                  transition: 'opacity 0.2s ease',
+                                  '&:hover': {
+                                    opacity: 0.7,
+                                    color: 'text.secondary'
+                                  },
+                                  '&:active': {
+                                    cursor: 'grabbing'
+                                  }
+                                }}
+                              >
+                                <DragIndicatorIcon fontSize="small" />
+                              </Box>
+                              <TextField
+                                fullWidth
+                                size="small"
+                                value={row.sku}
+                                onChange={(e) =>
+                                  handleEdit(row.id, "sku", e.target.value.toUpperCase())
+                                }
+                                onBlur={() => handleSKUBlur(row.id)}
+                                error={duplicateSKUs.has(row.sku?.toUpperCase())}
+                                helperText={duplicateSKUs.has(row.sku?.toUpperCase()) ? "Duplicate SKU Found" : ""}
+                                placeholder="Auto-generated"
+                              />
+                            </Box>
                           </TableCell>
 
-                          <TableCell {...provided.dragHandleProps}>
+                          <TableCell>
                             <TextField
                               fullWidth
                               size="small"
