@@ -14,6 +14,14 @@ import { API_URL } from "../config";
  *       "price_ea": 10.00
  *     }
  *   ],
+ *   "discounts": [
+ *     {
+ *       "name": "Student Discount",
+ *       "type": "percent",
+ *       "value": 10.0,
+ *       "selected": true
+ *     }
+ *   ],
  *   "voucher": 10  // Dollar amount
  * }
  *

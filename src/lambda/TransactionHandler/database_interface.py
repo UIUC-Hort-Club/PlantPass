@@ -42,8 +42,7 @@ def create_transaction(transaction):
         {
             "name": "discount name",
             "type": "percent" | "dollar",
-            "percent_off": 0,
-            "value_off": 0.0,
+            "value": 10.0,  // For percent: 10 = 10%, for dollar: 10 = $10
             "selected": true
         }],
         "voucher": 10     // This is the dollar amount of the voucher, not a percentage
@@ -87,15 +86,14 @@ def create_transaction(transaction):
             discount_record = {
                 "name": discount.get("name"),
                 "type": discount_type,
-                "percent_off": discount.get("percent_off", 0),
-                "value_off": discount.get("value_off", 0.0)
+                "value": discount.get("value", 0)
             }
             
             if selected:
                 if discount_type == "dollar":
-                    discount_record["amount_off"] = discount.get("value_off", 0)
-                else:
-                    discount_record["amount_off"] = (subtotal * discount.get("percent_off", 0)) / 100
+                    discount_record["amount_off"] = discount.get("value", 0)
+                else:  # percent type
+                    discount_record["amount_off"] = (subtotal * discount.get("value", 0)) / 100
             else:
                 discount_record["amount_off"] = 0
             
@@ -151,7 +149,7 @@ def update_transaction(transaction_id, updated_transaction):
     """
     Update an existing transaction with new data.
     
-    IMPORTANT: This function preserves historical pricing and discount rates.
+    @NOTE This function preserves historical pricing and discount rates.
     Only quantities, discount selections, voucher amounts, and payment info can be updated.
     Original prices and discount rates are preserved to maintain transaction integrity.
     """
@@ -160,77 +158,65 @@ def update_transaction(transaction_id, updated_transaction):
         if not existing:
             raise Exception(f"Transaction {transaction_id} not found")
         
-        # Handle items update - preserve historical prices
         if "items" in updated_transaction:
             updated_items = updated_transaction["items"]
             preserved_items = []
             
             for updated_item in updated_items:
                 sku = updated_item["SKU"]
-                # Find the original item to preserve its historical price
                 original_item = next((item for item in existing["items"] if item["SKU"] == sku), None)
                 
                 if original_item:
-                    # Preserve original price and item name, only update quantity
                     preserved_items.append({
                         "SKU": sku,
-                        "item": original_item["item"],  # Keep original item name
+                        "item": original_item["item"],
                         "quantity": updated_item["quantity"],
-                        "price_ea": original_item["price_ea"]  # Keep original price
+                        "price_ea": original_item["price_ea"]
                     })
                 else:
-                    # New item - use provided data (this handles adding new items)
                     preserved_items.append(updated_item)
             
             existing["items"] = preserved_items
             
-        # Handle discounts update - preserve historical discount rates
         if "discounts" in updated_transaction:
             updated_discounts = updated_transaction["discounts"]
             preserved_discounts = []
             
+            # Calculate subtotal after items have been updated
+            subtotal = sum(item["quantity"] * item["price_ea"] for item in existing["items"])
+            
             for updated_discount in updated_discounts:
                 discount_name = updated_discount["name"]
-                # Find the original discount to preserve its historical rates
                 original_discount = next((d for d in existing["discounts"] if d["name"] == discount_name), None)
                 
                 if original_discount:
-                    # Preserve original discount rates, only update selection
                     discount_record = {
                         "name": discount_name,
                         "type": original_discount["type"],
-                        "percent_off": original_discount["percent_off"],
-                        "value_off": original_discount["value_off"]
+                        "value": original_discount["value"]
                     }
                     
-                    # Recalculate amount_off based on selection and original rates
                     selected = updated_discount.get("selected", False)
                     if selected:
                         if original_discount["type"] == "dollar":
-                            discount_record["amount_off"] = original_discount["value_off"]
-                        else:  # percent
-                            # Recalculate based on new subtotal but original percentage
-                            subtotal = sum(item["quantity"] * item["price_ea"] for item in existing["items"])
-                            discount_record["amount_off"] = (subtotal * original_discount["percent_off"]) / 100
+                            discount_record["amount_off"] = original_discount["value"]
+                        else:  # percent type
+                            discount_record["amount_off"] = (subtotal * original_discount["value"]) / 100
                     else:
                         discount_record["amount_off"] = 0
                     
                     preserved_discounts.append(discount_record)
                 else:
-                    # New discount - use provided data (this handles new discounts)
                     preserved_discounts.append(updated_discount)
             
             existing["discounts"] = preserved_discounts
             
-        # Handle voucher update
         if "voucher" in updated_transaction:
             existing["club_voucher"] = updated_transaction["voucher"]
             
-        # Handle payment update
         if "payment" in updated_transaction:
             existing["payment"].update(updated_transaction["payment"])
         
-        # Recalculate receipt if items, discounts, or voucher changed
         if "items" in updated_transaction or "discounts" in updated_transaction or "voucher" in updated_transaction:
             subtotal = sum(item["quantity"] * item["price_ea"] for item in existing["items"])
             total_discount = sum(discount.get("amount_off", 0) for discount in existing["discounts"]) + existing.get("club_voucher", 0)
@@ -242,10 +228,8 @@ def update_transaction(transaction_id, updated_transaction):
                 "total": total
             }
         
-        # Convert to DynamoDB format
         db_item = json.loads(json.dumps(existing), parse_float=Decimal)
         
-        # Update in database
         table.put_item(Item=db_item)
         logger.info(f"Transaction updated successfully: {transaction_id}")
         

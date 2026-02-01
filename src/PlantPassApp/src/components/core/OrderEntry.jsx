@@ -36,6 +36,7 @@ function OrderEntry() {
     discount: 0,
     grandTotal: 0,
   });
+  const [receiptData, setReceiptData] = useState(null);
   const [voucher, setVoucher] = useState("");
   const [scannerOpen, setScannerOpen] = useState(false);
   const [currentTransactionID, setCurrentTransactionID] = useState("");
@@ -83,6 +84,7 @@ function OrderEntry() {
       discount: 0,
       grandTotal: 0,
     });
+    setReceiptData(null);
   };
 
   const loadProducts = async () => {
@@ -189,6 +191,16 @@ function OrderEntry() {
           discount: response.receipt.discount,
           grandTotal: response.receipt.total,
         });
+        // Store the complete receipt data from backend
+        setReceiptData({
+          totals: {
+            subtotal: response.receipt.subtotal,
+            discount: response.receipt.discount,
+            grandTotal: response.receipt.total,
+          },
+          discounts: response.discounts || [],
+          voucher: response.club_voucher || 0
+        });
         showSuccess("Your order has been successfully recorded.");
         setTransactionIDDialogOpen(true);
       })
@@ -207,8 +219,7 @@ function OrderEntry() {
     const discountsWithSelection = discounts.map(discount => ({
       name: discount.name,
       type: discount.type,
-      percent_off: discount.percent_off || 0,
-      value_off: discount.value_off || 0,
+      value: discount.value || 0,
       selected: selectedDiscounts.includes(discount.name)
     }));
 
@@ -240,6 +251,16 @@ function OrderEntry() {
           subtotal: response.receipt.subtotal,
           discount: response.receipt.discount,
           grandTotal: response.receipt.total,
+        });
+        // Update the receipt data with backend response
+        setReceiptData({
+          totals: {
+            subtotal: response.receipt.subtotal,
+            discount: response.receipt.discount,
+            grandTotal: response.receipt.total,
+          },
+          discounts: response.discounts || [],
+          voucher: response.club_voucher || 0
         });
         showSuccess(`Order ${currentTransactionID} has been updated!`);
       })
@@ -359,18 +380,13 @@ function OrderEntry() {
         </Stack>          
       </Box>
 
-      {currentTransactionID && (
+      {currentTransactionID && receiptData && (
         <>
           <Receipt 
-            totals={totals} 
+            totals={receiptData.totals} 
             transactionId={currentTransactionID}
-            discounts={discounts.map(discount => ({
-              name: discount.name,
-              amount_off: selectedDiscounts.includes(discount.name) ? 
-                (discount.type === "dollar" ? discount.value_off : 
-                 (Number(totals.subtotal) * discount.percent_off / 100)) : 0
-            }))}
-            voucher={Number(voucher) || 0}
+            discounts={receiptData.discounts}
+            voucher={receiptData.voucher}
           />
 
           <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mt: 2 }}>
