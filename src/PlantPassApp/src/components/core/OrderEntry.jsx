@@ -23,7 +23,7 @@ import { transformProductsData, initializeProductQuantities } from "../../utils/
 import { transformDiscountsForOrder } from "../../utils/discountTransformer";
 import LoadingSpinner from "../common/LoadingSpinner";
 
-function OrderEntry({ product_listings }) {
+function OrderEntry() {
   const { showSuccess, showWarning, showError } = useNotification();
   
   const [products, setProducts] = useState([]);
@@ -100,8 +100,7 @@ function OrderEntry({ product_listings }) {
     } catch (error) {
       console.error("Error loading products from database:", error);
       try {
-        const response = await fetch(product_listings);
-        const data = await response.json();
+        const data = [];
         setProducts(data);
         const { initialQuantities, initialSubtotals } = initializeProductQuantities(data);
         setQuantities(initialQuantities);
