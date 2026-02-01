@@ -17,8 +17,10 @@ def get_all_discounts():
         response = table.scan()
         discounts = response.get('Items', [])
         
+        logger.info(f"Raw discounts from database: {discounts}")
+        
         for discount in discounts:
-            # Convert Decimal to appropriate types
+            # Convert Decimal to appropriate types and handle both old and new schema
             if 'value' in discount and isinstance(discount['value'], Decimal):
                 discount['value'] = float(discount['value'])
             
@@ -27,10 +29,14 @@ def get_all_discounts():
         
         discounts.sort(key=lambda x: x.get('sort_order', 0))
         
+        logger.info(f"Processed discounts: {discounts}")
         logger.info(f"Retrieved {len(discounts)} discounts from database")
         return discounts
     except ClientError as e:
         logger.error(f"Error retrieving discounts: {e}")
+        raise Exception(f"Failed to retrieve discounts: {e}")
+    except Exception as e:
+        logger.error(f"Unexpected error in get_all_discounts: {e}")
         raise Exception(f"Failed to retrieve discounts: {e}")
 
 def replace_all_discounts(discounts_data):
