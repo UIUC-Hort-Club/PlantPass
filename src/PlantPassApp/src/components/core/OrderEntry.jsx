@@ -118,10 +118,47 @@ function OrderEntry() {
 
   const loadDiscounts = async () => {
     try {
+      console.log("Loading discounts from database...");
       const discountsData = await getAllDiscounts();
-      setDiscounts(discountsData);
+      console.log("Raw discounts data received:", discountsData);
+      
+      // Validate and sanitize discount data
+      const validDiscounts = Array.isArray(discountsData) ? discountsData.filter(discount => {
+        if (!discount || typeof discount !== 'object') {
+          console.warn("Invalid discount object:", discount);
+          return false;
+        }
+        
+        if (!discount.name) {
+          console.warn("Discount missing name:", discount);
+          return false;
+        }
+        
+        if (!discount.type || (discount.type !== 'percent' && discount.type !== 'dollar')) {
+          console.warn("Discount has invalid type:", discount);
+          return false;
+        }
+        
+        // Ensure discount has a value field (handle both old and new schema)
+        const value = discount.value || discount.value_off || discount.percent_off;
+        if (value === undefined || value === null) {
+          console.warn("Discount missing value:", discount);
+          // Set a default value of 0 instead of filtering out
+          discount.value = 0;
+        } else if (!discount.value) {
+          // Convert old schema to new schema
+          discount.value = discount.type === 'percent' ? 
+            (discount.percent_off || 0) : (discount.value_off || 0);
+        }
+        
+        return true;
+      }) : [];
+      
+      console.log("Processed discounts:", validDiscounts);
+      setDiscounts(validDiscounts);
     } catch (error) {
       console.error("Error loading discounts from database:", error);
+      showError("Failed to load discounts. Using empty discount list.");
       setDiscounts([]);
     }
   };
