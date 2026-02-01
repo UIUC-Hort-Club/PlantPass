@@ -92,7 +92,7 @@ def create_transaction(transaction):
             if selected:
                 if discount_type == "dollar":
                     discount_record["amount_off"] = discount.get("value", 0)
-                else:  # percent type
+                else:
                     discount_record["amount_off"] = (subtotal * discount.get("value", 0)) / 100
             else:
                 discount_record["amount_off"] = 0
@@ -182,7 +182,6 @@ def update_transaction(transaction_id, updated_transaction):
             updated_discounts = updated_transaction["discounts"]
             preserved_discounts = []
             
-            # Calculate subtotal after items have been updated
             subtotal = sum(item["quantity"] * item["price_ea"] for item in existing["items"])
             
             for updated_discount in updated_discounts:
@@ -200,7 +199,7 @@ def update_transaction(transaction_id, updated_transaction):
                     if selected:
                         if original_discount["type"] == "dollar":
                             discount_record["amount_off"] = original_discount["value"]
-                        else:  # percent type
+                        else:
                             discount_record["amount_off"] = (subtotal * original_discount["value"]) / 100
                     else:
                         discount_record["amount_off"] = 0
@@ -240,7 +239,7 @@ def update_transaction(transaction_id, updated_transaction):
         raise Exception(f"Failed to update transaction: {e}")
     except Exception as e:
         logger.error(f"Error updating transaction {transaction_id}: {e}")
-        raise
+        raise Exception(f"Failed to update transaction: {e}")
 
 def delete_transaction(transaction_id):
     """
