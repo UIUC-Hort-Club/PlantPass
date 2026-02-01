@@ -154,11 +154,17 @@ def update_transaction(transaction_id, updated_transaction):
     Original prices and discount rates are preserved to maintain transaction integrity.
     """
     try:
+        logger.info(f"Starting update for transaction {transaction_id}")
+        logger.info(f"Update data received: {json.dumps(updated_transaction, indent=2)}")
+        
         existing = read_transaction(transaction_id)
         if not existing:
             raise Exception(f"Transaction {transaction_id} not found")
         
+        logger.info(f"Original transaction loaded: {json.dumps(existing, indent=2, default=str)}")
+        
         if "items" in updated_transaction:
+            logger.info("Processing items update...")
             updated_items = updated_transaction["items"]
             preserved_items = []
             
@@ -167,26 +173,34 @@ def update_transaction(transaction_id, updated_transaction):
                 original_item = next((item for item in existing["items"] if item["SKU"] == sku), None)
                 
                 if original_item:
-                    preserved_items.append({
+                    preserved_item = {
                         "SKU": sku,
                         "item": original_item["item"],
                         "quantity": updated_item["quantity"],
                         "price_ea": original_item["price_ea"]
-                    })
+                    }
+                    logger.info(f"Preserving item {sku}: quantity {original_item['quantity']} -> {updated_item['quantity']}, price preserved at {original_item['price_ea']}")
+                    preserved_items.append(preserved_item)
                 else:
+                    logger.info(f"Adding new item {sku}: {updated_item}")
                     preserved_items.append(updated_item)
             
             existing["items"] = preserved_items
+            logger.info(f"Updated items: {json.dumps(preserved_items, indent=2, default=str)}")
             
         if "discounts" in updated_transaction:
+            logger.info("Processing discounts update...")
             updated_discounts = updated_transaction["discounts"]
             preserved_discounts = []
             
             subtotal = sum(item["quantity"] * item["price_ea"] for item in existing["items"])
+            logger.info(f"Calculated subtotal for discount calculations: {subtotal}")
             
             for updated_discount in updated_discounts:
                 discount_name = updated_discount["name"]
                 original_discount = next((d for d in existing["discounts"] if d["name"] == discount_name), None)
+                
+                logger.info(f"Processing discount '{discount_name}'...")
                 
                 if original_discount:
                     discount_record = {
@@ -196,41 +210,70 @@ def update_transaction(transaction_id, updated_transaction):
                     }
                     
                     selected = updated_discount.get("selected", False)
+                    logger.info(f"Discount '{discount_name}': type={original_discount['type']}, value={original_discount['value']}, selected={selected}")
+                    
                     if selected:
                         if original_discount["type"] == "dollar":
                             discount_record["amount_off"] = original_discount["value"]
+                            logger.info(f"Dollar discount applied: ${original_discount['value']}")
                         else:
-                            discount_record["amount_off"] = (subtotal * original_discount["value"]) / 100
+                            discount_amount = (subtotal * original_discount["value"]) / 100
+                            discount_record["amount_off"] = discount_amount
+                            logger.info(f"Percent discount applied: {original_discount['value']}% of ${subtotal} = ${discount_amount}")
                     else:
                         discount_record["amount_off"] = 0
+                        logger.info(f"Discount '{discount_name}' not selected, amount_off = 0")
                     
                     preserved_discounts.append(discount_record)
                 else:
+                    logger.info(f"New discount '{discount_name}' added: {updated_discount}")
                     preserved_discounts.append(updated_discount)
             
             existing["discounts"] = preserved_discounts
+            logger.info(f"Updated discounts: {json.dumps(preserved_discounts, indent=2, default=str)}")
             
         if "voucher" in updated_transaction:
-            existing["club_voucher"] = updated_transaction["voucher"]
+            old_voucher = existing.get("club_voucher", 0)
+            new_voucher = updated_transaction["voucher"]
+            existing["club_voucher"] = new_voucher
+            logger.info(f"Voucher updated: ${old_voucher} -> ${new_voucher}")
             
         if "payment" in updated_transaction:
+            logger.info(f"Payment info updated: {updated_transaction['payment']}")
             existing["payment"].update(updated_transaction["payment"])
         
         if "items" in updated_transaction or "discounts" in updated_transaction or "voucher" in updated_transaction:
+            logger.info("Recalculating receipt totals...")
+            
             subtotal = sum(item["quantity"] * item["price_ea"] for item in existing["items"])
-            total_discount = sum(discount.get("amount_off", 0) for discount in existing["discounts"]) + existing.get("club_voucher", 0)
+            logger.info(f"Final subtotal: ${subtotal}")
+            
+            discount_amounts = [discount.get("amount_off", 0) for discount in existing["discounts"]]
+            total_discount_from_discounts = sum(discount_amounts)
+            voucher_amount = existing.get("club_voucher", 0)
+            total_discount = total_discount_from_discounts + voucher_amount
+            
+            logger.info(f"Discount breakdown:")
+            for i, discount in enumerate(existing["discounts"]):
+                logger.info(f"  - {discount['name']}: ${discount_amounts[i]}")
+            logger.info(f"  - Voucher: ${voucher_amount}")
+            logger.info(f"Total discount: ${total_discount}")
+            
             total = max(subtotal - total_discount, 0)
+            logger.info(f"Final total: max(${subtotal} - ${total_discount}, 0) = ${total}")
             
             existing["receipt"] = {
                 "subtotal": subtotal,
                 "discount": total_discount,
                 "total": total
             }
+            logger.info(f"Updated receipt: {json.dumps(existing['receipt'], indent=2, default=str)}")
         
         db_item = json.loads(json.dumps(existing), parse_float=Decimal)
         
         table.put_item(Item=db_item)
-        logger.info(f"Transaction updated successfully: {transaction_id}")
+        logger.info(f"Transaction updated successfully in database: {transaction_id}")
+        logger.info(f"Final transaction state: {json.dumps(existing, indent=2, default=str)}")
         
         return existing
         
