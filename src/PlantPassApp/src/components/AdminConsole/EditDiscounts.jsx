@@ -49,8 +49,8 @@ export default function DiscountTable() {
         id: `${discount.name}-${index}`,
         name: discount.name,
         type: discount.type,
-        percent: discount.percent_off.toString(),
-        value: discount.value_off.toFixed(2),
+        percent: discount.type === 'percent' ? discount.value.toString() : '0',
+        value: discount.type === 'dollar' ? discount.value.toFixed(2) : '0.00',
         sortOrder: discount.sort_order,
         isNew: false,
         originalName: discount.name,
@@ -187,8 +187,7 @@ export default function DiscountTable() {
         .map(row => ({
           name: row.name,
           type: row.type,
-          percent_off: row.type === 'percent' ? parseFloat(row.percent) || 0 : 0,
-          value_off: row.type === 'dollar' ? parseFloat(row.value) || 0 : 0,
+          value: row.type === 'percent' ? parseFloat(row.percent) || 0 : parseFloat(row.value) || 0,
           sort_order: row.sortOrder
         }));
 

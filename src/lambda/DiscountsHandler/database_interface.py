@@ -18,11 +18,9 @@ def get_all_discounts():
         discounts = response.get('Items', [])
         
         for discount in discounts:
-            if 'percent_off' in discount and isinstance(discount['percent_off'], Decimal):
-                discount['percent_off'] = float(discount['percent_off'])
-            
-            if 'value_off' in discount and isinstance(discount['value_off'], Decimal):
-                discount['value_off'] = float(discount['value_off'])
+            # Convert Decimal to appropriate types
+            if 'value' in discount and isinstance(discount['value'], Decimal):
+                discount['value'] = float(discount['value'])
             
             if 'sort_order' in discount and isinstance(discount['sort_order'], Decimal):
                 discount['sort_order'] = int(discount['sort_order'])
@@ -43,8 +41,7 @@ def replace_all_discounts(discounts_data):
     discounts_data: List of discount dictionaries with keys:
     - name: str
     - type: str ("percent" or "dollar")
-    - percent_off: float (for percent discounts)
-    - value_off: float (for dollar discounts)
+    - value: float (for percent: percentage off, for dollar: dollar amount off)
     - sort_order: int
     """
     try:
@@ -70,8 +67,7 @@ def replace_all_discounts(discounts_data):
                 item = {
                     'name': discount_data['name'],
                     'type': discount_data['type'],
-                    'percent_off': Decimal(str(discount_data.get('percent_off', 0))),
-                    'value_off': Decimal(str(discount_data.get('value_off', 0))),
+                    'value': Decimal(str(discount_data.get('value', 0))),
                     'sort_order': int(discount_data.get('sort_order', 0))
                 }
                 

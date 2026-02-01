@@ -78,8 +78,8 @@ export default function DiscountsTable({
                     }}
                   >
                     {discount.type === 'dollar' 
-                      ? `-$${discount.value_off.toFixed(2)}`
-                      : `-${discount.percent_off}%`
+                      ? `-$${discount.value.toFixed(2)}`
+                      : `-${discount.value}%`
                     }
                   </Typography>
                 </TableCell>

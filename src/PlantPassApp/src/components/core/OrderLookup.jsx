@@ -205,8 +205,7 @@ function OrderLookup() {
       const discountsWithSelection = discounts.map(discount => ({
         name: discount.name,
         type: discount.type,
-        percent_off: discount.percent_off || 0,
-        value_off: discount.value_off || 0,
+        value: discount.value || 0,
         selected: selectedDiscounts.includes(discount.name)
       }));
 
@@ -414,8 +413,8 @@ function OrderLookup() {
             discounts={discounts.map(discount => ({
               name: discount.name,
               amount_off: selectedDiscounts.includes(discount.name) ? 
-                (discount.type === "dollar" ? discount.value_off : 
-                 (Number(totals.subtotal) * discount.percent_off / 100)) : 0
+                (discount.type === "dollar" ? discount.value : 
+                 (Number(totals.subtotal) * discount.value / 100)) : 0
             }))}
             voucher={Number(voucher) || 0}
           />

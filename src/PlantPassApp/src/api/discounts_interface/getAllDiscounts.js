@@ -16,6 +16,10 @@ import { API_URL } from "../config";
  *     "value": 5.0
  *   }
  * ]
+ * 
+ * Note: 
+ * - For percent type: value represents percentage off (e.g., 10.0 = 10% off)
+ * - For dollar type: value represents dollar amount off (e.g., 5.0 = $5.00 off)
  */
 export async function getAllDiscounts() {
   try {

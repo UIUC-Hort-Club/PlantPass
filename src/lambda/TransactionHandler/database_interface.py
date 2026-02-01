@@ -42,7 +42,7 @@ def create_transaction(transaction):
         {
             "name": "discount name",
             "type": "percent" | "dollar",
-            "value": 10.0,  // For percent: 10 = 10%, for dollar: 10 = $10
+            "value": 10.0,  // For percent: 10 = 10% off, for dollar: 10 = $10 off
             "selected": true
         }],
         "voucher": 10     // This is the dollar amount of the voucher, not a percentage
