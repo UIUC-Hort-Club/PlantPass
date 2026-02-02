@@ -49,8 +49,8 @@ export default function DiscountTable() {
         id: `${discount.name}-${index}`,
         name: discount.name,
         type: discount.type,
-        percent: discount.type === 'percent' ? discount.value.toString() : '0',
-        value: discount.type === 'dollar' ? discount.value.toFixed(2) : '0.00',
+        percent: discount.type === 'percent' ? discount.percent_off.toString() : '0',
+        value: discount.type === 'dollar' ? discount.value_off.toFixed(2) : '0.00',
         sortOrder: discount.sort_order,
         isNew: false,
         originalName: discount.name,
@@ -102,14 +102,20 @@ export default function DiscountTable() {
   };
 
   const handleEdit = (id, field, value) => {
-    if (field === 'percent') {
-      const formattedValue = formatPercentInput(value);
-      setRows(rows.map((r) => (r.id === id ? { ...r, [field]: formattedValue } : r)));
-    } else if (field === 'value') {
+    if (field === "percent") {
+      const integerOnly = value.replace(/\D/g, "");
+      setRows(rows.map((r) =>
+        r.id === id ? { ...r, percent: integerOnly } : r
+      ));
+    } else if (field === "value") {
       const formattedValue = formatPriceInput(value);
-      setRows(rows.map((r) => (r.id === id ? { ...r, [field]: formattedValue } : r)));
+      setRows(rows.map((r) =>
+        r.id === id ? { ...r, value: formattedValue } : r
+      ));
     } else {
-      setRows(rows.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
+      setRows(rows.map((r) =>
+        r.id === id ? { ...r, [field]: value } : r
+      ));
     }
   };
 
@@ -124,9 +130,11 @@ export default function DiscountTable() {
   const handlePercentBlurEvent = (id) => {
     const row = rows.find(r => r.id === id);
     if (!row) return;
-    
-    const formattedPercent = handlePercentBlur(row.percent);
-    setRows(rows.map((r) => (r.id === id ? { ...r, percent: formattedPercent } : r)));
+
+    const normalized = row.percent === "" ? "0" : row.percent;
+    setRows(rows.map((r) =>
+      r.id === id ? { ...r, percent: normalized } : r
+    ));
   };
 
   const handleReset = () => {
@@ -187,7 +195,10 @@ export default function DiscountTable() {
         .map(row => ({
           name: row.name,
           type: row.type,
-          value: row.type === 'percent' ? parseFloat(row.percent) || 0 : parseFloat(row.value) || 0,
+          value:
+            row.type === "percent"
+              ? parseInt(row.percent, 10) || 0
+              : parseFloat(row.value) || 0,
           sort_order: row.sortOrder
         }));
 
@@ -364,20 +375,24 @@ export default function DiscountTable() {
                               type="text"
                               fullWidth
                               size="small"
-                              value={row.type === 'percent' ? row.percent : row.value}
+                              value={row.type === "percent" ? row.percent : row.value}
                               onChange={(e) =>
-                                handleEdit(row.id, row.type === 'percent' ? 'percent' : 'value', e.target.value)
+                                handleEdit(
+                                  row.id,
+                                  row.type === "percent" ? "percent" : "value",
+                                  e.target.value
+                                )
                               }
                               onBlur={() => {
-                                if (row.type === 'percent') {
+                                if (row.type === "percent") {
                                   handlePercentBlurEvent(row.id);
                                 } else {
                                   handleValueBlurEvent(row.id);
                                 }
                               }}
                               inputProps={{
-                                inputMode: 'decimal',
-                                pattern: '[0-9]*\\.?[0-9]*'
+                                inputMode: row.type === "percent" ? "numeric" : "decimal",
+                                pattern: row.type === "percent" ? "[0-9]*" : "[0-9]*\\.?[0-9]*"
                               }}
                             />
                           </TableCell>
