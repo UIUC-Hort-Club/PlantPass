@@ -2,11 +2,13 @@ import json
 import logging
 from database_interface import (
     create_transaction,
-    export_transaction_data,
     read_transaction,
     update_transaction,
-    delete_transaction,
+    delete_transaction
+)
+from sales_analytics import (
     compute_sales_analytics,
+    export_transaction_data,
     clear_all_transactions
 )
 

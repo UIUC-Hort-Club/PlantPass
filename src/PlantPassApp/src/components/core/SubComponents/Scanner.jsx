@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -7,13 +7,11 @@ import {
   Button,
   Typography,
   Box,
-  Snackbar,
-  Alert,
 } from "@mui/material";
 import { Html5Qrcode } from "html5-qrcode";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
 import SavedSearchIcon from "@mui/icons-material/SavedSearch";
-import { v4 as uuidv4 } from "uuid";
+import { useNotification } from "../../../contexts/NotificationContext";
 
 export default function Scanner({
   opened,
@@ -22,11 +20,11 @@ export default function Scanner({
   products,
   getQuantity,
 }) {
+  const { showSuccess, showWarning, showInfo } = useNotification();
+  
   const [matchedProduct, setMatchedProduct] = useState(null);
   const [cameras, setCameras] = useState([]);
   const [selectedCamera, setSelectedCamera] = useState(null);
-
-  const [snackbars, setSnackbars] = useState([]);
   const [foundSKUs, setFoundSKUs] = useState(new Set());
 
   const scannerContainerRef = useRef(null);
@@ -66,29 +64,15 @@ export default function Scanner({
         if (product) {
           setMatchedProduct(product);
 
-          // Only show Found snackbar if SKU hasn't been found yet
+          // Only show Found notification if SKU hasn't been found yet
           if (!foundSKUs.has(product.SKU)) {
-            setSnackbars((prev) => [
-              ...prev,
-              {
-                id: uuidv4(),
-                message: `Found (${product.SKU}) ${product.Name}`,
-                severity: "success",
-              },
-            ]);
+            showSuccess(`Found (${product.SKU}) ${product.Name}`);
             setFoundSKUs((prev) => new Set(prev).add(product.SKU));
           }
         } else {
           setMatchedProduct(null);
           // Show Not Found message always
-          setSnackbars((prev) => [
-            ...prev,
-            {
-              id: uuidv4(),
-              message: `SKU: ${decodedText} Not Found`,
-              severity: "warning",
-            },
-          ]);
+          showWarning(`SKU: ${decodedText} Not Found`);
         }
       },
       (err) => console.log("scan error", err),
@@ -105,14 +89,14 @@ export default function Scanner({
           scannerInstanceRef.current = null;
         });
     };
-  }, [opened, selectedCamera, products, foundSKUs]);
+  }, [opened, selectedCamera, products, foundSKUs, showSuccess, showWarning]);
 
+  // Reset matched product when dialog opens
   useEffect(() => {
-    const timer = setTimeout(() => {
+    if (opened) {
       setMatchedProduct(null);
-    }, 0);
-
-    return () => clearTimeout(timer);
+      setFoundSKUs(new Set()); // Reset found SKUs when scanner opens
+    }
   }, [opened]);
 
   const handleAddItem = () => {
@@ -124,130 +108,97 @@ export default function Scanner({
     // Call parent callback to update state
     onScan(matchedProduct);
 
-    // Show snackbar with the accurate quantity
-    setSnackbars((prev) => [
-      ...prev,
-      {
-        id: uuidv4(),
-        message: `Added Item: ${matchedProduct.Name} (Qty: ${newQuantity})`,
-        severity: "info",
-      },
-    ]);
-  };
-
-  const handleCloseSnackbar = (id) => {
-    setSnackbars((prev) => prev.filter((s) => s.id !== id));
+    // Show notification with the accurate quantity
+    showInfo(`Added Item: ${matchedProduct.Name} (Qty: ${newQuantity})`);
   };
 
   return (
-    <>
-      <Dialog
-        open={opened}
-        onClose={onClose}
-        fullWidth
-        maxWidth="sm"
-        keepMounted
-      >
-        {/* Dialog Title Bar */}
-        <DialogTitle>
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Typography variant="h6">Scan Item</Typography>
-            {!matchedProduct ? (
-              <SearchOffIcon sx={{ color: "text.disabled", fontSize: 28 }} />
-            ) : (
-              <SavedSearchIcon sx={{ color: "green", fontSize: 28 }} />
-            )}
-          </Box>
-        </DialogTitle>
-
-        <DialogContent style={{ overflow: "hidden" }}>
-          {/* Camera Toggle */}
-          {cameras.length > 1 && (
-            <Box sx={{ mb: 2 }}>
-              <select
-                value={selectedCamera || ""}
-                onChange={(e) => setSelectedCamera(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "8px",
-                  borderRadius: "6px",
-                  fontSize: "1rem",
-                }}
-              >
-                {cameras.map((cam) => (
-                  <option key={cam.id} value={cam.id}>
-                    {cam.label || `Camera ${cam.id}`}
-                  </option>
-                ))}
-              </select>
-            </Box>
-          )}
-
-          {/* QR Scanner */}
-          <Box
-            id="scanner-container"
-            ref={scannerContainerRef}
-            sx={{
-              width: "100%",
-              height: "60%",
-            }}
-          />
-
-          {/* Display matched item */}
-          {matchedProduct && (
-            <Box sx={{ mt: 2, textAlign: "center" }}>
-              <Typography variant="body1">
-                Item:{" "}
-                <strong>
-                  {matchedProduct.Name} ({matchedProduct.SKU})
-                </strong>
-              </Typography>
-            </Box>
-          )}
-        </DialogContent>
-
-        <DialogActions>
-          {matchedProduct && (
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleAddItem}
-              size="small"
-            >
-              Add Item
-            </Button>
-          )}
-          <Button onClick={onClose} color="secondary" size="small">
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Stacked Snackbars */}
-      {snackbars.map((s, index) => (
-        <Snackbar
-          key={s.id}
-          open
-          autoHideDuration={4000}
-          onClose={() => handleCloseSnackbar(s.id)}
-          anchorOrigin={{ vertical: "top", horizontal: "left" }}
-          sx={{ mb: `${index * 56}px` }} // stack each snackbar
+    <Dialog
+      open={opened}
+      onClose={onClose}
+      fullWidth
+      maxWidth="sm"
+      keepMounted
+    >
+      {/* Dialog Title Bar */}
+      <DialogTitle>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
         >
-          <Alert
-            onClose={() => handleCloseSnackbar(s.id)}
-            severity={s.severity}
-            sx={{ width: "100%" }}
+          <Typography variant="h6">Scan Item</Typography>
+          {!matchedProduct ? (
+            <SearchOffIcon sx={{ color: "text.disabled", fontSize: 28 }} />
+          ) : (
+            <SavedSearchIcon sx={{ color: "green", fontSize: 28 }} />
+          )}
+        </Box>
+      </DialogTitle>
+
+      <DialogContent style={{ overflow: "hidden" }}>
+        {/* Camera Toggle */}
+        {cameras.length > 1 && (
+          <Box sx={{ mb: 2 }}>
+            <select
+              value={selectedCamera || ""}
+              onChange={(e) => setSelectedCamera(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "8px",
+                borderRadius: "6px",
+                fontSize: "1rem",
+              }}
+            >
+              {cameras.map((cam) => (
+                <option key={cam.id} value={cam.id}>
+                  {cam.label || `Camera ${cam.id}`}
+                </option>
+              ))}
+            </select>
+          </Box>
+        )}
+
+        {/* QR Scanner */}
+        <Box
+          id="scanner-container"
+          ref={scannerContainerRef}
+          sx={{
+            width: "100%",
+            height: "60%",
+          }}
+        />
+
+        {/* Display matched item */}
+        {matchedProduct && (
+          <Box sx={{ mt: 2, textAlign: "center" }}>
+            <Typography variant="body1">
+              Item:{" "}
+              <strong>
+                {matchedProduct.Name} ({matchedProduct.SKU})
+              </strong>
+            </Typography>
+          </Box>
+        )}
+      </DialogContent>
+
+      <DialogActions>
+        {matchedProduct && (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleAddItem}
+            size="small"
           >
-            {s.message}
-          </Alert>
-        </Snackbar>
-      ))}
-    </>
+            Add Item
+          </Button>
+        )}
+        <Button onClick={onClose} color="secondary" size="small">
+          Close
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 }

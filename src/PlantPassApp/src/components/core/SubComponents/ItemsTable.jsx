@@ -58,7 +58,6 @@ export default function ItemsTable({
                     pattern: "[0-9]*"
                   }}
                   onKeyDown={(e) => {
-                    // Prevent decimal point, minus sign, and 'e' (scientific notation)
                     if (e.key === '.' || e.key === '-' || e.key === 'e' || e.key === 'E') {
                       e.preventDefault();
                     }

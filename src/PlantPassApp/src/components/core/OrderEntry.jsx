@@ -120,42 +120,8 @@ function OrderEntry() {
     try {
       console.log("Loading discounts from database...");
       const discountsData = await getAllDiscounts();
-      console.log("Raw discounts data received:", discountsData);
-      
-      // Validate and sanitize discount data
-      const validDiscounts = Array.isArray(discountsData) ? discountsData.filter(discount => {
-        if (!discount || typeof discount !== 'object') {
-          console.warn("Invalid discount object:", discount);
-          return false;
-        }
-        
-        if (!discount.name) {
-          console.warn("Discount missing name:", discount);
-          return false;
-        }
-        
-        if (!discount.type || (discount.type !== 'percent' && discount.type !== 'dollar')) {
-          console.warn("Discount has invalid type:", discount);
-          return false;
-        }
-        
-        // Ensure discount has a value field (handle both old and new schema)
-        const value = discount.value || discount.value_off || discount.percent_off;
-        if (value === undefined || value === null) {
-          console.warn("Discount missing value:", discount);
-          // Set a default value of 0 instead of filtering out
-          discount.value = 0;
-        } else if (!discount.value) {
-          // Convert old schema to new schema
-          discount.value = discount.type === 'percent' ? 
-            (discount.percent_off || 0) : (discount.value_off || 0);
-        }
-        
-        return true;
-      }) : [];
-      
-      console.log("Processed discounts:", validDiscounts);
-      setDiscounts(validDiscounts);
+      console.log("Discounts data received:", discountsData);
+      setDiscounts(discountsData);
     } catch (error) {
       console.error("Error loading discounts from database:", error);
       showError("Failed to load discounts. Using empty discount list.");
@@ -200,13 +166,12 @@ function OrderEntry() {
     const transaction = {
       timestamp: Math.floor(Date.now() / 1000),
       items: Object.entries(quantities)
-        .filter(([sku, quantity]) => quantity && parseInt(quantity) > 0)
         .map(([sku, quantity]) => {
           const product = products.find((p) => p.SKU === sku);
           return {
             SKU: sku,
             item: product.Name,
-            quantity: parseInt(quantity),
+            quantity: parseInt(quantity) || 0,
             price_ea: product.Price,
           };
         }),
@@ -214,7 +179,7 @@ function OrderEntry() {
       voucher: Number(voucher) || 0,
     };
 
-    if (transaction.items.length === 0) {
+    if (Object.values(quantities).every(qty => !qty || parseInt(qty) === 0)) {
       showWarning("Please add items to your order before submitting.");
       return;
     }
@@ -228,7 +193,6 @@ function OrderEntry() {
           discount: response.receipt.discount,
           grandTotal: response.receipt.total,
         });
-        // Store the complete receipt data from backend
         setReceiptData({
           totals: {
             subtotal: response.receipt.subtotal,
@@ -262,13 +226,12 @@ function OrderEntry() {
 
     const updateData = {
       items: Object.entries(quantities)
-        .filter(([sku, quantity]) => quantity && parseInt(quantity) > 0)
         .map(([sku, quantity]) => {
           const product = products.find((p) => p.SKU === sku);
           return {
             SKU: sku,
             item: product.Name,
-            quantity: parseInt(quantity),
+            quantity: parseInt(quantity) || 0,
             price_ea: product.Price,
           };
         }),
@@ -276,7 +239,7 @@ function OrderEntry() {
       voucher: Number(voucher) || 0,
     };
 
-    if (updateData.items.length === 0) {
+    if (Object.values(quantities).every(qty => !qty || parseInt(qty) === 0)) {
       showWarning("Please add items to your order before updating.");
       return;
     }
@@ -289,7 +252,6 @@ function OrderEntry() {
           discount: response.receipt.discount,
           grandTotal: response.receipt.total,
         });
-        // Update the receipt data with backend response
         setReceiptData({
           totals: {
             subtotal: response.receipt.subtotal,

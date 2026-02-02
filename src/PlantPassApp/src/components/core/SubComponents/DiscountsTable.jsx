@@ -11,26 +11,23 @@ import {
 } from "@mui/material";
 
 export default function DiscountsTable({
-  discounts = [], // Default to empty array
-  selectedDiscounts = [], // Default to empty array
+  discounts = [],
+  selectedDiscounts = [],
   onDiscountToggle,
   readOnly = false,
 }) {
-  // Ensure discounts is always an array
   const safeDiscounts = Array.isArray(discounts) ? discounts : [];
   const safeSelectedDiscounts = Array.isArray(selectedDiscounts) ? selectedDiscounts : [];
 
   const handleIndividualToggle = (discountName) => {
-    if (readOnly) return; // Prevent changes if read-only
+    if (readOnly) return;
     
     const isSelected = safeSelectedDiscounts.includes(discountName);
     let newSelection;
     
     if (isSelected) {
-      // Remove from selection
       newSelection = safeSelectedDiscounts.filter(name => name !== discountName);
     } else {
-      // Add to selection
       newSelection = [...safeSelectedDiscounts, discountName];
     }
     
@@ -40,7 +37,7 @@ export default function DiscountsTable({
   };
 
   if (safeDiscounts.length === 0) {
-    return null; // Don't render if no discounts available
+    return null;
   }
 
   return (
@@ -65,7 +62,6 @@ export default function DiscountsTable({
           </TableHead>
           <TableBody>
             {safeDiscounts.map((discount, index) => {
-              // Defensive programming - ensure discount object exists and has required fields
               if (!discount || !discount.name) {
                 console.warn(`Invalid discount at index ${index}:`, discount);
                 return null;
@@ -91,7 +87,6 @@ export default function DiscountsTable({
                       }}
                     >
                       {(() => {
-                        // Handle both old and new schema, with fallbacks for undefined values
                         const value = discount.value || discount.value_off || discount.percent_off || 0;
                         
                         if (discount.type === 'dollar') {
