@@ -18,10 +18,7 @@ import Receipt from "./SubComponents/Receipt";
 import { readTransaction } from "../../api/transaction_interface/readTransaction";
 import { updateTransaction } from "../../api/transaction_interface/updateTransaction";
 import { deleteTransaction } from "../../api/transaction_interface/deleteTransaction";
-import { getAllProducts } from "../../api/products_interface/getAllProducts";
-import { getAllDiscounts } from "../../api/discounts_interface/getAllDiscounts";
 import { useNotification } from "../../contexts/NotificationContext";
-import { transformProductsData, initializeProductQuantities } from "../../utils/productTransformer";
 import { formatOrderId } from "../../utils/orderIdFormatter";
 
 function OrderLookup() {
@@ -38,6 +35,7 @@ function OrderLookup() {
     discount: 0,
     grandTotal: 0,
   });
+  const [receiptData, setReceiptData] = useState(null);
   const [voucher, setVoucher] = useState("");
   const [currentTransactionID, setCurrentTransactionID] = useState("");
   const [error, setError] = useState("");
@@ -45,55 +43,26 @@ function OrderLookup() {
   const [transactionLoaded, setTransactionLoaded] = useState(false);
   const [isOrderCompleted, setIsOrderCompleted] = useState(false);
 
-  useEffect(() => {
-    loadProducts();
-    loadDiscounts();
-  }, []);
-
-  const loadProducts = async () => {
-    try {
-      const productsData = await getAllProducts();
-      const transformedProducts = transformProductsData(productsData);
-      setProducts(transformedProducts);
-      
-      const { initialQuantities, initialSubtotals } = initializeProductQuantities(transformedProducts);
-      setQuantities({ ...initialQuantities, ...Object.fromEntries(Object.keys(initialQuantities).map(key => [key, 0])) });
-      setSubtotals(initialSubtotals);
-    } catch (error) {
-      console.error("Error loading products:", error);
-    }
-  };
-
-  const loadDiscounts = async () => {
-    try {
-      const discountsData = await getAllDiscounts();
-      setDiscounts(discountsData);
-    } catch (error) {
-      console.error("Error loading discounts:", error);
-      setDiscounts([]);
-    }
-  };
 
   const resetToInitialState = () => {
     setCurrentTransactionID("");
     setTransactionLoaded(false);
     setIsOrderCompleted(false);
-    setOrderId("");
+    setProducts([]);
+    setDiscounts([]);
+    setQuantities({});
+    setSubtotals({});
     setSelectedDiscounts([]);
     setVoucher("");
     setPaymentMethod("");
+    setOrderId("");
     setError("");
-    
-    const resetQuantities = {};
-    const resetSubtotals = {};
-    products.forEach((product) => {
-      resetQuantities[product.SKU] = 0;
-      resetSubtotals[product.SKU] = "0.00";
+    setTotals({
+      subtotal: 0,
+      discount: 0,
+      grandTotal: 0,
     });
-    setQuantities(resetQuantities);
-    setSubtotals(resetSubtotals);
-    
-    setTotals({ subtotal: 0, discount: 0, grandTotal: 0 });
+    setReceiptData(null);
   };
 
   const handleOrderIdChange = (e) => {
@@ -102,7 +71,7 @@ function OrderLookup() {
   };
 
   const handleQuantityChange = (e, sku) => {
-    if (isOrderCompleted) return; // Prevent changes if order is completed
+    if (isOrderCompleted) return;
     
     const value = e.target.value;
     const item = products.find((i) => i.SKU === sku);
@@ -125,7 +94,7 @@ function OrderLookup() {
   };
 
   const handleDiscountToggle = (selectedDiscountNames) => {
-    if (isOrderCompleted) return; // Prevent changes if order is completed
+    if (isOrderCompleted) return;
     setSelectedDiscounts(selectedDiscountNames);
   };
 
@@ -149,14 +118,23 @@ function OrderLookup() {
       setCurrentTransactionID(transaction.purchase_id);
       setTransactionLoaded(true);
 
+      const transactionProducts = transaction.items?.map(item => ({
+        SKU: item.SKU,
+        Name: item.item,
+        Price: item.price_ea
+      })) || [];
+      setProducts(transactionProducts);
+
+      const transactionDiscounts = transaction.discounts?.map(discount => ({
+        name: discount.name,
+        type: discount.type,
+        value: discount.value
+      })) || [];
+      setDiscounts(transactionDiscounts);
+
       const newQuantities = {};
       const newSubtotals = {};
       
-      products.forEach((product) => {
-        newQuantities[product.SKU] = 0;
-        newSubtotals[product.SKU] = "0.00";
-      });
-
       transaction.items?.forEach((item) => {
         newQuantities[item.SKU] = item.quantity;
         newSubtotals[item.SKU] = (item.quantity * item.price_ea).toFixed(2);
@@ -178,7 +156,16 @@ function OrderLookup() {
         grandTotal: transaction.receipt?.total || 0,
       });
 
-      // Check if order is completed
+      setReceiptData({
+        totals: {
+          subtotal: transaction.receipt.subtotal,
+          discount: transaction.receipt.discount,
+          grandTotal: transaction.receipt.total,
+        },
+        discounts: transaction.discounts || [],
+        voucher: transaction.club_voucher || 0
+      });
+
       const orderCompleted = transaction.payment?.method && transaction.payment?.paid;
       setIsOrderCompleted(orderCompleted);
 
@@ -205,20 +192,18 @@ function OrderLookup() {
       const discountsWithSelection = discounts.map(discount => ({
         name: discount.name,
         type: discount.type,
-        percent_off: discount.percent_off || 0,
-        value_off: discount.value_off || 0,
+        value: discount.value || 0,
         selected: selectedDiscounts.includes(discount.name)
       }));
 
       const updateData = {
         items: Object.entries(quantities)
-          .filter(([sku, quantity]) => quantity && parseInt(quantity) > 0)
           .map(([sku, quantity]) => {
             const product = products.find((p) => p.SKU === sku);
             return {
               SKU: sku,
               item: product.Name,
-              quantity: parseInt(quantity),
+              quantity: parseInt(quantity) || 0,
               price_ea: product.Price,
             };
           }),
@@ -233,9 +218,17 @@ function OrderLookup() {
         discount: updatedTransaction.receipt.discount,
         grandTotal: updatedTransaction.receipt.total,
       });
-      
+      setReceiptData({
+        totals: {
+          subtotal: updatedTransaction.receipt.subtotal,
+          discount: updatedTransaction.receipt.discount,
+          grandTotal: updatedTransaction.receipt.total,
+        },
+        discounts: updatedTransaction.discounts || [],
+        voucher: updatedTransaction.club_voucher || 0
+      });
       showSuccess(`Order ${currentTransactionID} has been updated!`);
-      setError();
+      setError("");
       
     } catch (err) {
       console.error("Error updating transaction:", err);
@@ -297,7 +290,6 @@ function OrderLookup() {
 
   return (
     <Container maxWidth="md">
-      {/* Lookup Header - Always visible */}
       <Stack
         direction="row"
         spacing={2}
@@ -334,17 +326,14 @@ function OrderLookup() {
         </Alert>
       )}
 
-      {/* Show completed order indicator */}
       {transactionLoaded && isOrderCompleted && (
         <Alert severity="info" sx={{ mb: 2 }}>
           <strong>Order Completed:</strong> This order has been marked as completed and is now view-only.
         </Alert>
       )}
 
-      {/* Only show content after transaction is loaded */}
       {transactionLoaded && (
         <>
-          {/* Items Table */}
           <ItemsTable
             stockItems={products}
             quantities={quantities}
@@ -353,7 +342,6 @@ function OrderLookup() {
             readOnly={isOrderCompleted}
           />
 
-          {/* Discounts Table */}
           <DiscountsTable
             discounts={discounts}
             selectedDiscounts={selectedDiscounts}
@@ -361,7 +349,6 @@ function OrderLookup() {
             readOnly={isOrderCompleted}
           />
 
-          {/* Voucher */}
           <Stack direction="row" justifyContent="right" sx={{ mt: 2 }}>
             <TextField
               label="Voucher"
@@ -369,7 +356,7 @@ function OrderLookup() {
               size="small"
               value={voucher}
               onChange={(e) => {
-                if (isOrderCompleted) return; // Prevent changes if order is completed
+                if (isOrderCompleted) return;
                 const value = e.target.value;
                 if (value === "") {
                   setVoucher("");
@@ -383,7 +370,6 @@ function OrderLookup() {
             />
           </Stack>
 
-          {/* Update / Delete Buttons - Only show if order is not completed */}
           {!isOrderCompleted && (
             <Box sx={{ mt: 2 }}>
               <Stack direction="row" spacing={2} justifyContent="space-between">
@@ -407,29 +393,23 @@ function OrderLookup() {
             </Box>
           )}
 
-          {/* Receipt */}
-          <Receipt 
-            totals={totals} 
-            transactionId={currentTransactionID}
-            discounts={discounts.map(discount => ({
-              name: discount.name,
-              amount_off: selectedDiscounts.includes(discount.name) ? 
-                (discount.type === "dollar" ? discount.value_off : 
-                 (Number(totals.subtotal) * discount.percent_off / 100)) : 0
-            }))}
-            voucher={Number(voucher) || 0}
-          />
+          {receiptData && (
+            <Receipt 
+              totals={receiptData.totals} 
+              transactionId={currentTransactionID}
+              discounts={receiptData.discounts}
+              voucher={receiptData.voucher}
+            />
+          )}
 
-          {/* Payment & Complete - Only show if order is not completed */}
           {!isOrderCompleted && (
-            <Box sx={{ mt: 2, display: "flex", alignItems: "center", gap: 2, justifyContent: "center" }}>
-              <FormControl size="small" sx={{ minWidth: 150 }}>
+            <Box sx={{ mt: 2, display: "flex", alignItems: "center", gap: 2, justifyContent: "center"}}>
+              <FormControl size="small" sx={{ minWidth: 180 }}>
                 <InputLabel>Payment Method *</InputLabel>
                 <Select
                   value={paymentMethod}
                   label="Payment Method *"
                   onChange={(e) => setPaymentMethod(e.target.value)}
-                  error={!paymentMethod}
                 >
                   <MenuItem value="">
                     <em>Select Payment Method</em>
@@ -452,7 +432,6 @@ function OrderLookup() {
             </Box>
           )}
 
-          {/* Show payment method for completed orders */}
           {isOrderCompleted && paymentMethod && (
             <Box sx={{ mt: 2, display: "flex", justifyContent: "center" }}>
               <Alert severity="success" sx={{ display: "inline-flex" }}>

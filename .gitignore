@@ -35,3 +35,11 @@ terraform.rc
 
 # Lambda build
 *.zip
+
+# Virtual environments
+venv
+test_env
+
+# Python
+__pycache__
+*pytest*

@@ -7,9 +7,19 @@ import { API_URL } from "../config";
  * [
  *   {
  *     "name": "Student Discount",
- *     "percent_off": 10.0
+ *     "type": "percent",
+ *     "value": 10.0
+ *   },
+ *   {
+ *     "name": "Senior Discount", 
+ *     "type": "dollar",
+ *     "value": 5.0
  *   }
  * ]
+ * 
+ * Note: 
+ * - For percent type: value represents percentage off (e.g., 10.0 = 10% off)
+ * - For dollar type: value represents dollar amount off (e.g., 5.0 = $5.00 off)
  */
 export async function getAllDiscounts() {
   try {

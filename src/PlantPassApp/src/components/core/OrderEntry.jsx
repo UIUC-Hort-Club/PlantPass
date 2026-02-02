@@ -23,7 +23,7 @@ import { transformProductsData, initializeProductQuantities } from "../../utils/
 import { transformDiscountsForOrder } from "../../utils/discountTransformer";
 import LoadingSpinner from "../common/LoadingSpinner";
 
-function OrderEntry({ product_listings }) {
+function OrderEntry() {
   const { showSuccess, showWarning, showError } = useNotification();
   
   const [products, setProducts] = useState([]);
@@ -36,6 +36,7 @@ function OrderEntry({ product_listings }) {
     discount: 0,
     grandTotal: 0,
   });
+  const [receiptData, setReceiptData] = useState(null);
   const [voucher, setVoucher] = useState("");
   const [scannerOpen, setScannerOpen] = useState(false);
   const [currentTransactionID, setCurrentTransactionID] = useState("");
@@ -83,6 +84,7 @@ function OrderEntry({ product_listings }) {
       discount: 0,
       grandTotal: 0,
     });
+    setReceiptData(null);
   };
 
   const loadProducts = async () => {
@@ -100,8 +102,7 @@ function OrderEntry({ product_listings }) {
     } catch (error) {
       console.error("Error loading products from database:", error);
       try {
-        const response = await fetch(product_listings);
-        const data = await response.json();
+        const data = [];
         setProducts(data);
         const { initialQuantities, initialSubtotals } = initializeProductQuantities(data);
         setQuantities(initialQuantities);
@@ -121,6 +122,7 @@ function OrderEntry({ product_listings }) {
       setDiscounts(discountsData);
     } catch (error) {
       console.error("Error loading discounts from database:", error);
+      showError("Failed to load discounts. Using empty discount list.");
       setDiscounts([]);
     }
   };
@@ -162,13 +164,12 @@ function OrderEntry({ product_listings }) {
     const transaction = {
       timestamp: Math.floor(Date.now() / 1000),
       items: Object.entries(quantities)
-        .filter(([sku, quantity]) => quantity && parseInt(quantity) > 0)
         .map(([sku, quantity]) => {
           const product = products.find((p) => p.SKU === sku);
           return {
             SKU: sku,
             item: product.Name,
-            quantity: parseInt(quantity),
+            quantity: parseInt(quantity) || 0,
             price_ea: product.Price,
           };
         }),
@@ -176,19 +177,27 @@ function OrderEntry({ product_listings }) {
       voucher: Number(voucher) || 0,
     };
 
-    if (transaction.items.length === 0) {
+    if (Object.values(quantities).every(qty => !qty || parseInt(qty) === 0)) {
       showWarning("Please add items to your order before submitting.");
       return;
     }
 
     createTransaction(transaction)
       .then((response) => {
-        console.log("Transaction recorded successfully:", response);
         setCurrentTransactionID(response.purchase_id);
         setTotals({
           subtotal: response.receipt.subtotal,
           discount: response.receipt.discount,
           grandTotal: response.receipt.total,
+        });
+        setReceiptData({
+          totals: {
+            subtotal: response.receipt.subtotal,
+            discount: response.receipt.discount,
+            grandTotal: response.receipt.total,
+          },
+          discounts: response.discounts || [],
+          voucher: response.club_voucher || 0
         });
         showSuccess("Your order has been successfully recorded.");
         setTransactionIDDialogOpen(true);
@@ -208,20 +217,18 @@ function OrderEntry({ product_listings }) {
     const discountsWithSelection = discounts.map(discount => ({
       name: discount.name,
       type: discount.type,
-      percent_off: discount.percent_off || 0,
-      value_off: discount.value_off || 0,
+      value: discount.value || 0,
       selected: selectedDiscounts.includes(discount.name)
     }));
 
     const updateData = {
       items: Object.entries(quantities)
-        .filter(([sku, quantity]) => quantity && parseInt(quantity) > 0)
         .map(([sku, quantity]) => {
           const product = products.find((p) => p.SKU === sku);
           return {
             SKU: sku,
             item: product.Name,
-            quantity: parseInt(quantity),
+            quantity: parseInt(quantity) || 0,
             price_ea: product.Price,
           };
         }),
@@ -229,18 +236,26 @@ function OrderEntry({ product_listings }) {
       voucher: Number(voucher) || 0,
     };
 
-    if (updateData.items.length === 0) {
+    if (Object.values(quantities).every(qty => !qty || parseInt(qty) === 0)) {
       showWarning("Please add items to your order before updating.");
       return;
     }
 
     updateTransaction(currentTransactionID, updateData)
       .then((response) => {
-        console.log("Transaction updated successfully:", response);
         setTotals({
           subtotal: response.receipt.subtotal,
           discount: response.receipt.discount,
           grandTotal: response.receipt.total,
+        });
+        setReceiptData({
+          totals: {
+            subtotal: response.receipt.subtotal,
+            discount: response.receipt.discount,
+            grandTotal: response.receipt.total,
+          },
+          discounts: response.discounts || [],
+          voucher: response.club_voucher || 0
         });
         showSuccess(`Order ${currentTransactionID} has been updated!`);
       })
@@ -360,18 +375,13 @@ function OrderEntry({ product_listings }) {
         </Stack>          
       </Box>
 
-      {currentTransactionID && (
+      {currentTransactionID && receiptData && (
         <>
           <Receipt 
-            totals={totals} 
+            totals={receiptData.totals} 
             transactionId={currentTransactionID}
-            discounts={discounts.map(discount => ({
-              name: discount.name,
-              amount_off: selectedDiscounts.includes(discount.name) ? 
-                (discount.type === "dollar" ? discount.value_off : 
-                 (Number(totals.subtotal) * discount.percent_off / 100)) : 0
-            }))}
-            voucher={Number(voucher) || 0}
+            discounts={receiptData.discounts}
+            voucher={receiptData.voucher}
           />
 
           <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mt: 2 }}>

@@ -135,6 +135,12 @@ resource "aws_apigatewayv2_route" "get_products" {
   target    = "integrations/${aws_apigatewayv2_integration.products_lambda_integration.id}"
 }
 
+resource "aws_apigatewayv2_route" "replace_all_products" {
+  api_id    = aws_apigatewayv2_api.frontend_api.id
+  route_key = "PUT /products"
+  target    = "integrations/${aws_apigatewayv2_integration.products_lambda_integration.id}"
+}
+
 resource "aws_apigatewayv2_route" "create_product" {
   api_id    = aws_apigatewayv2_api.frontend_api.id
   route_key = "POST /products"
@@ -159,6 +165,12 @@ resource "aws_apigatewayv2_route" "delete_product" {
 resource "aws_apigatewayv2_route" "get_discounts" {
   api_id    = aws_apigatewayv2_api.frontend_api.id
   route_key = "GET /discounts"
+  target    = "integrations/${aws_apigatewayv2_integration.discounts_lambda_integration.id}"
+}
+
+resource "aws_apigatewayv2_route" "replace_all_discounts" {
+  api_id    = aws_apigatewayv2_api.frontend_api.id
+  route_key = "PUT /discounts"
   target    = "integrations/${aws_apigatewayv2_integration.discounts_lambda_integration.id}"
 }
 

@@ -25,7 +25,6 @@ export const NotificationProvider = ({ children }) => {
 
     setNotifications(prev => [...prev, notification]);
 
-    // Auto-remove after duration
     setTimeout(() => {
       removeNotification(id);
     }, duration);
@@ -37,7 +36,6 @@ export const NotificationProvider = ({ children }) => {
     setNotifications(prev => prev.filter(notification => notification.id !== id));
   };
 
-  // Convenience methods
   const showSuccess = (message, duration) => showNotification('success', message, duration);
   const showError = (message, duration) => showNotification('error', message, duration);
   const showWarning = (message, duration) => showNotification('warning', message, duration);
@@ -56,7 +54,6 @@ export const NotificationProvider = ({ children }) => {
     <NotificationContext.Provider value={value}>
       {children}
       
-      {/* Render all notifications */}
       {notifications.map((notification, index) => (
         <Snackbar
           key={notification.id}
@@ -65,7 +62,7 @@ export const NotificationProvider = ({ children }) => {
           onClose={() => removeNotification(notification.id)}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
           sx={{ 
-            mb: `${index * 60}px`, // Stack notifications vertically from bottom
+            mb: `${index * 60}px`,
             zIndex: 9999 + index 
           }}
         >

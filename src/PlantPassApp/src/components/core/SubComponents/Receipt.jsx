@@ -98,7 +98,6 @@ function Receipt({ totals, transactionId, discounts = [], voucher = 0 }) {
           alignItems="center"
           sx={{ marginBottom: "10px" }}
         >
-          {/* Grand Total */}
           <Typography
             variant="body1"
             sx={{ mt: 2, fontWeight: 700 }}

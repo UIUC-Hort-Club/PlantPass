@@ -11,30 +11,33 @@ import {
 } from "@mui/material";
 
 export default function DiscountsTable({
-  discounts,
-  selectedDiscounts,
+  discounts = [],
+  selectedDiscounts = [],
   onDiscountToggle,
   readOnly = false,
 }) {
+  const safeDiscounts = Array.isArray(discounts) ? discounts : [];
+  const safeSelectedDiscounts = Array.isArray(selectedDiscounts) ? selectedDiscounts : [];
+
   const handleIndividualToggle = (discountName) => {
-    if (readOnly) return; // Prevent changes if read-only
+    if (readOnly) return;
     
-    const isSelected = selectedDiscounts.includes(discountName);
+    const isSelected = safeSelectedDiscounts.includes(discountName);
     let newSelection;
     
     if (isSelected) {
-      // Remove from selection
-      newSelection = selectedDiscounts.filter(name => name !== discountName);
+      newSelection = safeSelectedDiscounts.filter(name => name !== discountName);
     } else {
-      // Add to selection
-      newSelection = [...selectedDiscounts, discountName];
+      newSelection = [...safeSelectedDiscounts, discountName];
     }
     
-    onDiscountToggle(newSelection);
+    if (onDiscountToggle) {
+      onDiscountToggle(newSelection);
+    }
   };
 
-  if (discounts.length === 0) {
-    return null; // Don't render if no discounts available
+  if (safeDiscounts.length === 0) {
+    return null;
   }
 
   return (
@@ -58,33 +61,45 @@ export default function DiscountsTable({
             </TableRow>
           </TableHead>
           <TableBody>
-            {discounts.map((discount) => (
-              <TableRow key={discount.name}>
-                <TableCell>
-                  <Checkbox
-                    checked={selectedDiscounts.includes(discount.name)}
-                    onChange={() => handleIndividualToggle(discount.name)}
-                    size="small"
-                    disabled={readOnly}
-                  />
-                </TableCell>
-                <TableCell>{discount.name}</TableCell>
-                <TableCell>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      color: 'success.main',
-                      fontWeight: 'medium'
-                    }}
-                  >
-                    {discount.type === 'dollar' 
-                      ? `-$${discount.value_off.toFixed(2)}`
-                      : `-${discount.percent_off}%`
-                    }
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            ))}
+            {safeDiscounts.map((discount, index) => {
+              if (!discount || !discount.name) {
+                console.warn(`Invalid discount at index ${index}:`, discount);
+                return null;
+              }
+              
+              return (
+                <TableRow key={discount.name}>
+                  <TableCell>
+                    <Checkbox
+                      checked={safeSelectedDiscounts.includes(discount.name)}
+                      onChange={() => handleIndividualToggle(discount.name)}
+                      size="small"
+                      disabled={readOnly}
+                    />
+                  </TableCell>
+                  <TableCell>{discount.name}</TableCell>
+                  <TableCell>
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        color: 'success.main',
+                        fontWeight: 'medium'
+                      }}
+                    >
+                      {(() => {
+                        const value = discount.value || discount.value_off || discount.percent_off || 0;
+                        
+                        if (discount.type === 'dollar') {
+                          return `-$${Number(value).toFixed(2)}`;
+                        } else {
+                          return `-${Number(value)}%`;
+                        }
+                      })()}
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </Box>

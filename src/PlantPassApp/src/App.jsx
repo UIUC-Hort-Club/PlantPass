@@ -19,8 +19,6 @@ import AdminPasswordModal from "./components/AdminConsole/AdminPasswordModal";
 import NavigationMenu from "./components/Navigation/NavigationMenu";
 import { NotificationProvider } from "./contexts/NotificationContext";
 
-const DISCOUNTS_SOURCE = `${import.meta.env.BASE_URL}data/discounts.json`;
-const PRODUCTS_SOURCE = `${import.meta.env.BASE_URL}data/products.json`;
 function TabPanel({ children, value, index }) {
   return (
     <div hidden={value !== index}>
@@ -162,7 +160,7 @@ export default function App() {
       {!isAdmin ? (
         <>
           <TabPanel value={tabIndex} index={0}>
-            <OrderEntry product_listings={PRODUCTS_SOURCE} />
+            <OrderEntry />
           </TabPanel>
 
           <TabPanel value={tabIndex} index={1}>

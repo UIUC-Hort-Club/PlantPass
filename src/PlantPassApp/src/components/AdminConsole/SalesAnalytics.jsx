@@ -229,7 +229,6 @@ function SalesAnalytics() {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      {/* Header with Refresh */}
       <Stack
         direction="row"
         justifyContent="space-between"
@@ -248,7 +247,6 @@ function SalesAnalytics() {
         </Button>
       </Stack>
 
-      {/* Metrics cards */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={2.4}>
           <MetricCard 
@@ -284,7 +282,6 @@ function SalesAnalytics() {
         </Grid>
       </Grid>
 
-      {/* Revenue chart */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom>Revenue Over Time</Typography>
@@ -305,7 +302,6 @@ function SalesAnalytics() {
         </CardContent>
       </Card>
 
-      {/* Orders table */}
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -364,7 +360,6 @@ function SalesAnalytics() {
               Export Data
             </Button>
 
-            {/* Clear records button */}
             <Button
               variant="outlined"
               size="small"
@@ -387,7 +382,6 @@ function SalesAnalytics() {
             </Button>
           </Stack>
 
-          {/* Pagination (right) */}
           <TablePagination
             rowsPerPageOptions={[rowsPerPage]}
             component="div"
