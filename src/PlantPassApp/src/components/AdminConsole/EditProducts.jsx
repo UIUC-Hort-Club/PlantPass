@@ -22,7 +22,7 @@ import { replaceAllProducts } from "../../api/products_interface/replaceAllProdu
 import { useNotification } from "../../contexts/NotificationContext";
 import { generateSKU } from "../../utils/skuGenerator";
 import { validateSKUs } from "../../utils/skuValidator";
-import { formatPriceInput, formatPriceDisplay, handlePriceBlur } from "../../utils/priceFormatter";
+import { formatPriceInput, handlePriceBlur } from "../../utils/priceFormatter";
 import LoadingSpinner from "../common/LoadingSpinner";
 
 export default function ProductTable() {
@@ -180,6 +180,7 @@ export default function ProductTable() {
     }
 
     if (duplicateSKUs.length > 0) {
+      console.log(duplicateSKUs)
       showError("Please fix duplicate SKUs before saving");
       return;
     }

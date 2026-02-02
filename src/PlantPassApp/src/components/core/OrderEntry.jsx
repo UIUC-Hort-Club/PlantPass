@@ -118,9 +118,7 @@ function OrderEntry() {
 
   const loadDiscounts = async () => {
     try {
-      console.log("Loading discounts from database...");
       const discountsData = await getAllDiscounts();
-      console.log("Discounts data received:", discountsData);
       setDiscounts(discountsData);
     } catch (error) {
       console.error("Error loading discounts from database:", error);
@@ -186,7 +184,6 @@ function OrderEntry() {
 
     createTransaction(transaction)
       .then((response) => {
-        console.log("Transaction recorded successfully:", response);
         setCurrentTransactionID(response.purchase_id);
         setTotals({
           subtotal: response.receipt.subtotal,
@@ -246,7 +243,6 @@ function OrderEntry() {
 
     updateTransaction(currentTransactionID, updateData)
       .then((response) => {
-        console.log("Transaction updated successfully:", response);
         setTotals({
           subtotal: response.receipt.subtotal,
           discount: response.receipt.discount,

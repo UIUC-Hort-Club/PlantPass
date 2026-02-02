@@ -24,8 +24,7 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { getAllDiscounts } from "../../api/discounts_interface/getAllDiscounts";
 import { replaceAllDiscounts } from "../../api/discounts_interface/replaceAllDiscounts";
 import { useNotification } from "../../contexts/NotificationContext";
-import { formatPriceInput, formatPriceDisplay, handlePriceBlur } from "../../utils/priceFormatter";
-import { formatPercentInput, formatPercentDisplay, handlePercentBlur } from "../../utils/percentFormatter";
+import { formatPriceInput, handlePriceBlur } from "../../utils/priceFormatter";
 import LoadingSpinner from "../common/LoadingSpinner";
 
 export default function DiscountTable() {
@@ -49,8 +48,8 @@ export default function DiscountTable() {
         id: `${discount.name}-${index}`,
         name: discount.name,
         type: discount.type,
-        percent: discount.type === 'percent' ? discount.percent_off.toString() : '0',
-        value: discount.type === 'dollar' ? discount.value_off.toFixed(2) : '0.00',
+        percent: discount.type === 'percent' ? discount.value.toString() : '0',
+        value: discount.type === 'dollar' ? discount.value.toFixed(2) : '0.00',
         sortOrder: discount.sort_order,
         isNew: false,
         originalName: discount.name,
