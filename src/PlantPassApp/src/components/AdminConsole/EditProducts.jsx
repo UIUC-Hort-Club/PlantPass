@@ -180,7 +180,6 @@ export default function ProductTable() {
     }
 
     if (duplicateSKUs.length > 0) {
-      console.log(duplicateSKUs)
       showError("Please fix duplicate SKUs before saving");
       return;
     }
