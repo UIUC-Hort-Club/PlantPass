@@ -3,7 +3,6 @@ import {
   Box,
   AppBar,
   Toolbar,
-  Typography,
   IconButton,
   useTheme,
   useMediaQuery,
@@ -11,7 +10,6 @@ import {
 import MenuIcon from "@mui/icons-material/Menu";
 import SupervisorAccountIcon from "@mui/icons-material/SupervisorAccount";
 import PublicIcon from "@mui/icons-material/Public";
-import { authenticateAdmin } from "./api/authentication/passwordAuthentication";
 import OrderEntry from "./components/core/OrderEntry";
 import OrderLookup from "./components/core/OrderLookup";
 import AdminConsole from "./components/AdminConsole/AdminConsole";
@@ -32,7 +30,7 @@ export default function App() {
      Theme / responsiveness
      ========================= */
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  useMediaQuery(theme.breakpoints.down("sm"));
 
   /* =========================
      Navigation & UI state
@@ -69,7 +67,7 @@ export default function App() {
     setAdminModalOpen(true);
   };
 
-  const handleAdminPasswordSubmit = (password) => {
+  const handleAdminPasswordSubmit = (_password) => {
     setIsAdmin(true);
     setAdminModalOpen(false);
     setAdminError("");
@@ -106,84 +104,84 @@ export default function App() {
           py: 2,
         }}
       >
-      {/* =========================
+        {/* =========================
           App header
          ========================= */}
-      <AppBar position="static" elevation={0} sx={{ mb: 2 }}>
-        <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-          {/* Logo + title */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Box
-              component="img"
-              src="plantpass_logo_transp.png"
-              alt="PlantPass Logo"
-              sx={{
-                height: "100%",
-                maxHeight: 56,
-                width: "auto",
-                objectFit: "contain",
-              }}
+        <AppBar position="static" elevation={0} sx={{ mb: 2 }}>
+          <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+            {/* Logo + title */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Box
+                component="img"
+                src="plantpass_logo_transp.png"
+                alt="PlantPass Logo"
+                sx={{
+                  height: "100%",
+                  maxHeight: 56,
+                  width: "auto",
+                  objectFit: "contain",
+                }}
+              />
+            </Box>
+
+            {/* Header actions */}
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              {!isAdmin ? (
+                <IconButton color="inherit" onClick={handleAdminClick}>
+                  <SupervisorAccountIcon />
+                </IconButton>
+              ) : (
+                <IconButton color="inherit" onClick={handleHomeClick}>
+                  <PublicIcon />
+                </IconButton>
+              )}
+
+              <IconButton edge="end" color="inherit" onClick={handleMenuOpen}>
+                <MenuIcon />
+              </IconButton>
+            </Box>
+
+            {/* Navigation menu */}
+            <NavigationMenu
+              anchorEl={menuAnchorEl}
+              open={Boolean(menuAnchorEl)}
+              onClose={handleMenuClose}
+              isAdmin={isAdmin}
+              onNavigate={handleMenuItemClick}
             />
-          </Box>
+          </Toolbar>
+        </AppBar>
 
-          {/* Header actions */}
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            {!isAdmin ? (
-              <IconButton color="inherit" onClick={handleAdminClick}>
-                <SupervisorAccountIcon />
-              </IconButton>
-            ) : (
-              <IconButton color="inherit" onClick={handleHomeClick}>
-                <PublicIcon />
-              </IconButton>
-            )}
-
-            <IconButton edge="end" color="inherit" onClick={handleMenuOpen}>
-              <MenuIcon />
-            </IconButton>
-          </Box>
-
-          {/* Navigation menu */}
-          <NavigationMenu
-            anchorEl={menuAnchorEl}
-            open={Boolean(menuAnchorEl)}
-            onClose={handleMenuClose}
-            isAdmin={isAdmin}
-            onNavigate={handleMenuItemClick}
-          />
-        </Toolbar>
-      </AppBar>
-
-      {/* =========================
+        {/* =========================
           Main content
          ========================= */}
-      {!isAdmin ? (
-        <>
-          <TabPanel value={tabIndex} index={0}>
-            <OrderEntry />
-          </TabPanel>
+        {!isAdmin ? (
+          <>
+            <TabPanel value={tabIndex} index={0}>
+              <OrderEntry />
+            </TabPanel>
 
-          <TabPanel value={tabIndex} index={1}>
-            <OrderLookup />
-          </TabPanel>
-        </>
-      ) : (
-        <AdminConsole tabIndex={adminTabIndex} />
-      )}
+            <TabPanel value={tabIndex} index={1}>
+              <OrderLookup />
+            </TabPanel>
+          </>
+        ) : (
+          <AdminConsole tabIndex={adminTabIndex} />
+        )}
 
-      {/* =========================
+        {/* =========================
           Admin password modal
          ========================= */}
-      <AdminPasswordModal
-        open={adminModalOpen}
-        onClose={() => {
-          setAdminModalOpen(false);
-          setAdminError("");
-        }}
-        onSubmit={handleAdminPasswordSubmit}
-        error={adminError}
-      />
-    </Box>
+        <AdminPasswordModal
+          open={adminModalOpen}
+          onClose={() => {
+            setAdminModalOpen(false);
+            setAdminError("");
+          }}
+          onSubmit={handleAdminPasswordSubmit}
+          error={adminError}
+        />
+      </Box>
     </NotificationProvider>
   );
 }

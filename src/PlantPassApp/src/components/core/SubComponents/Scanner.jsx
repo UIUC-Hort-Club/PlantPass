@@ -3,15 +3,12 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
   Button,
   Typography,
   Box,
   Stack,
 } from "@mui/material";
 import { Html5Qrcode } from "html5-qrcode";
-import SearchOffIcon from "@mui/icons-material/SearchOff";
-import SavedSearchIcon from "@mui/icons-material/SavedSearch";
 import { useNotification } from "../../../contexts/NotificationContext";
 
 export default function Scanner({
@@ -59,7 +56,6 @@ export default function Scanner({
         if (product) {
           setMatchedProduct(product);
 
-          // Only show Found notification if SKU hasn't been found yet
           if (!foundSKUs.has(product.SKU)) {
             showSuccess(`Found (${product.SKU}) ${product.Name}`);
             setFoundSKUs((prev) => new Set(prev).add(product.SKU));
