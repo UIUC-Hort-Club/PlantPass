@@ -62,7 +62,7 @@ export default function ConfirmationDialog({
         {requireTextConfirmation && (
           <Box sx={{ mt: 2 }}>
             <Typography variant="body2" sx={{ mb: 1 }}>
-              Type "{confirmationText}" to confirm:
+              Type &quot;{confirmationText}&quot; to confirm:
             </Typography>
             <TextField
               fullWidth

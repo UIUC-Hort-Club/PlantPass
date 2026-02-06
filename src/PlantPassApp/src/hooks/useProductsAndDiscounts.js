@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getAllProducts } from '../api/products_interface/getAllProducts';
 import { getAllDiscounts } from '../api/discounts_interface/getAllDiscounts';
-import { transformProductsData, initializeProductQuantities } from '../utils/productTransformer';
+import { transformProductsData } from '../utils/productTransformer';
 
 export const useProductsAndDiscounts = () => {
   const [products, setProducts] = useState([]);

@@ -20,9 +20,9 @@ export default function ItemsTable({
 }) {
   return (
     <Box sx={{ maxHeight: 800, overflowY: "auto" }}>
-        <Typography variant="h6" sx={{ mb: 1 }}>
+      <Typography variant="h6" sx={{ mb: 1 }}>
           Product Listings {readOnly && "(View Only)"}
-        </Typography>
+      </Typography>
       <Table size="small">
         <TableHead>
           <TableRow>

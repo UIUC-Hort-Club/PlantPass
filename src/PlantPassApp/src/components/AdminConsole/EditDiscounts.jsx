@@ -224,7 +224,7 @@ export default function DiscountTable() {
   return (
     <Paper sx={{ p: 2 }}>
       <Stack
-      spacing={1}
+        spacing={1}
         sx={{ mb: 3 }}
       >
         <Typography variant="h6">Edit Discounts</Typography>
