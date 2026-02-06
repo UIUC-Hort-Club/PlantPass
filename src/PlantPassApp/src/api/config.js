@@ -1,14 +1,14 @@
 // config.js
 
 /**
- * API Gateway base URL from environment variable
- * Set API_ENDPOINT in .env for local development
- * Set as GitHub secret for CI/CD
+ * API Gateway base URL from runtime config
+ * In production: injected via config.js at deploy time
+ * In development: falls back to VITE_API_ENDPOINT from .env
  */
-const apiEndpoint = import.meta.env.API_ENDPOINT;
+const apiEndpoint = window.APP_CONFIG?.API_ENDPOINT || import.meta.env.VITE_API_ENDPOINT;
 
 if (!apiEndpoint) {
-  console.error("API_ENDPOINT environment variable is not set");
+  console.error("API_ENDPOINT is not configured. Set VITE_API_ENDPOINT in .env for local development.");
 }
 
 export const API_URL = apiEndpoint;

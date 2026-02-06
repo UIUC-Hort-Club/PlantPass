@@ -132,12 +132,14 @@ jobs:
           node-version: 20
 
       - name: Build Frontend
-        env:
-          API_ENDPOINT: ${{ secrets.API_ENDPOINT }}
         run: |
           cd src/PlantPassApp
           npm install
           npm run build
+
+      - name: Create runtime config
+        run: |
+          echo "window.APP_CONFIG = { API_ENDPOINT: '${{ secrets.API_ENDPOINT }}' };" > ./src/PlantPassApp/dist/config.js
 
       - name: Deploy frontend to S3
         run: |
