@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Container,
   Button,
@@ -6,7 +6,6 @@ import {
   Box,
   Alert,
   TextField,
-  Typography,
   FormControl,
   InputLabel,
   Select,
@@ -22,7 +21,7 @@ import { useNotification } from "../../contexts/NotificationContext";
 import { formatOrderId } from "../../utils/orderIdFormatter";
 
 function OrderLookup() {
-  const { showSuccess, showError } = useNotification();
+  const { showSuccess } = useNotification();
   
   const [orderId, setOrderId] = useState("");
   const [products, setProducts] = useState([]);
@@ -30,6 +29,7 @@ function OrderLookup() {
   const [quantities, setQuantities] = useState({});
   const [subtotals, setSubtotals] = useState({});
   const [selectedDiscounts, setSelectedDiscounts] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [totals, setTotals] = useState({
     subtotal: 0,
     discount: 0,

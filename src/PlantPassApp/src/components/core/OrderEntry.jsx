@@ -31,6 +31,7 @@ function OrderEntry() {
   const [quantities, setQuantities] = useState({});
   const [subtotals, setSubtotals] = useState({});
   const [selectedDiscounts, setSelectedDiscounts] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [totals, setTotals] = useState({
     subtotal: 0,
     discount: 0,
