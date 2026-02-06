@@ -43,3 +43,6 @@ test_env
 # Python
 __pycache__
 *pytest*
+
+# Env files
+.env

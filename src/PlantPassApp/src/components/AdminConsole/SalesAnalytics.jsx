@@ -31,6 +31,7 @@ import {
 } from "chart.js";
 import { fetchSalesAnalytics } from "../../api/transaction_interface/fetchSalesAnalytics";
 import { clearAllTransactions } from "../../api/transaction_interface/clearAllTransactions";
+import { exportData as exportDataAPI } from "../../api/transaction_interface/exportData";
 import { useNotification } from "../../contexts/NotificationContext";
 import LoadingSpinner from "../common/LoadingSpinner";
 import MetricCard from "./MetricCard";
@@ -107,13 +108,9 @@ function SalesAnalytics() {
 
   const exportData = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://y5kg6dk6p3.execute-api.us-east-1.amazonaws.com'}/transactions/export-data`);
-      if (!response.ok) throw new Error('Export failed');
-      
-      const data = await response.json();
+      const data = await exportDataAPI();
       const filename = `sales-data-${new Date().toISOString().split('T')[0]}.json`;
-      downloadJSON(data.export_data, filename);
-      
+      downloadJSON(data, filename);
       showSuccess("Data exported successfully");
     } catch (error) {
       console.error("Error exporting data:", error);

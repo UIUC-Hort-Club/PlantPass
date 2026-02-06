@@ -1,8 +1,14 @@
 // config.js
 
 /**
- * Define the API Gateway base URL here
- * 
- * Probobly need to stuff this in github secrets and put it in a local env file for local teesting
+ * API Gateway base URL from environment variable
+ * Set API_ENDPOINT in .env for local development
+ * Set as GitHub secret for CI/CD
  */
-export const API_URL = "https://y5kg6dk6p3.execute-api.us-east-1.amazonaws.com";
+const apiEndpoint = import.meta.env.API_ENDPOINT;
+
+if (!apiEndpoint) {
+  console.error("API_ENDPOINT environment variable is not set");
+}
+
+export const API_URL = apiEndpoint;
