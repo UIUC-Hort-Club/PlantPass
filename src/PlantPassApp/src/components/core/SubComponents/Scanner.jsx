@@ -7,6 +7,7 @@ import {
   Button,
   Typography,
   Box,
+  Stack,
 } from "@mui/material";
 import { Html5Qrcode } from "html5-qrcode";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
@@ -30,9 +31,6 @@ export default function Scanner({
   const scannerContainerRef = useRef(null);
   const scannerInstanceRef = useRef(null);
 
-  // ----------------------------------------------------
-  // Load camera list
-  // ----------------------------------------------------
   useEffect(() => {
     if (!opened) return;
     Html5Qrcode.getCameras()
@@ -46,69 +44,78 @@ export default function Scanner({
       .catch((err) => console.error("Camera fetch error:", err));
   }, [opened]);
 
-  // ----------------------------------------------------
-  // Start scanner
-  // ----------------------------------------------------
   useEffect(() => {
     if (!opened || !selectedCamera || !scannerContainerRef.current) return;
 
     const containerId = "scanner-container";
     const qr = new Html5Qrcode(containerId);
+    let isActive = true;
 
     qr.start(
       { deviceId: { exact: selectedCamera } },
       { fps: 10, qrbox: 250 },
       (decodedText) => {
+        if (!isActive) return;
+
         const product = products.find((p) => p.SKU === decodedText);
 
         if (product) {
           setMatchedProduct(product);
 
-          // Only show Found notification if SKU hasn't been found yet
-          if (!foundSKUs.has(product.SKU)) {
-            showSuccess(`Found (${product.SKU}) ${product.Name}`);
-            setFoundSKUs((prev) => new Set(prev).add(product.SKU));
-          }
+          setFoundSKUs((prev) => {
+            if (!prev.has(product.SKU)) {
+              showSuccess(`Found (${product.SKU}) ${product.Name}`);
+              return new Set(prev).add(product.SKU);
+            }
+            return prev;
+          });
         } else {
           setMatchedProduct(null);
-          // Show Not Found message always
           showWarning(`SKU: ${decodedText} Not Found`);
         }
       },
-      (err) => console.log("scan error", err),
+      (err) => {
+        if (isActive) {
+          console.log("scan error", err);
+        }
+      },
     ).catch((err) => console.error("start error", err));
 
     scannerInstanceRef.current = qr;
 
     return () => {
-      scannerInstanceRef.current
-        ?.stop()
-        .catch(() => {})
-        .finally(() => {
-          scannerInstanceRef.current?.clear();
-          scannerInstanceRef.current = null;
-        });
+      isActive = false;
+      if (scannerInstanceRef.current) {
+        scannerInstanceRef.current
+          .stop()
+          .catch(() => {})
+          .finally(() => {
+            scannerInstanceRef.current?.clear();
+            scannerInstanceRef.current = null;
+          });
+      }
     };
-  }, [opened, selectedCamera, products, foundSKUs, showSuccess, showWarning]);
+  }, [opened, selectedCamera, products, showSuccess, showWarning]);
 
-  // Reset matched product when dialog opens
   useEffect(() => {
     if (opened) {
       setMatchedProduct(null);
-      setFoundSKUs(new Set()); // Reset found SKUs when scanner opens
+      setFoundSKUs(new Set());
+    } else {
+      setMatchedProduct(null);
+      setFoundSKUs(new Set());
+      setCameras([]);
+      setSelectedCamera(null);
     }
   }, [opened]);
 
   const handleAddItem = () => {
     if (!matchedProduct) return;
 
-    // Compute what the new quantity will be
     const newQuantity = (getQuantity(matchedProduct.SKU) || 0) + 1;
 
-    // Call parent callback to update state
     onScan(matchedProduct);
 
-    // Show notification with the accurate quantity
     showInfo(`Added Item: ${matchedProduct.Name} (Qty: ${newQuantity})`);
   };
 
@@ -130,11 +137,21 @@ export default function Scanner({
           }}
         >
           <Typography variant="h6">Scan Item</Typography>
-          {!matchedProduct ? (
-            <SearchOffIcon sx={{ color: "text.disabled", fontSize: 28 }} />
-          ) : (
-            <SavedSearchIcon sx={{ color: "green", fontSize: 28 }} />
-          )}
+          <Stack direction="row" spacing={1}>
+            {matchedProduct && (
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleAddItem}
+                size="small"
+              >
+                Add Item
+              </Button>
+            )}
+            <Button onClick={onClose} color="secondary" size="small">
+              Close
+            </Button>            
+          </Stack>
         </Box>
       </DialogTitle>
 
@@ -183,22 +200,6 @@ export default function Scanner({
           </Box>
         )}
       </DialogContent>
-
-      <DialogActions>
-        {matchedProduct && (
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleAddItem}
-            size="small"
-          >
-            Add Item
-          </Button>
-        )}
-        <Button onClick={onClose} color="secondary" size="small">
-          Close
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 }
