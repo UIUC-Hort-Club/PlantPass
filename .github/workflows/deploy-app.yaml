@@ -132,6 +132,8 @@ jobs:
           node-version: 20
 
       - name: Build Frontend
+        env:
+          API_ENDPOINT: ${{ secrets.API_ENDPOINT }}
         run: |
           cd src/PlantPassApp
           npm install
