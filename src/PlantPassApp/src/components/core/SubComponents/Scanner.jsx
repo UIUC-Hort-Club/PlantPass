@@ -49,63 +49,46 @@ export default function Scanner({
 
     const containerId = "scanner-container";
     const qr = new Html5Qrcode(containerId);
-    let isActive = true;
 
     qr.start(
       { deviceId: { exact: selectedCamera } },
       { fps: 10, qrbox: 250 },
       (decodedText) => {
-        if (!isActive) return;
-
         const product = products.find((p) => p.SKU === decodedText);
 
         if (product) {
           setMatchedProduct(product);
 
-          setFoundSKUs((prev) => {
-            if (!prev.has(product.SKU)) {
-              showSuccess(`Found (${product.SKU}) ${product.Name}`);
-              return new Set(prev).add(product.SKU);
-            }
-            return prev;
-          });
+          // Only show Found notification if SKU hasn't been found yet
+          if (!foundSKUs.has(product.SKU)) {
+            showSuccess(`Found (${product.SKU}) ${product.Name}`);
+            setFoundSKUs((prev) => new Set(prev).add(product.SKU));
+          }
         } else {
           setMatchedProduct(null);
           showWarning(`SKU: ${decodedText} Not Found`);
         }
       },
-      (err) => {
-        if (isActive) {
-          console.log("scan error", err);
-        }
-      },
+      (err) => console.log("scan error", err),
     ).catch((err) => console.error("start error", err));
 
     scannerInstanceRef.current = qr;
 
     return () => {
-      isActive = false;
-      if (scannerInstanceRef.current) {
-        scannerInstanceRef.current
-          .stop()
-          .catch(() => {})
-          .finally(() => {
-            scannerInstanceRef.current?.clear();
-            scannerInstanceRef.current = null;
-          });
-      }
+      scannerInstanceRef.current
+        ?.stop()
+        .catch(() => {})
+        .finally(() => {
+          scannerInstanceRef.current?.clear();
+          scannerInstanceRef.current = null;
+        });
     };
-  }, [opened, selectedCamera, products, showSuccess, showWarning]);
+  }, [opened, selectedCamera, products, foundSKUs, showSuccess, showWarning]);
 
   useEffect(() => {
     if (opened) {
       setMatchedProduct(null);
       setFoundSKUs(new Set());
-    } else {
-      setMatchedProduct(null);
-      setFoundSKUs(new Set());
-      setCameras([]);
-      setSelectedCamera(null);
     }
   }, [opened]);
 
