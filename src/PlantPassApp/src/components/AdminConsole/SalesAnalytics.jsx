@@ -46,7 +46,7 @@ import { clearAllTransactions } from "../../api/transaction_interface/clearAllTr
 import { exportData as exportDataAPI } from "../../api/transaction_interface/exportData";
 import { useNotification } from "../../contexts/NotificationContext";
 import { useWebSocket } from "../../hooks/useWebSocket";
-import { getWebSocketUrl } from "../../api/websocket/config";
+import { WEBSOCKET_URL } from "../../api/websocket/config";
 import LoadingSpinner from "../common/LoadingSpinner";
 import MetricCard from "./MetricCard";
 import ConfirmationDialog from "../common/ConfirmationDialog";
@@ -87,8 +87,6 @@ function SalesAnalytics() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [showLive, setShowLive] = useState(false);
   const disconnectTimeoutRef = useRef(null);
-
-  const websocketUrl = getWebSocketUrl();
   
   const handleWebSocketMessage = (message) => {
     console.log('Received WebSocket update:', message);
@@ -100,9 +98,9 @@ function SalesAnalytics() {
   };
 
   const { isConnected } = useWebSocket(
-    websocketUrl,
+    WEBSOCKET_URL,
     handleWebSocketMessage,
-    { enabled: !!websocketUrl }
+    { enabled: !!WEBSOCKET_URL }
   );
 
   useEffect(() => {

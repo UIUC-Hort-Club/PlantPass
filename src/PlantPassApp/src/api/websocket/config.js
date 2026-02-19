@@ -1,13 +1,12 @@
 /**
- * WebSocket configuration
- * The WebSocket URL should be set in the public/config.js file
+ * WebSocket URL from runtime config
+ * In production: injected via config.js at deploy time
+ * In development: falls back to WEBSOCKET_URL from .env
  */
+const websocketUrl = window.APP_CONFIG?.WEBSOCKET_URL || import.meta.env.WEBSOCKET_URL;
 
-export function getWebSocketUrl() {
-  if (window.APP_CONFIG && window.APP_CONFIG.WEBSOCKET_URL) {
-    return window.APP_CONFIG.WEBSOCKET_URL;
-  }
-  
-  console.warn('WebSocket URL not configured in APP_CONFIG');
-  return null;
+if (!websocketUrl) {
+  console.warn('WEBSOCKET_URL is not configured. Set WEBSOCKET_URL in .env for local development.');
 }
+
+export const WEBSOCKET_URL = websocketUrl;
