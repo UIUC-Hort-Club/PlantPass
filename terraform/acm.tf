@@ -1,47 +1,45 @@
-# # ---------------------------------------------------------
-# # ACM Certificate (must be in us-east-1 for CloudFront)
-# # ---------------------------------------------------------
+# ---------------------------------------------------------
+# ACM Certificate (must be in us-east-1 for CloudFront)
+# ---------------------------------------------------------
 
-# provider "aws" {
-#   alias  = "us_east_1"
-#   region = "us-east-1"
-# }
+provider "aws" {
+  alias  = "us_east_1"
+  region = "us-east-1"
+}
 
-# resource "aws_acm_certificate" "cert" {
-#   provider          = aws.us_east_1
-#   domain_name       = var.domain_name
-#   validation_method = "DNS"
+resource "aws_acm_certificate" "cert" {
+  provider          = aws.us_east_1
+  domain_name       = var.domain_name
+  validation_method = "DNS"
 
-#   subject_alternative_names = var.alternate_names
+  subject_alternative_names = var.alternate_names
 
-#   tags = {
-#     application = "plantpass"
-#   }
-# }
+  tags = {
+    application = "plantpass"
+  }
 
-# # ---------------------------------------------------------
-# # DNS Validation Records (created in your Route53 zone)
-# # ---------------------------------------------------------
+  lifecycle {
+    create_before_destroy = true
+  }
+}
 
-# resource "aws_route53_record" "cert_validation" {
-#   for_each = {
-#     for dvo in aws_acm_certificate.cert.domain_validation_options :
-#     dvo.domain_name => {
-#       name   = dvo.resource_record_name
-#       record = dvo.resource_record_value
-#       type   = dvo.resource_record_type
-#     }
-#   }
+# ---------------------------------------------------------
+# DNS Validation Records (must be created manually in Cloudflare)
+# ---------------------------------------------------------
 
-#   zone_id = aws_route53_zone.main.zone_id
-#   name    = each.value.name
-#   type    = each.value.type
-#   ttl     = 60
-#   records = [each.value.record]
-# }
+# Output the validation records so you can add them to Cloudflare
+output "acm_validation_records" {
+  value = {
+    for dvo in aws_acm_certificate.cert.domain_validation_options :
+    dvo.domain_name => {
+      name  = dvo.resource_record_name
+      type  = dvo.resource_record_type
+      value = dvo.resource_record_value
+    }
+  }
+  description = "Add these CNAME records to Cloudflare DNS for certificate validation"
+}
 
-# resource "aws_acm_certificate_validation" "cert" {
-#   provider                = aws.us_east_1
-#   certificate_arn         = aws_acm_certificate.cert.arn
-#   validation_record_fqdns = [for record in aws_route53_record.cert_validation : record.fqdn]
-# }
+# Note: Certificate validation will complete automatically once you add
+# the CNAME records to Cloudflare. The certificate will show as "Issued"
+# in the AWS ACM console when validation is complete.
