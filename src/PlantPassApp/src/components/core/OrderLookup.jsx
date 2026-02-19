@@ -19,6 +19,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import ItemsTable from "./SubComponents/ItemsTable";
 import DiscountsTable from "./SubComponents/DiscountsTable";
 import Receipt from "./SubComponents/Receipt";
+import ConfirmationDialog from "../common/ConfirmationDialog";
 import { readTransaction } from "../../api/transaction_interface/readTransaction";
 import { getRecentUnpaidTransactions } from "../../api/transaction_interface/getRecentUnpaidTransactions";
 import { updateTransaction } from "../../api/transaction_interface/updateTransaction";
@@ -58,6 +59,9 @@ function OrderLookup() {
   });
   const [showSettings, setShowSettings] = useState(false);
   const [tempLimit, setTempLimit] = useState(recentOrdersLimit);
+  
+  // Confirmation dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // Fetch recent unpaid orders on mount and when limit changes
   useEffect(() => {
@@ -74,7 +78,7 @@ function OrderLookup() {
   };
 
   const handleLimitChange = () => {
-    const newLimit = Math.max(1, Math.min(20, tempLimit)); // Clamp between 1 and 20
+    const newLimit = Math.max(0, Math.min(20, tempLimit === '' ? 0 : tempLimit)); // Clamp between 0 and 20
     setRecentOrdersLimit(newLimit);
     sessionStorage.setItem("recentOrdersLimit", newLimit.toString());
     setShowSettings(false);
@@ -100,6 +104,8 @@ function OrderLookup() {
       grandTotal: 0,
     });
     setReceiptData(null);
+    setShowRecentOrders(true);
+    fetchRecentOrders();
   };
 
   const handleOrderIdChange = (e) => {
@@ -309,10 +315,6 @@ function OrderLookup() {
       return;
     }
 
-    if (!window.confirm("Are you sure you want to delete this transaction? This action cannot be undone.")) {
-      return;
-    }
-
     try {
       await deleteTransaction(currentTransactionID);
       resetToInitialState();
@@ -401,9 +403,16 @@ function OrderLookup() {
           }}
         >
           <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-            <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>
-              Recent Unpaid Orders
-            </Typography>
+            <Box>
+              <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>
+                Recent Unpaid Orders
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {recentOrdersLimit === 0 
+                  ? 'Display disabled. Select gear icon to configure' 
+                  : `Showing ${recentOrdersLimit} most recent unpaid orders. Select gear icon to configure`}
+              </Typography>
+            </Box>
             <Tooltip title="Configure display count">
               <IconButton 
                 size="small" 
@@ -418,11 +427,28 @@ function OrderLookup() {
             <Box sx={{ mb: 2, display: 'flex', gap: 1, alignItems: 'center' }}>
               <TextField
                 label="Show orders"
-                type="number"
+                type="text"
                 size="small"
                 value={tempLimit}
-                onChange={(e) => setTempLimit(parseInt(e.target.value) || 1)}
-                inputProps={{ min: 1, max: 20 }}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Allow empty string or numbers only
+                  if (value === '' || /^\d+$/.test(value)) {
+                    setTempLimit(value === '' ? '' : parseInt(value, 10));
+                  }
+                }}
+                onBlur={(e) => {
+                  // If empty on blur, set to 0
+                  if (e.target.value === '') {
+                    setTempLimit(0);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleLimitChange();
+                  }
+                }}
+                inputProps={{ min: 0, max: 20 }}
                 sx={{ width: 120 }}
               />
               <Button 
@@ -435,7 +461,7 @@ function OrderLookup() {
             </Box>
           )}
 
-          {recentOrders.length === 0 ? (
+          {recentOrdersLimit === 0 ? null : recentOrders.length === 0 ? (
             <Typography variant="body2" color="text.secondary">
               No unpaid orders found
             </Typography>
@@ -533,7 +559,7 @@ function OrderLookup() {
                   variant="contained"
                   color="error"
                   size="small"
-                  onClick={handleDelete}
+                  onClick={() => setDeleteDialogOpen(true)}
                 >
                   Delete Order
                 </Button>
@@ -599,6 +625,17 @@ function OrderLookup() {
       )}
 
       <div style={{ height: "1rem" }} />
+
+      <ConfirmationDialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={handleDelete}
+        title="Delete Transaction"
+        message={`Are you sure you want to delete transaction ${currentTransactionID}? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        severity="error"
+      />
     </Container>
   );
 }
