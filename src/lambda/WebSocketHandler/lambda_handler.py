@@ -8,7 +8,13 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 dynamodb = boto3.resource('dynamodb')
-connections_table = dynamodb.Table(os.environ['CONNECTIONS_TABLE'])
+
+def get_connections_table():
+    """Get the connections table, with error handling."""
+    table_name = os.environ.get('CONNECTIONS_TABLE')
+    if not table_name:
+        raise ValueError("CONNECTIONS_TABLE environment variable not set")
+    return dynamodb.Table(table_name)
 
 def lambda_handler(event, context):
     """
@@ -40,6 +46,8 @@ def handle_connect(connection_id):
     Store connection ID in DynamoDB when client connects.
     """
     try:
+        connections_table = get_connections_table()
+        
         # TTL set to 2 hours from now (in case disconnect doesn't fire)
         ttl = int((datetime.now() + timedelta(hours=2)).timestamp())
         
@@ -64,6 +72,8 @@ def handle_disconnect(connection_id):
     Remove connection ID from DynamoDB when client disconnects.
     """
     try:
+        connections_table = get_connections_table()
+        
         connections_table.delete_item(
             Key={'connectionId': connection_id}
         )
