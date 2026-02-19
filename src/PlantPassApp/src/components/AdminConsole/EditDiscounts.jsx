@@ -231,6 +231,8 @@ export default function DiscountTable() {
         <Typography variant="body1">
           Discounts will always be computed as applied to the subtotal. For instance, if the subtotal is
           $1000 with a $50 voucher, 10% off discount, and 100 dollar off discount, it will be as follows:
+        </Typography>
+        <Typography variant="body1" sx={{ fontFamily: 'monospace', mt: 1 }}>
           1000 - (50) - (1000 * 0.10) - (100) = $750
         </Typography>
       </Stack>
