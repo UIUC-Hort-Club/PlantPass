@@ -53,6 +53,6 @@ variable "reset_token_hash" {
 
 variable "enable_custom_domain" {
   type        = bool
-  default     = false
+  default     = true
   description = "Set to true after ACM certificate is validated in Cloudflare"
 }
