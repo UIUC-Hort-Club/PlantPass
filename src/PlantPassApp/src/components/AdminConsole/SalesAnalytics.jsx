@@ -45,6 +45,7 @@ import { clearAllTransactions } from "../../api/transaction_interface/clearAllTr
 import { exportData as exportDataAPI } from "../../api/transaction_interface/exportData";
 import { useNotification } from "../../contexts/NotificationContext";
 import { useWebSocket } from "../../hooks/useWebSocket";
+import { getWebSocketUrl } from "../../api/websocket/config";
 import LoadingSpinner from "../common/LoadingSpinner";
 import MetricCard from "./MetricCard";
 import ConfirmationDialog from "../common/ConfirmationDialog";
@@ -82,19 +83,42 @@ function SalesAnalytics() {
   const rowsPerPage = 20;
   const [orderBy, setOrderBy] = useState('timestamp');
   const [order, setOrder] = useState('desc');
+  const [lastUpdated, setLastUpdated] = useState(null);
 
-  const loadAnalytics = async (isRefresh = false) => {
+  const websocketUrl = getWebSocketUrl();
+  
+  const handleWebSocketMessage = (message) => {
+    console.log('Received WebSocket update:', message);
+    
+    if (message.type === 'transaction_update') {
+      loadAnalytics(true, true);
+      setLastUpdated(new Date());
+    }
+  };
+
+  const { isConnected } = useWebSocket(
+    websocketUrl,
+    handleWebSocketMessage,
+    { enabled: !!websocketUrl }
+  );
+
+  const loadAnalytics = async (isRefresh = false, isSilent = false) => {
     try {
-      if (isRefresh) {
+      if (isRefresh && !isSilent) {
         setRefreshing(true);
-      } else {
+      } else if (!isRefresh) {
         setLoading(true);
       }
       setError(null);
       const data = await fetchSalesAnalytics();
       
       setAnalytics(data);
-      if (isRefresh) {
+      
+      if (!lastUpdated) {
+        setLastUpdated(new Date());
+      }
+      
+      if (isRefresh && !isSilent) {
         showSuccess("Analytics refreshed successfully");
       }
     } catch (error) {
@@ -110,7 +134,9 @@ function SalesAnalytics() {
       }
       
       setError(errorMessage);
-      showError(errorMessage);
+      if (!isSilent) {
+        showError(errorMessage);
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -306,15 +332,21 @@ function SalesAnalytics() {
         sx={{ mb: 3 }}
       >
         <Typography variant="h6">Sales Flow Console</Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          size="small"
-          onClick={() => loadAnalytics(true)}
-          disabled={refreshing}
-        >
-          {refreshing ? "Refreshing..." : "Refresh"}
-        </Button>
+        {isConnected && (
+          <Chip
+            label="Live"
+            size="small"
+            color="success"
+            variant="outlined"
+            sx={{
+              animation: 'slowBlink 3s ease-in-out infinite',
+              '@keyframes slowBlink': {
+                '0%, 100%': { opacity: 1 },
+                '50%': { opacity: 0.4 }
+              }
+            }}
+          />
+        )}
       </Stack>
 
       <Grid container spacing={2} sx={{ mb: 3 }}>
