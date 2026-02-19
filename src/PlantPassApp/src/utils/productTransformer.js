@@ -2,7 +2,7 @@ export const transformProductsData = (productsData) => {
   return productsData.map(product => ({
     SKU: product.SKU,
     Name: product.item,
-    Price: product.price_ea
+    Price: Number(product.price_ea) || 0
   }));
 };
 

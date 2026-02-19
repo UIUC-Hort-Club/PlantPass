@@ -55,7 +55,7 @@ export default function ItemsTable({
               <TableRow key={item.SKU}>
                 <TableCell>{item.Name}</TableCell>
                 <TableCell>
-                  ${item.Price.toFixed(2)}
+                  ${(item.Price || 0).toFixed(2)}
                 </TableCell>
                 <TableCell>
                   <TextField
