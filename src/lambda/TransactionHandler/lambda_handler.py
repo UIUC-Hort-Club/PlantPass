@@ -71,9 +71,26 @@ def lambda_handler(event, context):
             return response(200, analytics)
 
         elif route_key == "GET /transactions/export-data":
-            export_data = export_transaction_data()
-            logger.info(f"Export data retrieved: {len(export_data)} records")
-            return response(200, {"export_data": export_data})
+            transactions = export_transaction_data()
+            csv_export = generate_csv_export(transactions)
+            
+            logger.info(f"Generated CSV export: {csv_export['filename']}")
+            
+            # Return base64-encoded zip file
+            return {
+                "statusCode": 200,
+                "headers": {
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+                    "Access-Control-Allow-Headers": "Content-Type",
+                    "Content-Type": "application/json"
+                },
+                "body": json.dumps({
+                    "filename": csv_export['filename'],
+                    "content": csv_export['content'],
+                    "content_type": csv_export['content_type']
+                })
+            }
 
         elif route_key == "DELETE /transactions/clear-all":
             cleared_count = clear_all_transactions()
