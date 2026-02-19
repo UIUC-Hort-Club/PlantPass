@@ -39,6 +39,7 @@ import {
   Title,
   Tooltip,
   Legend,
+  Filler,
 } from "chart.js";
 import { fetchSalesAnalytics } from "../../api/transaction_interface/fetchSalesAnalytics";
 import { clearAllTransactions } from "../../api/transaction_interface/clearAllTransactions";
@@ -59,6 +60,7 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
+  Filler
 );
 
 function SalesAnalytics() {
