@@ -96,12 +96,13 @@ export default function App() {
         sx={{
           minHeight: "100vh",
           width: "100%",
-          maxWidth: 800,
+          maxWidth: { xs: '100%', sm: 600, md: 800, lg: 1000 }, // Responsive max width
           mx: "auto",
           display: "flex",
           flexDirection: "column",
           backgroundColor: "white",
-          py: 2,
+          py: { xs: 1, sm: 2 }, // Reduced padding on mobile
+          px: { xs: 1, sm: 2 }, // Add horizontal padding
         }}
       >
         {/* =========================
