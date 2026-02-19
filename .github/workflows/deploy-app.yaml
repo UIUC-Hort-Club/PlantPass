@@ -76,7 +76,6 @@ jobs:
     needs: prepare-lambda
     outputs:
       frontend_bucket_name: ${{ steps.bucket.outputs.frontend_bucket_name }}
-      websocket_endpoint: ${{ steps.bucket.outputs.websocket_endpoint }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -118,9 +117,7 @@ jobs:
         working-directory: ./terraform
         run: |
           BUCKET=$(terraform output frontend_bucket_name | tr -d '"')
-          WEBSOCKET_URL=$(terraform output websocket_endpoint | tr -d '"')
           echo "frontend_bucket_name=$BUCKET" >> $GITHUB_OUTPUT
-          echo "websocket_endpoint=$WEBSOCKET_URL" >> $GITHUB_OUTPUT
 
   deploy-frontend:
     runs-on: ubuntu-latest
@@ -158,7 +155,7 @@ jobs:
 
       - name: Create runtime config
         run: |
-          echo "window.APP_CONFIG = { API_ENDPOINT: '${{ secrets.API_ENDPOINT }}', WEBSOCKET_URL: '${{ needs.deploy-infra.outputs.websocket_endpoint }}' };" > ./src/PlantPassApp/dist/config.js
+          echo "window.APP_CONFIG = { API_ENDPOINT: '${{ secrets.API_ENDPOINT }}', WEBSOCKET_URL: '${{ secrets.WEBSOCKET_URL }}' };" > ./src/PlantPassApp/dist/config.js
 
       - name: Deploy frontend to S3
         run: |
