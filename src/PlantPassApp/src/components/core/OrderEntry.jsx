@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Container,
   Button,
@@ -23,6 +23,7 @@ import LoadingSpinner from "../common/LoadingSpinner";
 
 function OrderEntry() {
   const { showSuccess, showWarning, showError } = useNotification();
+  const receiptRef = useRef(null);
   
   const [products, setProducts] = useState([]);
   const [discounts, setDiscounts] = useState([]);
@@ -57,6 +58,14 @@ function OrderEntry() {
       grandTotal: 0,
     });
     setReceiptData(null);
+  };
+
+  const handleTransactionIDClose = () => {
+    setTransactionIDDialogOpen(false);
+    // Scroll to receipt after modal closes
+    setTimeout(() => {
+      receiptRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
   };
 
   const loadProducts = async () => {
@@ -337,7 +346,7 @@ function OrderEntry() {
       </Box>
 
       {currentTransactionID && receiptData && (
-        <>
+        <div ref={receiptRef}>
           <Receipt 
             totals={receiptData.totals} 
             transactionId={currentTransactionID}
@@ -363,14 +372,14 @@ function OrderEntry() {
               New Order
             </Button>
           </Stack>
-        </>
+        </div>
       )}
 
       <div style={{ height: "1rem" }} />
 
       <ShowTransactionID
         open={transactionIDDialogOpen}
-        onClose={() => setTransactionIDDialogOpen(false)}
+        onClose={handleTransactionIDClose}
         transactionID={currentTransactionID}
       />
     </Container>
