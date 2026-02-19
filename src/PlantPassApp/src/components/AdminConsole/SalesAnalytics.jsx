@@ -74,7 +74,6 @@ function SalesAnalytics() {
     transactions: []
   });
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [showClearDialog, setShowClearDialog] = useState(false);
   const [showExportInfoDialog, setShowExportInfoDialog] = useState(false);
@@ -126,9 +125,7 @@ function SalesAnalytics() {
 
   const loadAnalytics = async (isRefresh = false, isSilent = false) => {
     try {
-      if (isRefresh && !isSilent) {
-        setRefreshing(true);
-      } else if (!isRefresh) {
+      if (!isRefresh) {
         setLoading(true);
       }
       setError(null);
@@ -161,7 +158,6 @@ function SalesAnalytics() {
       }
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
