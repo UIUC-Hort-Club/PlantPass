@@ -9,6 +9,8 @@ import {
   TextField,
   Box,
   Typography,
+  TableContainer,
+  Paper,
 } from "@mui/material";
 
 export default function ItemsTable({
@@ -19,61 +21,78 @@ export default function ItemsTable({
   readOnly = false,
 }) {
   return (
-    <Box sx={{ maxHeight: 800, overflowY: "auto" }}>
+    <Box>
       <Typography variant="h6" sx={{ mb: 1 }}>
           Product Listings {readOnly && "(View Only)"}
       </Typography>
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell sx={{ width: "40%" }}>
-              <strong>Item</strong>
-            </TableCell>
-            <TableCell sx={{ width: "20%" }}>
-              <strong>Price</strong>
-            </TableCell>
-            <TableCell sx={{ width: "20%" }}>
-              <strong>Quantity</strong>
-            </TableCell>
-            <TableCell sx={{ width: "20%" }}>
-              <strong>Total Price</strong>
-            </TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {stockItems.map((item) => (
-            <TableRow key={item.SKU}>
-              <TableCell sx={{ width: "40%" }}>{item.Name}</TableCell>
-              <TableCell sx={{ width: "20%" }}>
-                ${item.Price.toFixed(2)}
+      <TableContainer 
+        component={Paper} 
+        sx={{ 
+          maxHeight: 800, 
+          overflowY: "auto",
+          overflowX: "auto" // Enable horizontal scrolling on mobile
+        }}
+      >
+        <Table size="small" sx={{ minWidth: 500 }}>
+          <TableHead>
+            <TableRow>
+              <TableCell sx={{ minWidth: 120 }}>
+                <strong>Item</strong>
               </TableCell>
-              <TableCell sx={{ width: "20%" }}>
-                <TextField
-                  type="number"
-                  value={quantities[item.SKU]}
-                  onChange={(e) => onQuantityChange(e, item.SKU)}
-                  inputProps={{ 
-                    min: 0,
-                    step: 1,
-                    pattern: "[0-9]*"
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === '.' || e.key === '-' || e.key === 'e' || e.key === 'E') {
-                      e.preventDefault();
-                    }
-                  }}
-                  size="small"
-                  fullWidth
-                  disabled={readOnly}
-                />
+              <TableCell sx={{ minWidth: 80 }}>
+                <strong>Price</strong>
               </TableCell>
-              <TableCell sx={{ width: "20%" }}>
-                ${subtotals[item.SKU]}
+              <TableCell sx={{ minWidth: 100 }}>
+                <strong>Quantity</strong>
+              </TableCell>
+              <TableCell sx={{ minWidth: 100 }}>
+                <strong>Total Price</strong>
               </TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHead>
+          <TableBody>
+            {stockItems.map((item) => (
+              <TableRow key={item.SKU}>
+                <TableCell>{item.Name}</TableCell>
+                <TableCell>
+                  ${item.Price.toFixed(2)}
+                </TableCell>
+                <TableCell>
+                  <TextField
+                    type="number"
+                    value={quantities[item.SKU]}
+                    onChange={(e) => onQuantityChange(e, item.SKU)}
+                    inputProps={{ 
+                      min: 0,
+                      step: 1,
+                      pattern: "[0-9]*",
+                      inputMode: "numeric" // Trigger numeric keyboard on mobile
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === '.' || e.key === '-' || e.key === 'e' || e.key === 'E') {
+                        e.preventDefault();
+                      }
+                    }}
+                    size="small"
+                    fullWidth
+                    disabled={readOnly}
+                    sx={{
+                      minWidth: 80,
+                      '& .MuiInputBase-input': {
+                        minHeight: 44, // Ensure touch target size
+                        boxSizing: 'border-box'
+                      }
+                    }}
+                  />
+                </TableCell>
+                <TableCell>
+                  ${subtotals[item.SKU]}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </Box>
   );
 }

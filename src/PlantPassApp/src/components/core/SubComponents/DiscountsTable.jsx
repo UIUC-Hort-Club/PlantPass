@@ -8,6 +8,8 @@ import {
   Checkbox,
   Box,
   Typography,
+  TableContainer,
+  Paper,
 } from "@mui/material";
 
 export default function DiscountsTable({
@@ -45,17 +47,24 @@ export default function DiscountsTable({
       <Typography variant="h6" sx={{ mb: 1 }}>
         Available Discounts {readOnly && "(View Only)"}
       </Typography>
-      <Box sx={{ maxHeight: 300, overflowY: "auto" }}>
-        <Table size="small">
+      <TableContainer 
+        component={Paper}
+        sx={{ 
+          maxHeight: 300, 
+          overflowY: "auto",
+          overflowX: "auto" // Enable horizontal scrolling on mobile
+        }}
+      >
+        <Table size="small" sx={{ minWidth: 400 }}>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ width: "15%" }}>
+              <TableCell sx={{ minWidth: 60 }}>
                 <strong>Apply</strong>
               </TableCell>
-              <TableCell sx={{ width: "60%" }}>
+              <TableCell sx={{ minWidth: 200 }}>
                 <strong>Discount Name</strong>
               </TableCell>
-              <TableCell sx={{ width: "25%" }}>
+              <TableCell sx={{ minWidth: 100 }}>
                 <strong>Value</strong>
               </TableCell>
             </TableRow>
@@ -73,8 +82,12 @@ export default function DiscountsTable({
                     <Checkbox
                       checked={safeSelectedDiscounts.includes(discount.name)}
                       onChange={() => handleIndividualToggle(discount.name)}
-                      size="small"
+                      size="medium" // Larger touch target for mobile
                       disabled={readOnly}
+                      sx={{
+                        minWidth: 44, // Ensure minimum touch target
+                        minHeight: 44
+                      }}
                     />
                   </TableCell>
                   <TableCell>{discount.name}</TableCell>
@@ -102,7 +115,7 @@ export default function DiscountsTable({
             })}
           </TableBody>
         </Table>
-      </Box>
+      </TableContainer>
     </Box>
   );
 }
