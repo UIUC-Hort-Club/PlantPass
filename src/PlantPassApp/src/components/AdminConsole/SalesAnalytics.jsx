@@ -25,6 +25,7 @@ import {
   List,
   ListItem,
   ListItemText,
+  TableSortLabel,
 } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { Line } from "react-chartjs-2";
@@ -77,6 +78,8 @@ function SalesAnalytics() {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(0);
   const rowsPerPage = 20;
+  const [orderBy, setOrderBy] = useState('timestamp');
+  const [order, setOrder] = useState('desc');
 
   const loadAnalytics = async (isRefresh = false) => {
     try {
@@ -229,6 +232,49 @@ function SalesAnalytics() {
     setPage(newPage);
   };
 
+  const handleRequestSort = (property) => {
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
+  };
+
+  const sortedTransactions = [...analytics.transactions].sort((a, b) => {
+    let aValue, bValue;
+    
+    switch (orderBy) {
+      case 'purchase_id':
+        aValue = a.purchase_id;
+        bValue = b.purchase_id;
+        break;
+      case 'timestamp':
+        aValue = a.timestamp;
+        bValue = b.timestamp;
+        break;
+      case 'total_quantity':
+        aValue = a.total_quantity;
+        bValue = b.total_quantity;
+        break;
+      case 'grand_total':
+        aValue = a.grand_total;
+        bValue = b.grand_total;
+        break;
+      case 'paid':
+        aValue = a.paid ? 1 : 0;
+        bValue = b.paid ? 1 : 0;
+        break;
+      default:
+        return 0;
+    }
+    
+    if (aValue < bValue) {
+      return order === 'asc' ? -1 : 1;
+    }
+    if (aValue > bValue) {
+      return order === 'asc' ? 1 : -1;
+    }
+    return 0;
+  });
+
   if (loading) {
     return (
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -330,21 +376,54 @@ function SalesAnalytics() {
           <TableHead>
             <TableRow>
               <TableCell>
-                <strong>Order ID</strong>
+                <TableSortLabel
+                  active={orderBy === 'purchase_id'}
+                  direction={orderBy === 'purchase_id' ? order : 'asc'}
+                  onClick={() => handleRequestSort('purchase_id')}
+                >
+                  <strong>Order ID</strong>
+                </TableSortLabel>
               </TableCell>
               <TableCell>
-                <strong>Timestamp</strong>
+                <TableSortLabel
+                  active={orderBy === 'timestamp'}
+                  direction={orderBy === 'timestamp' ? order : 'asc'}
+                  onClick={() => handleRequestSort('timestamp')}
+                >
+                  <strong>Timestamp</strong>
+                </TableSortLabel>
               </TableCell>
               <TableCell>
-                <strong>Units</strong>
+                <TableSortLabel
+                  active={orderBy === 'total_quantity'}
+                  direction={orderBy === 'total_quantity' ? order : 'asc'}
+                  onClick={() => handleRequestSort('total_quantity')}
+                >
+                  <strong>Units</strong>
+                </TableSortLabel>
               </TableCell>
               <TableCell>
-                <strong>Total</strong>
+                <TableSortLabel
+                  active={orderBy === 'grand_total'}
+                  direction={orderBy === 'grand_total' ? order : 'asc'}
+                  onClick={() => handleRequestSort('grand_total')}
+                >
+                  <strong>Total</strong>
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === 'paid'}
+                  direction={orderBy === 'paid' ? order : 'asc'}
+                  onClick={() => handleRequestSort('paid')}
+                >
+                  <strong>Paid</strong>
+                </TableSortLabel>
               </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {analytics.transactions
+            {sortedTransactions
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((transaction) => (
                 <TableRow key={transaction.purchase_id}>
@@ -352,11 +431,12 @@ function SalesAnalytics() {
                   <TableCell>{formatTimestamp(transaction.timestamp)}</TableCell>
                   <TableCell>{transaction.total_quantity}</TableCell>
                   <TableCell>${transaction.grand_total.toFixed(2)}</TableCell>
+                  <TableCell>{transaction.paid ? 'Yes' : 'No'}</TableCell>
                 </TableRow>
               ))}
             {analytics.transactions.length === 0 && (
               <TableRow>
-                <TableCell colSpan={4} align="center">
+                <TableCell colSpan={5} align="center">
                   <Typography variant="body2" color="text.secondary">
                     No transactions found
                   </Typography>
@@ -423,7 +503,7 @@ function SalesAnalytics() {
           <TablePagination
             rowsPerPageOptions={[rowsPerPage]}
             component="div"
-            count={analytics.transactions.length}
+            count={sortedTransactions.length}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}
