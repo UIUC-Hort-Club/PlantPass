@@ -131,10 +131,19 @@ jobs:
         with:
           node-version: 20
 
-      - name: Build Frontend
+      - name: Install dependencies
         run: |
           cd src/PlantPassApp
           npm install
+
+      - name: Run lint
+        run: |
+          cd src/PlantPassApp
+          npm run lint
+
+      - name: Build Frontend
+        run: |
+          cd src/PlantPassApp
           npm run build
 
       - name: Create runtime config

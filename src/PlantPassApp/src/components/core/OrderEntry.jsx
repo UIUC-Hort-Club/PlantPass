@@ -10,9 +10,7 @@ import {
 import { InputAdornment } from "@mui/material";
 import ItemsTable from "./SubComponents/ItemsTable";
 import DiscountsTable from "./SubComponents/DiscountsTable";
-import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
 import Receipt from "./SubComponents/Receipt";
-import Scanner from "./SubComponents/Scanner";
 import { createTransaction } from "../../api/transaction_interface/createTransaction";
 import { updateTransaction } from "../../api/transaction_interface/updateTransaction";
 import { getAllProducts } from "../../api/products_interface/getAllProducts";
@@ -31,6 +29,7 @@ function OrderEntry() {
   const [quantities, setQuantities] = useState({});
   const [subtotals, setSubtotals] = useState({});
   const [selectedDiscounts, setSelectedDiscounts] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [totals, setTotals] = useState({
     subtotal: 0,
     discount: 0,
@@ -38,7 +37,6 @@ function OrderEntry() {
   });
   const [receiptData, setReceiptData] = useState(null);
   const [voucher, setVoucher] = useState("");
-  const [scannerOpen, setScannerOpen] = useState(false);
   const [currentTransactionID, setCurrentTransactionID] = useState("");
   const [transactionIDDialogOpen, setTransactionIDDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -46,32 +44,6 @@ function OrderEntry() {
   const computedSubtotal = Object.values(subtotals)
     .reduce((sum, val) => sum + (parseFloat(val) || 0), 0)
     .toFixed(2);
-
-  const handleScan = (scannedProduct) => {
-    if (scannedProduct) {
-      const sku = scannedProduct.SKU;
-      const currentQuantity = parseInt(quantities[sku]) || 0;
-      const newQuantity = currentQuantity + 1; // Always increment by 1 (whole number)
-
-      setQuantities((prev) => ({
-        ...prev,
-        [sku]: newQuantity,
-      }));
-
-      setSubtotals((prev) => ({
-        ...prev,
-        [sku]: (scannedProduct.Price * newQuantity).toFixed(2),
-      }));
-    } else {
-      showError(
-        `Internal Error: Item with SKU "${scannedProduct?.SKU}" not found, but should have been found...`
-      );
-    }
-  };
-
-  const getQuantity = (sku) => {
-    return quantities[sku] || 0;
-  };
 
   const handleNewOrder = () => {
     loadProducts();
@@ -349,29 +321,18 @@ function OrderEntry() {
       <Box sx={{ mt: 2 }}>
         <Stack
           direction="row"
-          justifyContent="space-between"
+          justifyContent="flex-end"
           alignItems="center"
         >
           <Button
-            variant="outlined"
-            startIcon={<QrCodeScannerIcon />}
-            onClick={() => setScannerOpen(true)}
+            variant="contained"
+            color="primary"
+            onClick={handleEnterOrder}
             size="small"
+            disabled={!!currentTransactionID}
           >
-            Scan
+            Enter
           </Button>
-
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleEnterOrder}
-              size="small"
-              disabled={!!currentTransactionID}
-            >
-              Enter
-            </Button>
-          </Stack>
         </Stack>          
       </Box>
 
@@ -406,14 +367,6 @@ function OrderEntry() {
       )}
 
       <div style={{ height: "1rem" }} />
-
-      <Scanner
-        opened={scannerOpen}
-        onClose={() => setScannerOpen(false)}
-        onScan={handleScan}
-        products={products}
-        getQuantity={getQuantity}
-      />
 
       <ShowTransactionID
         open={transactionIDDialogOpen}
