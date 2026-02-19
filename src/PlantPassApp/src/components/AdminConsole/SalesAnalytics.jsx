@@ -90,6 +90,13 @@ function SalesAnalytics() {
       }
       setError(null);
       const data = await fetchSalesAnalytics();
+      
+      // Debug: Log transaction data to see paid field
+      console.log('Analytics data received:', data);
+      if (data.transactions && data.transactions.length > 0) {
+        console.log('Sample transaction:', data.transactions[0]);
+      }
+      
       setAnalytics(data);
       if (isRefresh) {
         showSuccess("Analytics refreshed successfully");
@@ -259,8 +266,9 @@ function SalesAnalytics() {
         bValue = b.grand_total;
         break;
       case 'paid':
-        aValue = a.paid ? 1 : 0;
-        bValue = b.paid ? 1 : 0;
+        // Handle paid field - ensure it's treated as boolean
+        aValue = (a.paid === true || a.paid === 'true') ? 1 : 0;
+        bValue = (b.paid === true || b.paid === 'true') ? 1 : 0;
         break;
       default:
         return 0;
@@ -431,7 +439,7 @@ function SalesAnalytics() {
                   <TableCell>{formatTimestamp(transaction.timestamp)}</TableCell>
                   <TableCell>{transaction.total_quantity}</TableCell>
                   <TableCell>${transaction.grand_total.toFixed(2)}</TableCell>
-                  <TableCell>{transaction.paid ? 'Yes' : 'No'}</TableCell>
+                  <TableCell>{transaction.paid === true || transaction.paid === 'true' ? 'Yes' : 'No'}</TableCell>
                 </TableRow>
               ))}
             {analytics.transactions.length === 0 && (
