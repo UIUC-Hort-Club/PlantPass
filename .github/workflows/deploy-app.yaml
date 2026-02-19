@@ -76,6 +76,7 @@ jobs:
     needs: prepare-lambda
     outputs:
       frontend_bucket_name: ${{ steps.bucket.outputs.frontend_bucket_name }}
+      websocket_endpoint: ${{ steps.bucket.outputs.websocket_endpoint }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
