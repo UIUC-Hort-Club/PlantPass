@@ -1,36 +1,16 @@
-resource "aws_route53_zone" "main" {
-  name = var.domain_name
+# ---------------------------------------------------------
+# DNS is managed in Cloudflare (domain registered with Cloudflare)
+# ---------------------------------------------------------
 
-  tags = {
-    application = "plantpass"
-  }
-}
-
-resource "aws_route53_record" "root" {
-  zone_id = aws_route53_zone.main.zone_id
-  name    = var.domain_name
-  type    = "A"
-
-  alias {
-    name                   = aws_cloudfront_distribution.frontend.domain_name
-    zone_id                = aws_cloudfront_distribution.frontend.hosted_zone_id
-    evaluate_target_health = false
-  }
-}
-
-resource "aws_route53_record" "www" {
-  zone_id = aws_route53_zone.main.zone_id
-  name    = "www.${var.domain_name}"
-  type    = "A"
-
-  alias {
-    name                   = aws_cloudfront_distribution.frontend.domain_name
-    zone_id                = aws_cloudfront_distribution.frontend.hosted_zone_id
-    evaluate_target_health = false
-  }
-}
-
-output "route53_nameservers" {
-  value       = aws_route53_zone.main.name_servers
-  description = "Nameservers to configure at your domain registrar"
-}
+# Instructions for Cloudflare DNS setup:
+# 1. Add ACM validation CNAME records (see acm_validation_records output)
+# 2. Once certificate validates, add these CNAME records:
+#    - Name: @ (or hortclubplantpass.org)
+#    - Target: <cloudfront_domain_name from output>
+#    - Proxy status: DNS only (grey cloud, not orange)
+#
+#    - Name: www
+#    - Target: <cloudfront_domain_name from output>
+#    - Proxy status: DNS only (grey cloud, not orange)
+#
+# Note: Cloudflare will automatically flatten the root CNAME to work properly
