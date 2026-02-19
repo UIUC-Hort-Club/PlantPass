@@ -291,5 +291,6 @@ class Transaction:
             "purchase_id": self.purchase_id,
             "timestamp": self.timestamp,
             "total_quantity": sum(item.get("quantity", 0) for item in self.items),
-            "grand_total": self.receipt.get("total", 0)
+            "grand_total": self.receipt.get("total", 0),
+            "paid": self.payment.get("paid", False)
         }
