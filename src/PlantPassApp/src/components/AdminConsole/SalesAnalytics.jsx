@@ -37,7 +37,6 @@ import LoadingSpinner from "../common/LoadingSpinner";
 import MetricCard from "./MetricCard";
 import ConfirmationDialog from "../common/ConfirmationDialog";
 import { formatTimestamp } from "../../utils/dateFormatter";
-import { downloadJSON } from "../../utils/exportUtils";
 
 ChartJS.register(
   CategoryScale,
@@ -108,9 +107,26 @@ function SalesAnalytics() {
 
   const exportData = async () => {
     try {
-      const data = await exportDataAPI();
-      const filename = `sales-data-${new Date().toISOString().split('T')[0]}.json`;
-      downloadJSON(data, filename);
+      const { filename, content, contentType } = await exportDataAPI();
+      
+      // Decode base64 to binary
+      const binaryString = atob(content);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      
+      // Create blob and download
+      const blob = new Blob([bytes], { type: contentType });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
       showSuccess("Data exported successfully");
     } catch (error) {
       console.error("Error exporting data:", error);

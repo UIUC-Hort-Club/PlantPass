@@ -1,8 +1,8 @@
 import { API_URL } from '../config';
 
 /**
- * Export all transaction data
- * @returns {Promise<Object>} The exported data
+ * Export all transaction data as a zip file containing CSV files
+ * @returns {Promise<Object>} Object with filename, content (base64), and content_type
  */
 export const exportData = async () => {
   const response = await fetch(`${API_URL}/transactions/export-data`);
@@ -12,5 +12,9 @@ export const exportData = async () => {
   }
   
   const data = await response.json();
-  return data.export_data;
+  return {
+    filename: data.filename,
+    content: data.content,
+    contentType: data.content_type
+  };
 };
