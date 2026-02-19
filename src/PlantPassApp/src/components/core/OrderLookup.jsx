@@ -461,7 +461,11 @@ function OrderLookup() {
             </Box>
           )}
 
-          {recentOrdersLimit === 0 ? null : recentOrders.length === 0 ? null : (
+          {recentOrdersLimit === 0 ? null : recentOrders.length === 0 ? (
+            <Typography variant="body2" color="text.secondary">
+              No unpaid orders found
+            </Typography>
+          ) : (
             <Stack spacing={1}>
               {recentOrders.map((order) => (
                 <Paper

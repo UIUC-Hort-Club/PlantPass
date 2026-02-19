@@ -105,6 +105,12 @@ resource "aws_apigatewayv2_route" "clear_transactions" {
   target    = "integrations/${aws_apigatewayv2_integration.transaction_lambda_integration.id}"
 }
 
+resource "aws_apigatewayv2_route" "recent_unpaid_transactions" {
+  api_id    = aws_apigatewayv2_api.frontend_api.id
+  route_key = "GET /transactions/recent-unpaid"
+  target    = "integrations/${aws_apigatewayv2_integration.transaction_lambda_integration.id}"
+}
+
 # -------------------------
 # Admin Lambda Routes
 # -------------------------
