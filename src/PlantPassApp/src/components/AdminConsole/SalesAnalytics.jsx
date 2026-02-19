@@ -46,7 +46,7 @@ import { clearAllTransactions } from "../../api/transaction_interface/clearAllTr
 import { exportData as exportDataAPI } from "../../api/transaction_interface/exportData";
 import { useNotification } from "../../contexts/NotificationContext";
 import { useWebSocket } from "../../hooks/useWebSocket";
-import { WEBSOCKET_URL } from "../../api/websocket/config";
+import { WEBSOCKET_URL } from "../../api/config";
 import LoadingSpinner from "../common/LoadingSpinner";
 import MetricCard from "./MetricCard";
 import ConfirmationDialog from "../common/ConfirmationDialog";
