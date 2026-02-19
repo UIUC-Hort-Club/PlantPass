@@ -2,12 +2,59 @@
 
 # PlantPass
 
-PlantPass is an application developed for the UIUC Horticulture Club to streamline checkout processes at their flagship event, The Spring Plant Fair. The frontend is deployed on AWS Cloudfront and the backend uses Lambdas + DynamoDB. This is intended to be fast, easy to use by non-technical indivisuals, and track sales data for use in following events.
+PlantPass is a point-of-sale application developed for the UIUC Horticulture Club to streamline checkout processes at their Spring Plant Fair. The system provides order entry, transaction management, and sales analytics capabilities.
 
-# Local Development
+## Architecture
 
-The frontend is located in `./src/PlantPassApp`. Run `npm install` and then `npm run dev` to start the local development environment. It should automatically connect to the backend, as there is not yet any authentication implemented there.
+- Frontend: React application deployed on AWS CloudFront
+- Backend: AWS Lambda functions with DynamoDB database
+- Infrastructure: Terraform-managed AWS resources
 
-# Building Infrastructure
+## Features
 
-To create, modify, or delete aws resources this project uses terraform. The app will deploy everything on push or pull request to master branch
+- Order entry with product selection and discount application
+- Transaction lookup and modification
+- Payment processing with multiple payment methods
+- Admin console with sales analytics and data export
+- Product and discount management
+- Real-time sales tracking and reporting
+
+## Local Development
+
+Navigate to `./src/PlantPassApp` and run:
+
+```bash
+npm install
+npm run dev
+```
+
+The development server will start and automatically connect to the backend API.
+
+## Infrastructure
+
+Infrastructure is managed via Terraform in the `./terraform` directory. Deployment occurs automatically on push or pull request to the master branch.
+
+## Project Structure
+
+```
+src/
+├── PlantPassApp/          # React frontend application
+│   ├── src/
+│   │   ├── api/           # API integration layer
+│   │   ├── components/    # React components
+│   │   ├── contexts/      # React contexts
+│   │   ├── hooks/         # Custom React hooks
+│   │   └── utils/         # Utility functions
+│   └── public/            # Static assets
+└── lambda/                # AWS Lambda functions
+    ├── AdminPassword/     # Admin authentication
+    ├── DiscountsHandler/  # Discount management
+    ├── ProductsHandler/   # Product management
+    └── TransactionHandler/# Transaction processing
+terraform/                 # Infrastructure as code
+```
+
+## Contact
+
+Primary Contact: Joseph (Joe) Ku  
+Email: josephku825@gmail.com
