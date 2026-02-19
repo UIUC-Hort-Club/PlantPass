@@ -376,6 +376,19 @@ function SalesAnalytics() {
           <Stack direction="row" spacing={2} alignItems="center">
             {/* Export button with info icon */}
             <Stack direction="row" spacing={0.5} alignItems="center">
+              <IconButton
+                size="small"
+                onClick={() => setShowExportInfoDialog(true)}
+                sx={{ 
+                  backgroundColor: 'info.main',
+                  color: 'white',
+                  '&:hover': {
+                    backgroundColor: 'info.dark',
+                  }
+                }}
+              >
+                <InfoOutlinedIcon fontSize="small" />
+              </IconButton>
               <Button
                 variant="outlined"
                 size="small"
@@ -383,13 +396,6 @@ function SalesAnalytics() {
               >
                 Export Data
               </Button>
-              <IconButton
-                size="small"
-                onClick={() => setShowExportInfoDialog(true)}
-                sx={{ color: 'primary.main' }}
-              >
-                <InfoOutlinedIcon fontSize="small" />
-              </IconButton>
             </Stack>
 
             <Button
