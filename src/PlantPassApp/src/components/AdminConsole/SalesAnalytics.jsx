@@ -17,7 +17,16 @@ import {
   Stack,
   TablePagination,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
 } from "@mui/material";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -64,6 +73,7 @@ function SalesAnalytics() {
   const [refreshing, setRefreshing] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [showClearDialog, setShowClearDialog] = useState(false);
+  const [showExportInfoDialog, setShowExportInfoDialog] = useState(false);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(0);
   const rowsPerPage = 20;
@@ -364,14 +374,29 @@ function SalesAnalytics() {
           }}
         >
           <Stack direction="row" spacing={2} alignItems="center">
-            {/* Export button (far left) */}
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={exportData}
-            >
-              Export Data
-            </Button>
+            {/* Export button with info icon */}
+            <Stack direction="row" spacing={0.5} alignItems="center">
+              <IconButton
+                size="small"
+                onClick={() => setShowExportInfoDialog(true)}
+                sx={{ 
+                  backgroundColor: 'info.main',
+                  color: 'white',
+                  '&:hover': {
+                    backgroundColor: 'info.dark',
+                  }
+                }}
+              >
+                <InfoOutlinedIcon fontSize="small" />
+              </IconButton>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={exportData}
+              >
+                Export Data
+              </Button>
+            </Stack>
 
             <Button
               variant="outlined"
@@ -418,6 +443,77 @@ function SalesAnalytics() {
         confirmationText="DELETE ALL"
         severity="error"
       />
+
+      {/* Export Info Dialog */}
+      <Dialog
+        open={showExportInfoDialog}
+        onClose={() => setShowExportInfoDialog(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Export Data Information</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" gutterBottom sx={{ mb: 2 }}>
+            This export will download a ZIP file containing 3 CSV files with all transaction data:
+          </Typography>
+
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, mb: 1 }}>
+              1. transactions.csv
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              Summary of each transaction
+            </Typography>
+            <List dense sx={{ pl: 2 }}>
+              <ListItem sx={{ py: 0 }}>
+                <ListItemText 
+                  primary="• purchase_id, timestamp, subtotal, discount_total, club_voucher, grand_total, payment_method, paid"
+                  primaryTypographyProps={{ variant: 'body2', fontFamily: 'monospace' }}
+                />
+              </ListItem>
+            </List>
+          </Box>
+
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, mb: 1 }}>
+              2. transaction_items.csv
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              Individual items from each transaction (only items with quantity &gt; 0)
+            </Typography>
+            <List dense sx={{ pl: 2 }}>
+              <ListItem sx={{ py: 0 }}>
+                <ListItemText 
+                  primary="• purchase_id, timestamp, item_name, sku, quantity, price_ea, line_total"
+                  primaryTypographyProps={{ variant: 'body2', fontFamily: 'monospace' }}
+                />
+              </ListItem>
+            </List>
+          </Box>
+
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, mb: 1 }}>
+              3. transaction_discounts.csv
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              Discounts applied to each transaction (only discounts with amount_off &gt; 0)
+            </Typography>
+            <List dense sx={{ pl: 2 }}>
+              <ListItem sx={{ py: 0 }}>
+                <ListItemText 
+                  primary="• purchase_id, timestamp, discount_name, discount_type, discount_value, amount_off"
+                  primaryTypographyProps={{ variant: 'body2', fontFamily: 'monospace' }}
+                />
+              </ListItem>
+            </List>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowExportInfoDialog(false)} variant="contained">
+            OK
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }
