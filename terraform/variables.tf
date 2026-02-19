@@ -46,6 +46,11 @@ variable "auth_layer_zip_path" {
   type = string
 }
 
+variable "websocket_lambda_zip_path" {
+  type        = string
+  description = "Path to WebSocketHandler Lambda ZIP relative to Terraform working directory"
+}
+
 variable "reset_token_hash" {
   type      = string
   sensitive = true

@@ -46,11 +46,10 @@ function OrderLookup() {
   const [voucher, setVoucher] = useState("");
   const [currentTransactionID, setCurrentTransactionID] = useState("");
   const [error, setError] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState(""); // Initialize to empty
+  const [paymentMethod, setPaymentMethod] = useState("");
   const [transactionLoaded, setTransactionLoaded] = useState(false);
   const [isOrderCompleted, setIsOrderCompleted] = useState(false);
   
-  // Recent orders state
   const [recentOrders, setRecentOrders] = useState([]);
   const [showRecentOrders, setShowRecentOrders] = useState(true);
   const [recentOrdersLimit, setRecentOrdersLimit] = useState(() => {
@@ -60,10 +59,8 @@ function OrderLookup() {
   const [showSettings, setShowSettings] = useState(false);
   const [tempLimit, setTempLimit] = useState(recentOrdersLimit);
   
-  // Confirmation dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  // Fetch recent unpaid orders on mount and when limit changes
   useEffect(() => {
     fetchRecentOrders();
   }, [recentOrdersLimit]);
@@ -78,7 +75,7 @@ function OrderLookup() {
   };
 
   const handleLimitChange = () => {
-    const newLimit = Math.max(0, Math.min(20, tempLimit === '' ? 0 : tempLimit)); // Clamp between 0 and 20
+    const newLimit = Math.max(0, Math.min(20, tempLimit === '' ? 0 : tempLimit));
     setRecentOrdersLimit(newLimit);
     sessionStorage.setItem("recentOrdersLimit", newLimit.toString());
     setShowSettings(false);
@@ -251,7 +248,6 @@ function OrderLookup() {
       setPaymentMethod("");
     }
 
-    // Hide recent orders after selection
     setShowRecentOrders(false);
   };
 
@@ -349,7 +345,6 @@ function OrderLookup() {
       showSuccess(`Order ${currentTransactionID} has been completed!`);
       setError("");
       
-      // Refresh recent orders list
       await fetchRecentOrders();
       
       resetToInitialState();
@@ -432,13 +427,11 @@ function OrderLookup() {
                 value={tempLimit}
                 onChange={(e) => {
                   const value = e.target.value;
-                  // Allow empty string or numbers only
                   if (value === '' || /^\d+$/.test(value)) {
                     setTempLimit(value === '' ? '' : parseInt(value, 10));
                   }
                 }}
                 onBlur={(e) => {
-                  // If empty on blur, set to 0
                   if (e.target.value === '') {
                     setTempLimit(0);
                   }

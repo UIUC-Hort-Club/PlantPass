@@ -26,6 +26,7 @@ import {
   ListItem,
   ListItemText,
   TableSortLabel,
+  Chip,
 } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { Line } from "react-chartjs-2";
@@ -43,6 +44,7 @@ import { fetchSalesAnalytics } from "../../api/transaction_interface/fetchSalesA
 import { clearAllTransactions } from "../../api/transaction_interface/clearAllTransactions";
 import { exportData as exportDataAPI } from "../../api/transaction_interface/exportData";
 import { useNotification } from "../../contexts/NotificationContext";
+import { useWebSocket } from "../../hooks/useWebSocket";
 import LoadingSpinner from "../common/LoadingSpinner";
 import MetricCard from "./MetricCard";
 import ConfirmationDialog from "../common/ConfirmationDialog";
@@ -91,12 +93,6 @@ function SalesAnalytics() {
       setError(null);
       const data = await fetchSalesAnalytics();
       
-      // Debug: Log transaction data to see paid field
-      console.log('Analytics data received:', data);
-      if (data.transactions && data.transactions.length > 0) {
-        console.log('Sample transaction:', data.transactions[0]);
-      }
-      
       setAnalytics(data);
       if (isRefresh) {
         showSuccess("Analytics refreshed successfully");
@@ -129,14 +125,12 @@ function SalesAnalytics() {
     try {
       const { filename, content, contentType } = await exportDataAPI();
       
-      // Decode base64 to binary
       const binaryString = atob(content);
       const bytes = new Uint8Array(binaryString.length);
       for (let i = 0; i < binaryString.length; i++) {
         bytes[i] = binaryString.charCodeAt(i);
       }
       
-      // Create blob and download
       const blob = new Blob([bytes], { type: contentType });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -266,7 +260,6 @@ function SalesAnalytics() {
         bValue = b.grand_total;
         break;
       case 'paid':
-        // Handle paid field - ensure it's treated as boolean
         aValue = (a.paid === true || a.paid === 'true') ? 1 : 0;
         bValue = (b.paid === true || b.paid === 'true') ? 1 : 0;
         break;

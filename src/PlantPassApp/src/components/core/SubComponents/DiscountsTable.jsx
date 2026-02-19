@@ -52,7 +52,7 @@ export default function DiscountsTable({
         sx={{ 
           maxHeight: 300, 
           overflowY: "auto",
-          overflowX: "auto" // Enable horizontal scrolling on mobile
+          overflowX: "auto"
         }}
       >
         <Table size="small" sx={{ minWidth: 400 }}>
@@ -82,10 +82,10 @@ export default function DiscountsTable({
                     <Checkbox
                       checked={safeSelectedDiscounts.includes(discount.name)}
                       onChange={() => handleIndividualToggle(discount.name)}
-                      size="medium" // Larger touch target for mobile
+                      size="medium"
                       disabled={readOnly}
                       sx={{
-                        minWidth: 44, // Ensure minimum touch target
+                        minWidth: 44,
                         minHeight: 44
                       }}
                     />

@@ -54,6 +54,11 @@ jobs:
           cd src/lambda/DiscountsHandler
           zip -r ../../../terraform/discounts_handler_lambda_package.zip .
 
+      - name: Package WebSocket Lambda
+        run: |
+          cd src/lambda/WebSocketHandler
+          zip -r ../../../terraform/websocket_handler_lambda_package.zip .
+
       - name: Upload Lambda ZIPs
         uses: actions/upload-artifact@v4
         with:
@@ -63,6 +68,7 @@ jobs:
             terraform/admin_password_lambda_package.zip
             terraform/products_handler_lambda_package.zip
             terraform/discounts_handler_lambda_package.zip
+            terraform/websocket_handler_lambda_package.zip
             terraform/auth_layer.zip
 
   deploy-infra:
@@ -102,15 +108,18 @@ jobs:
             -var "admin_lambda_zip_path=admin_password_lambda_package.zip" \
             -var "products_lambda_zip_path=products_handler_lambda_package.zip" \
             -var "discounts_lambda_zip_path=discounts_handler_lambda_package.zip" \
+            -var "websocket_lambda_zip_path=websocket_handler_lambda_package.zip" \
             -var "auth_layer_zip_path=auth_layer.zip" \
             -var "reset_token_hash=${{ secrets.RESET_TOKEN_HASH }}"
 
-      - name: Get frontend bucket name
+      - name: Get outputs
         id: bucket
         working-directory: ./terraform
         run: |
           BUCKET=$(terraform output frontend_bucket_name | tr -d '"')
+          WEBSOCKET_URL=$(terraform output websocket_endpoint | tr -d '"')
           echo "frontend_bucket_name=$BUCKET" >> $GITHUB_OUTPUT
+          echo "websocket_endpoint=$WEBSOCKET_URL" >> $GITHUB_OUTPUT
 
   deploy-frontend:
     runs-on: ubuntu-latest
@@ -148,7 +157,7 @@ jobs:
 
       - name: Create runtime config
         run: |
-          echo "window.APP_CONFIG = { API_ENDPOINT: '${{ secrets.API_ENDPOINT }}' };" > ./src/PlantPassApp/dist/config.js
+          echo "window.APP_CONFIG = { API_ENDPOINT: '${{ secrets.API_ENDPOINT }}', WEBSOCKET_URL: '${{ needs.deploy-infra.outputs.websocket_endpoint }}' };" > ./src/PlantPassApp/dist/config.js
 
       - name: Deploy frontend to S3
         run: |

@@ -13,6 +13,7 @@ from sales_analytics import (
     clear_all_transactions
 )
 from csv_export import generate_csv_export
+from websocket_notifier import notify_transaction_update
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -31,6 +32,10 @@ def lambda_handler(event, context):
             try:
                 transaction = create_transaction(body)
                 logger.info("Transaction saved successfully")
+                
+                # Notify WebSocket clients
+                notify_transaction_update('created', transaction)
+                
                 return response(201, {"message": "Transaction created successfully", "transaction": transaction})
             except Exception as e:
                 logger.error(f"Error saving transaction: {e}", exc_info=True)
@@ -65,6 +70,10 @@ def lambda_handler(event, context):
             
             updated_transaction = update_transaction(purchase_id, body)
             logger.info(f"Transaction updated: {updated_transaction}")
+            
+            # Notify WebSocket clients
+            notify_transaction_update('updated', updated_transaction)
+            
             return response(200, {"transaction": updated_transaction})
 
         elif route_key == "DELETE /transactions/{purchase_id}":
@@ -74,6 +83,10 @@ def lambda_handler(event, context):
             
             delete_transaction(purchase_id)
             logger.info(f"Transaction deleted: {purchase_id}")
+            
+            # Notify WebSocket clients
+            notify_transaction_update('deleted', {'purchase_id': purchase_id})
+            
             return response(204, {})  # 204 No Content
         
         elif route_key == "GET /transactions/sales-analytics":
@@ -106,6 +119,10 @@ def lambda_handler(event, context):
         elif route_key == "DELETE /transactions/clear-all":
             cleared_count = clear_all_transactions()
             logger.info(f"Cleared {cleared_count} transactions")
+            
+            # Notify WebSocket clients
+            notify_transaction_update('cleared', {'cleared_count': cleared_count})
+            
             return response(200, {"message": f"Successfully cleared {cleared_count} transactions", "cleared_count": cleared_count})
 
         else:

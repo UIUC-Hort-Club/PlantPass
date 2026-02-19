@@ -1,5 +1,3 @@
-// config.js
-
 /**
  * API Gateway base URL from runtime config
  * In production: injected via config.js at deploy time

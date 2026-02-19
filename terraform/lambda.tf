@@ -68,7 +68,8 @@ resource "aws_iam_role_policy" "lambda_dynamodb_access" {
           aws_dynamodb_table.discounts.arn,
           aws_dynamodb_table.products.arn,
           aws_dynamodb_table.transactions.arn,
-          "${aws_dynamodb_table.transactions.arn}/index/*"
+          "${aws_dynamodb_table.transactions.arn}/index/*",
+          aws_dynamodb_table.websocket_connections.arn
         ]
       }
     ]
@@ -132,6 +133,8 @@ resource "aws_lambda_function" "transaction_handler" {
   environment {
     variables = {
       TRANSACTIONS_TABLE = aws_dynamodb_table.transactions.name
+      CONNECTIONS_TABLE  = aws_dynamodb_table.websocket_connections.name
+      WEBSOCKET_ENDPOINT = "https://${aws_apigatewayv2_api.websocket_api.id}.execute-api.${var.aws_region}.amazonaws.com/${aws_apigatewayv2_stage.websocket_stage.name}"
     }
   }
 
