@@ -129,3 +129,48 @@ def delete_transaction(transaction_id):
     except Exception as e:
         logger.error(f"Error deleting transaction {transaction_id}: {e}")
         raise Exception(f"Failed to delete transaction: {e}")
+
+def get_recent_unpaid_transactions(limit=5):
+    """
+    Retrieve recent unpaid transactions.
+    
+    Args:
+        limit (int): Maximum number of transactions to return
+        
+    Returns:
+        list: List of unpaid transactions sorted by timestamp (newest first)
+    """
+    try:
+        response = table.scan()
+        transactions = response['Items']
+        
+        while 'LastEvaluatedKey' in response:
+            response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+            transactions.extend(response['Items'])
+        
+        # Filter unpaid transactions
+        unpaid_transactions = [
+            t for t in transactions 
+            if not t.get('payment', {}).get('paid', False)
+        ]
+        
+        # Sort by timestamp (newest first)
+        unpaid_transactions.sort(
+            key=lambda x: x.get('timestamp', 0), 
+            reverse=True
+        )
+        
+        # Limit results
+        limited_transactions = unpaid_transactions[:limit]
+        
+        # Convert to float and return
+        result = decimal_to_float(limited_transactions)
+        logger.info(f"Retrieved {len(result)} recent unpaid transactions")
+        return result
+        
+    except ClientError as e:
+        logger.error(f"DynamoDB error getting recent unpaid transactions: {e}")
+        raise Exception(f"Failed to get recent unpaid transactions: {e}")
+    except Exception as e:
+        logger.error(f"Error getting recent unpaid transactions: {e}")
+        raise Exception(f"Failed to get recent unpaid transactions: {e}")

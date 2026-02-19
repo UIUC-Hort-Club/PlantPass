@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Container,
   Button,
@@ -10,11 +10,17 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Paper,
+  Typography,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
+import SettingsIcon from "@mui/icons-material/Settings";
 import ItemsTable from "./SubComponents/ItemsTable";
 import DiscountsTable from "./SubComponents/DiscountsTable";
 import Receipt from "./SubComponents/Receipt";
 import { readTransaction } from "../../api/transaction_interface/readTransaction";
+import { getRecentUnpaidTransactions } from "../../api/transaction_interface/getRecentUnpaidTransactions";
 import { updateTransaction } from "../../api/transaction_interface/updateTransaction";
 import { deleteTransaction } from "../../api/transaction_interface/deleteTransaction";
 import { useNotification } from "../../contexts/NotificationContext";
@@ -42,6 +48,37 @@ function OrderLookup() {
   const [paymentMethod, setPaymentMethod] = useState(""); // Initialize to empty
   const [transactionLoaded, setTransactionLoaded] = useState(false);
   const [isOrderCompleted, setIsOrderCompleted] = useState(false);
+  
+  // Recent orders state
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [showRecentOrders, setShowRecentOrders] = useState(true);
+  const [recentOrdersLimit, setRecentOrdersLimit] = useState(() => {
+    const saved = sessionStorage.getItem("recentOrdersLimit");
+    return saved ? parseInt(saved, 10) : 5;
+  });
+  const [showSettings, setShowSettings] = useState(false);
+  const [tempLimit, setTempLimit] = useState(recentOrdersLimit);
+
+  // Fetch recent unpaid orders on mount and when limit changes
+  useEffect(() => {
+    fetchRecentOrders();
+  }, [recentOrdersLimit]);
+
+  const fetchRecentOrders = async () => {
+    try {
+      const orders = await getRecentUnpaidTransactions(recentOrdersLimit);
+      setRecentOrders(orders);
+    } catch (err) {
+      console.error("Error fetching recent orders:", err);
+    }
+  };
+
+  const handleLimitChange = () => {
+    const newLimit = Math.max(1, Math.min(20, tempLimit)); // Clamp between 1 and 20
+    setRecentOrdersLimit(newLimit);
+    sessionStorage.setItem("recentOrdersLimit", newLimit.toString());
+    setShowSettings(false);
+  };
 
 
   const resetToInitialState = () => {
@@ -115,71 +152,101 @@ function OrderLookup() {
         return;
       }
 
-      setCurrentTransactionID(transaction.purchase_id);
-      setTransactionLoaded(true);
-
-      const transactionProducts = transaction.items?.map(item => ({
-        SKU: item.SKU,
-        Name: item.item,
-        Price: item.price_ea
-      })) || [];
-      setProducts(transactionProducts);
-
-      const transactionDiscounts = transaction.discounts?.map(discount => ({
-        name: discount.name,
-        type: discount.type,
-        value: discount.value
-      })) || [];
-      setDiscounts(transactionDiscounts);
-
-      const newQuantities = {};
-      const newSubtotals = {};
-      
-      transaction.items?.forEach((item) => {
-        newQuantities[item.SKU] = item.quantity;
-        newSubtotals[item.SKU] = (item.quantity * item.price_ea).toFixed(2);
-      });
-
-      setQuantities(newQuantities);
-      setSubtotals(newSubtotals);
-
-      const selectedDiscountNames = transaction.discounts
-        ?.filter(discount => discount.amount_off > 0)
-        .map(discount => discount.name) || [];
-      setSelectedDiscounts(selectedDiscountNames);
-
-      setVoucher(transaction.club_voucher || 0);
-
-      setTotals({
-        subtotal: transaction.receipt?.subtotal || 0,
-        discount: transaction.receipt?.discount || 0,
-        grandTotal: transaction.receipt?.total || 0,
-      });
-
-      setReceiptData({
-        totals: {
-          subtotal: transaction.receipt.subtotal,
-          discount: transaction.receipt.discount,
-          grandTotal: transaction.receipt.total,
-        },
-        discounts: transaction.discounts || [],
-        voucher: transaction.club_voucher || 0
-      });
-
-      const orderCompleted = transaction.payment?.method && transaction.payment?.paid;
-      setIsOrderCompleted(orderCompleted);
-
-      if (transaction.payment?.method && transaction.payment?.paid) {
-        setPaymentMethod(transaction.payment.method);
-      } else {
-        setPaymentMethod("");
-      }
+      loadTransaction(transaction);
 
     } catch (err) {
       console.error("Error looking up transaction:", err);
       setError("Transaction not found!");
       setTransactionLoaded(false);
     }
+  };
+
+  const handleSelectRecentOrder = async (purchaseId) => {
+    setOrderId(purchaseId);
+    setError("");
+    setTransactionLoaded(false);
+
+    try {
+      const transaction = await readTransaction(purchaseId);
+      
+      if (!transaction) {
+        setError("Transaction not found!");
+        setTransactionLoaded(false);
+        return;
+      }
+
+      loadTransaction(transaction);
+
+    } catch (err) {
+      console.error("Error loading transaction:", err);
+      setError("Transaction not found!");
+      setTransactionLoaded(false);
+    }
+  };
+
+  const loadTransaction = (transaction) => {
+    setCurrentTransactionID(transaction.purchase_id);
+    setTransactionLoaded(true);
+
+    const transactionProducts = transaction.items?.map(item => ({
+      SKU: item.SKU,
+      Name: item.item,
+      Price: item.price_ea
+    })) || [];
+    setProducts(transactionProducts);
+
+    const transactionDiscounts = transaction.discounts?.map(discount => ({
+      name: discount.name,
+      type: discount.type,
+      value: discount.value
+    })) || [];
+    setDiscounts(transactionDiscounts);
+
+    const newQuantities = {};
+    const newSubtotals = {};
+    
+    transaction.items?.forEach((item) => {
+      newQuantities[item.SKU] = item.quantity;
+      newSubtotals[item.SKU] = (item.quantity * item.price_ea).toFixed(2);
+    });
+
+    setQuantities(newQuantities);
+    setSubtotals(newSubtotals);
+
+    const selectedDiscountNames = transaction.discounts
+      ?.filter(discount => discount.amount_off > 0)
+      .map(discount => discount.name) || [];
+    setSelectedDiscounts(selectedDiscountNames);
+
+    setVoucher(transaction.club_voucher || 0);
+
+    setTotals({
+      subtotal: transaction.receipt?.subtotal || 0,
+      discount: transaction.receipt?.discount || 0,
+      grandTotal: transaction.receipt?.total || 0,
+    });
+
+    setReceiptData({
+      totals: {
+        subtotal: transaction.receipt.subtotal,
+        discount: transaction.receipt.discount,
+        grandTotal: transaction.receipt.total,
+      },
+      discounts: transaction.discounts || [],
+      voucher: transaction.club_voucher || 0
+    });
+
+    const orderCompleted = transaction.payment?.method && transaction.payment?.paid;
+    setIsOrderCompleted(orderCompleted);
+
+    if (transaction.payment?.method && transaction.payment?.paid) {
+      setPaymentMethod(transaction.payment.method);
+    } else {
+      setPaymentMethod("");
+    }
+
+    // Hide recent orders after selection
+    setShowRecentOrders(false);
   };
 
   const handleUpdate = async () => {
@@ -280,6 +347,9 @@ function OrderLookup() {
       showSuccess(`Order ${currentTransactionID} has been completed!`);
       setError("");
       
+      // Refresh recent orders list
+      await fetchRecentOrders();
+      
       resetToInitialState();
       
     } catch (err) {
@@ -319,6 +389,92 @@ function OrderLookup() {
           Reset
         </Button>
       </Stack>
+
+      {!transactionLoaded && (
+        <Paper 
+          elevation={2} 
+          sx={{ 
+            p: 2, 
+            mb: 2, 
+            backgroundColor: '#f5f5f5',
+            display: showRecentOrders ? 'block' : 'none'
+          }}
+        >
+          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+            <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>
+              Recent Unpaid Orders
+            </Typography>
+            <Tooltip title="Configure display count">
+              <IconButton 
+                size="small" 
+                onClick={() => setShowSettings(!showSettings)}
+              >
+                <SettingsIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Stack>
+
+          {showSettings && (
+            <Box sx={{ mb: 2, display: 'flex', gap: 1, alignItems: 'center' }}>
+              <TextField
+                label="Show orders"
+                type="number"
+                size="small"
+                value={tempLimit}
+                onChange={(e) => setTempLimit(parseInt(e.target.value) || 1)}
+                inputProps={{ min: 1, max: 20 }}
+                sx={{ width: 120 }}
+              />
+              <Button 
+                variant="contained" 
+                size="small" 
+                onClick={handleLimitChange}
+              >
+                Apply
+              </Button>
+            </Box>
+          )}
+
+          {recentOrders.length === 0 ? (
+            <Typography variant="body2" color="text.secondary">
+              No unpaid orders found
+            </Typography>
+          ) : (
+            <Stack spacing={1}>
+              {recentOrders.map((order) => (
+                <Paper
+                  key={order.purchase_id}
+                  elevation={1}
+                  sx={{
+                    p: 1.5,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      backgroundColor: '#e3f2fd',
+                      transform: 'translateX(4px)',
+                    },
+                  }}
+                  onClick={() => handleSelectRecentOrder(order.purchase_id)}
+                >
+                  <Stack direction="row" justifyContent="space-between" alignItems="center">
+                    <Box>
+                      <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                        {order.purchase_id}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {order.items?.length || 0} item(s) • ${order.receipt?.total?.toFixed(2) || '0.00'}
+                      </Typography>
+                    </Box>
+                    <Typography variant="caption" color="text.secondary">
+                      {order.timestamp ? new Date(order.timestamp * 1000).toLocaleTimeString() : ''}
+                    </Typography>
+                  </Stack>
+                </Paper>
+              ))}
+            </Stack>
+          )}
+        </Paper>
+      )}
 
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>

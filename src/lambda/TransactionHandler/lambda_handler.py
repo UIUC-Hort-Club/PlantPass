@@ -4,7 +4,8 @@ from database_interface import (
     create_transaction,
     read_transaction,
     update_transaction,
-    delete_transaction
+    delete_transaction,
+    get_recent_unpaid_transactions
 )
 from sales_analytics import (
     compute_sales_analytics,
@@ -47,6 +48,15 @@ def lambda_handler(event, context):
             
             logger.info(f"Transaction retrieved: {transaction}")
             return response(200, transaction)
+        
+        elif route_key == "GET /transactions/recent-unpaid":
+            # Get limit from query parameters, default to 5
+            query_params = event.get("queryStringParameters") or {}
+            limit = int(query_params.get("limit", 5))
+            
+            recent_transactions = get_recent_unpaid_transactions(limit)
+            logger.info(f"Retrieved {len(recent_transactions)} recent unpaid transactions")
+            return response(200, {"transactions": recent_transactions})
 
         elif route_key == "PUT /transactions/{purchase_id}":
             purchase_id = path_params.get("purchase_id")
