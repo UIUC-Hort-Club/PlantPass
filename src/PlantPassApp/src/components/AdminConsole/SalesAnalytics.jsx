@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Container,
   Grid,
@@ -84,6 +84,8 @@ function SalesAnalytics() {
   const [orderBy, setOrderBy] = useState('timestamp');
   const [order, setOrder] = useState('desc');
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [showLive, setShowLive] = useState(false);
+  const disconnectTimeoutRef = useRef(null);
 
   const websocketUrl = getWebSocketUrl();
   
@@ -101,6 +103,26 @@ function SalesAnalytics() {
     handleWebSocketMessage,
     { enabled: !!websocketUrl }
   );
+
+  useEffect(() => {
+    if (isConnected) {
+      if (disconnectTimeoutRef.current) {
+        clearTimeout(disconnectTimeoutRef.current);
+        disconnectTimeoutRef.current = null;
+      }
+      setShowLive(true);
+    } else {
+      disconnectTimeoutRef.current = setTimeout(() => {
+        setShowLive(false);
+      }, 5000);
+    }
+
+    return () => {
+      if (disconnectTimeoutRef.current) {
+        clearTimeout(disconnectTimeoutRef.current);
+      }
+    };
+  }, [isConnected]);
 
   const loadAnalytics = async (isRefresh = false, isSilent = false) => {
     try {
@@ -332,19 +354,12 @@ function SalesAnalytics() {
         sx={{ mb: 3 }}
       >
         <Typography variant="h6">Sales Flow Console</Typography>
-        {isConnected && (
+        {showLive && (
           <Chip
             label="Live"
             size="small"
             color="success"
             variant="outlined"
-            sx={{
-              animation: 'slowBlink 3s ease-in-out infinite',
-              '@keyframes slowBlink': {
-                '0%, 100%': { opacity: 1 },
-                '50%': { opacity: 0.4 }
-              }
-            }}
           />
         )}
       </Stack>
