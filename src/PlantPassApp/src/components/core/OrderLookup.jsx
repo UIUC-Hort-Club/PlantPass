@@ -42,6 +42,7 @@ function OrderLookup() {
   const [currentTransactionID, setCurrentTransactionID] = useState("");
   const [error, setError] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
   const [transactionLoaded, setTransactionLoaded] = useState(false);
   const [isOrderCompleted, setIsOrderCompleted] = useState(false);
   
@@ -92,6 +93,7 @@ function OrderLookup() {
     setSelectedDiscounts([]);
     setVoucher("");
     setPaymentMethod("");
+    setCustomerEmail("");
     setOrderId("");
     setError("");
     setReceiptData(null);
@@ -216,6 +218,7 @@ function OrderLookup() {
     setSelectedDiscounts(selectedDiscountNames);
 
     setVoucher(transaction.club_voucher || 0);
+    setCustomerEmail(transaction.customer_email || "");
 
     setReceiptData({
       totals: {
@@ -321,7 +324,8 @@ function OrderLookup() {
         payment: {
           method: paymentMethod,
           paid: true
-        }
+        },
+        email: customerEmail || ""
       };
 
       await updateTransaction(currentTransactionID, paymentData);
@@ -560,6 +564,22 @@ function OrderLookup() {
               discounts={receiptData.discounts}
               voucher={receiptData.voucher}
             />
+          )}
+
+          {!isOrderCompleted && (
+            <Box sx={{ mt: 2 }}>
+              <TextField
+                label="Customer Email (Optional)"
+                type="email"
+                size="small"
+                fullWidth
+                value={customerEmail}
+                onChange={(e) => setCustomerEmail(e.target.value)}
+                placeholder="email@example.com"
+                helperText="Receipt will be sent to this email when order is completed"
+                sx={{ maxWidth: 400, mx: "auto", display: "block" }}
+              />
+            </Box>
           )}
 
           {!isOrderCompleted && (
