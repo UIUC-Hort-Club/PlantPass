@@ -88,42 +88,7 @@ function SalesAnalytics() {
   const [showLive, setShowLive] = useState(false);
   const disconnectTimeoutRef = useRef(null);
   
-  const handleWebSocketMessage = (message) => {
-    console.log('Received WebSocket update:', message);
-    
-    if (message.type === 'transaction_update') {
-      loadAnalytics(true, true);
-      setLastUpdated(new Date());
-    }
-  };
-
-  const { isConnected } = useWebSocket(
-    WEBSOCKET_URL,
-    handleWebSocketMessage,
-    { enabled: !!WEBSOCKET_URL }
-  );
-
-  useEffect(() => {
-    if (isConnected) {
-      if (disconnectTimeoutRef.current) {
-        clearTimeout(disconnectTimeoutRef.current);
-        disconnectTimeoutRef.current = null;
-      }
-      setShowLive(true);
-    } else {
-      disconnectTimeoutRef.current = setTimeout(() => {
-        setShowLive(false);
-      }, 5000);
-    }
-
-    return () => {
-      if (disconnectTimeoutRef.current) {
-        clearTimeout(disconnectTimeoutRef.current);
-      }
-    };
-  }, [isConnected]);
-
-  const loadAnalytics = async (isRefresh = false, isSilent = false) => {
+  const loadAnalytics = useCallback(async (isRefresh = false, isSilent = false) => {
     try {
       if (!isRefresh) {
         setLoading(true);
@@ -159,11 +124,44 @@ function SalesAnalytics() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [lastUpdated, showSuccess, showError]);
+  
+  const handleWebSocketMessage = useCallback((message) => {
+    if (message.type === 'transaction_update') {
+      loadAnalytics(true, true);
+      setLastUpdated(new Date());
+    }
+  }, [loadAnalytics]);
+
+  const { isConnected } = useWebSocket(
+    WEBSOCKET_URL,
+    handleWebSocketMessage,
+    { enabled: !!WEBSOCKET_URL }
+  );
+
+  useEffect(() => {
+    if (isConnected) {
+      if (disconnectTimeoutRef.current) {
+        clearTimeout(disconnectTimeoutRef.current);
+        disconnectTimeoutRef.current = null;
+      }
+      setShowLive(true);
+    } else {
+      disconnectTimeoutRef.current = setTimeout(() => {
+        setShowLive(false);
+      }, 5000);
+    }
+
+    return () => {
+      if (disconnectTimeoutRef.current) {
+        clearTimeout(disconnectTimeoutRef.current);
+      }
+    };
+  }, [isConnected]);
 
   useEffect(() => {
     loadAnalytics();
-  }, []);
+  }, [loadAnalytics]);
 
   const exportData = async () => {
     try {
