@@ -16,9 +16,13 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
+import LockIcon from "@mui/icons-material/Lock";
+import LockOpenIcon from "@mui/icons-material/LockOpen";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { getAllProducts } from "../../api/products_interface/getAllProducts";
 import { replaceAllProducts } from "../../api/products_interface/replaceAllProducts";
+import { getLockState } from "../../api/lock_interface/getLockState";
+import { setLockState } from "../../api/lock_interface/setLockState";
 import { useNotification } from "../../contexts/NotificationContext";
 import { generateSKU } from "../../utils/skuGenerator";
 import { validateSKUs } from "../../utils/skuValidator";
@@ -34,9 +38,12 @@ export default function ProductTable() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [duplicateSKUs, setDuplicateSKUs] = useState([]);
+  const [isLocked, setIsLocked] = useState(false);
+  const [lockLoading, setLockLoading] = useState(false);
 
   useEffect(() => {
     loadProducts();
+    checkLockState();
   }, []);
 
   useEffect(() => {
@@ -65,6 +72,30 @@ export default function ProductTable() {
       showError("Error loading products");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkLockState = async () => {
+    try {
+      const response = await getLockState('products');
+      setIsLocked(response.isLocked || false);
+    } catch (error) {
+      console.error("Error checking lock state:", error);
+    }
+  };
+
+  const toggleLock = async () => {
+    try {
+      setLockLoading(true);
+      const newLockState = !isLocked;
+      await setLockState('products', newLockState);
+      setIsLocked(newLockState);
+      showSuccess(newLockState ? "Products locked" : "Products unlocked");
+    } catch (error) {
+      console.error("Error toggling lock:", error);
+      showError("Error updating lock state");
+    } finally {
+      setLockLoading(false);
     }
   };
 
@@ -179,6 +210,21 @@ export default function ProductTable() {
       return;
     }
 
+    // Check current lock state before saving
+    try {
+      const currentLockState = await getLockState('products');
+      if (currentLockState.isLocked) {
+        showError("Cannot save: Products have been locked by another admin");
+        await loadProducts();
+        await checkLockState();
+        return;
+      }
+    } catch (error) {
+      console.error("Error checking lock state:", error);
+      showError("Error verifying lock state");
+      return;
+    }
+
     // Check for validation errors including duplicates
     const validationErrors = validateSKUs(rows);
     if (validationErrors.length > 0) {
@@ -248,7 +294,23 @@ export default function ProductTable() {
         alignItems="center"
         sx={{ mb: 3 }}
       >
-        <Typography variant="h6">Edit Products</Typography>
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <Typography variant="h6">Edit Products</Typography>
+          <IconButton 
+            onClick={toggleLock} 
+            disabled={lockLoading}
+            size="small"
+            sx={{ 
+              color: isLocked ? 'error.main' : 'success.main',
+              '&:hover': {
+                backgroundColor: isLocked ? 'error.light' : 'success.light',
+                opacity: 0.1
+              }
+            }}
+          >
+            {isLocked ? <LockIcon /> : <LockOpenIcon />}
+          </IconButton>
+        </Stack>
       </Stack>
 
       <Stack direction="row" justifyContent="space-between" sx={{ mb: 1 }}>
@@ -256,6 +318,7 @@ export default function ProductTable() {
           <Button
             variant="outlined"
             size="small"
+            disabled={isLocked}
             sx={{
               fontWeight: 200,
               color: "error.dark",
@@ -274,12 +337,22 @@ export default function ProductTable() {
             Clear
           </Button>
 
-          <Button variant="outlined" size="small" onClick={handleReset}>
+          <Button 
+            variant="outlined" 
+            size="small" 
+            onClick={handleReset}
+            disabled={isLocked}
+          >
             Reset
           </Button>
         </Stack>
 
-        <Button variant="contained" size="small" onClick={handleAddRow}>
+        <Button 
+          variant="contained" 
+          size="small" 
+          onClick={handleAddRow}
+          disabled={isLocked}
+        >
           Add Product
         </Button>
       </Stack>
@@ -365,6 +438,7 @@ export default function ProductTable() {
                                 error={duplicateSKUs.some(err => err.includes(row.sku?.toUpperCase()))}
                                 helperText={duplicateSKUs.find(err => err.includes(row.sku?.toUpperCase())) || ""}
                                 placeholder="Auto-generated"
+                                disabled={isLocked}
                               />
                             </Box>
                           </TableCell>
@@ -378,6 +452,7 @@ export default function ProductTable() {
                                 handleEdit(row.id, "name", e.target.value)
                               }
                               onBlur={() => handleNameBlur(row.id)}
+                              disabled={isLocked}
                             />
                           </TableCell>
 
@@ -395,6 +470,7 @@ export default function ProductTable() {
                                 inputMode: 'decimal',
                                 pattern: '[0-9]*\\.?[0-9]*'
                               }}
+                              disabled={isLocked}
                             />
                           </TableCell>
 
@@ -402,6 +478,7 @@ export default function ProductTable() {
                             <IconButton
                               size="small"
                               onClick={() => handleDelete(row.id)}
+                              disabled={isLocked}
                             >
                               <DeleteIcon fontSize="small" />
                             </IconButton>
@@ -428,7 +505,7 @@ export default function ProductTable() {
         <Button 
           variant="contained" 
           onClick={handleSave}
-          disabled={!hasChanges() || saving}
+          disabled={!hasChanges() || saving || isLocked}
         >
           {saving ? "Saving..." : "Save"}
         </Button>

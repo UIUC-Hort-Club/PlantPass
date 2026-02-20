@@ -16,9 +16,13 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
+import LockIcon from "@mui/icons-material/Lock";
+import LockOpenIcon from "@mui/icons-material/LockOpen";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { getAllPaymentMethods } from "../../api/payment_methods_interface/getAllPaymentMethods";
 import { replaceAllPaymentMethods } from "../../api/payment_methods_interface/replaceAllPaymentMethods";
+import { getLockState } from "../../api/lock_interface/getLockState";
+import { setLockState } from "../../api/lock_interface/setLockState";
 import { useNotification } from "../../contexts/NotificationContext";
 import LoadingSpinner from "../common/LoadingSpinner";
 
@@ -30,9 +34,12 @@ export default function EditPaymentMethods() {
   const [deletedRows, setDeletedRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
+  const [lockLoading, setLockLoading] = useState(false);
 
   useEffect(() => {
     loadPaymentMethods();
+    checkLockState();
   }, []);
 
   const loadPaymentMethods = async () => {
@@ -54,6 +61,30 @@ export default function EditPaymentMethods() {
       showError("Error loading payment methods");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkLockState = async () => {
+    try {
+      const response = await getLockState('payment_methods');
+      setIsLocked(response.isLocked || false);
+    } catch (error) {
+      console.error("Error checking lock state:", error);
+    }
+  };
+
+  const toggleLock = async () => {
+    try {
+      setLockLoading(true);
+      const newLockState = !isLocked;
+      await setLockState('payment_methods', newLockState);
+      setIsLocked(newLockState);
+      showSuccess(newLockState ? "Payment methods locked" : "Payment methods unlocked");
+    } catch (error) {
+      console.error("Error toggling lock:", error);
+      showError("Error updating lock state");
+    } finally {
+      setLockLoading(false);
     }
   };
 
@@ -130,6 +161,21 @@ export default function EditPaymentMethods() {
       return;
     }
 
+    // Check current lock state before saving
+    try {
+      const currentLockState = await getLockState('payment_methods');
+      if (currentLockState.isLocked) {
+        showError("Cannot save: Payment methods have been locked by another admin");
+        await loadPaymentMethods();
+        await checkLockState();
+        return;
+      }
+    } catch (error) {
+      console.error("Error checking lock state:", error);
+      showError("Error verifying lock state");
+      return;
+    }
+
     setSaving(true);
     try {
       const validMethods = rows
@@ -167,7 +213,23 @@ export default function EditPaymentMethods() {
         alignItems="center"
         sx={{ mb: 3 }}
       >
-        <Typography variant="h6">Edit Payment Methods</Typography>
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <Typography variant="h6">Edit Payment Methods</Typography>
+          <IconButton 
+            onClick={toggleLock} 
+            disabled={lockLoading}
+            size="small"
+            sx={{ 
+              color: isLocked ? 'error.main' : 'success.main',
+              '&:hover': {
+                backgroundColor: isLocked ? 'error.light' : 'success.light',
+                opacity: 0.1
+              }
+            }}
+          >
+            {isLocked ? <LockIcon /> : <LockOpenIcon />}
+          </IconButton>
+        </Stack>
       </Stack>
 
       <Stack direction="row" justifyContent="space-between" sx={{ mb: 1 }}>
@@ -175,6 +237,7 @@ export default function EditPaymentMethods() {
           <Button
             variant="outlined"
             size="small"
+            disabled={isLocked}
             sx={{
               fontWeight: 200,
               color: "error.dark",
@@ -193,12 +256,22 @@ export default function EditPaymentMethods() {
             Clear
           </Button>
 
-          <Button variant="outlined" size="small" onClick={handleReset}>
+          <Button 
+            variant="outlined" 
+            size="small" 
+            onClick={handleReset}
+            disabled={isLocked}
+          >
             Reset
           </Button>
         </Stack>
 
-        <Button variant="contained" size="small" onClick={handleAddRow}>
+        <Button 
+          variant="contained" 
+          size="small" 
+          onClick={handleAddRow}
+          disabled={isLocked}
+        >
           Add Payment Method
         </Button>
       </Stack>
@@ -275,6 +348,7 @@ export default function EditPaymentMethods() {
                                   handleEdit(row.id, "name", e.target.value)
                                 }
                                 placeholder="e.g., Cash, Credit/Debit, Check"
+                                disabled={isLocked}
                               />
                             </Box>
                           </TableCell>
@@ -283,6 +357,7 @@ export default function EditPaymentMethods() {
                             <IconButton
                               size="small"
                               onClick={() => handleDelete(row.id)}
+                              disabled={isLocked}
                             >
                               <DeleteIcon fontSize="small" />
                             </IconButton>
@@ -309,7 +384,7 @@ export default function EditPaymentMethods() {
         <Button 
           variant="contained" 
           onClick={handleSave}
-          disabled={!hasChanges() || saving}
+          disabled={!hasChanges() || saving || isLocked}
         >
           {saving ? "Saving..." : "Save"}
         </Button>

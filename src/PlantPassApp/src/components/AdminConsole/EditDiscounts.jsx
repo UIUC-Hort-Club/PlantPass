@@ -20,9 +20,13 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import PercentIcon from '@mui/icons-material/Percent';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import LockIcon from "@mui/icons-material/Lock";
+import LockOpenIcon from "@mui/icons-material/LockOpen";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { getAllDiscounts } from "../../api/discounts_interface/getAllDiscounts";
 import { replaceAllDiscounts } from "../../api/discounts_interface/replaceAllDiscounts";
+import { getLockState } from "../../api/lock_interface/getLockState";
+import { setLockState } from "../../api/lock_interface/setLockState";
 import { useNotification } from "../../contexts/NotificationContext";
 import { formatPriceInput, handlePriceBlur } from "../../utils/priceFormatter";
 import LoadingSpinner from "../common/LoadingSpinner";
@@ -35,9 +39,12 @@ export default function DiscountTable() {
   const [deletedRows, setDeletedRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
+  const [lockLoading, setLockLoading] = useState(false);
 
   useEffect(() => {
     loadDiscounts();
+    checkLockState();
   }, []);
 
   const loadDiscounts = async () => {
@@ -62,6 +69,30 @@ export default function DiscountTable() {
       showError("Error loading discounts");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkLockState = async () => {
+    try {
+      const response = await getLockState('discounts');
+      setIsLocked(response.isLocked || false);
+    } catch (error) {
+      console.error("Error checking lock state:", error);
+    }
+  };
+
+  const toggleLock = async () => {
+    try {
+      setLockLoading(true);
+      const newLockState = !isLocked;
+      await setLockState('discounts', newLockState);
+      setIsLocked(newLockState);
+      showSuccess(newLockState ? "Discounts locked" : "Discounts unlocked");
+    } catch (error) {
+      console.error("Error toggling lock:", error);
+      showError("Error updating lock state");
+    } finally {
+      setLockLoading(false);
     }
   };
 
@@ -187,6 +218,21 @@ export default function DiscountTable() {
       return;
     }
 
+    // Check current lock state before saving
+    try {
+      const currentLockState = await getLockState('discounts');
+      if (currentLockState.isLocked) {
+        showError("Cannot save: Discounts have been locked by another admin");
+        await loadDiscounts();
+        await checkLockState();
+        return;
+      }
+    } catch (error) {
+      console.error("Error checking lock state:", error);
+      showError("Error verifying lock state");
+      return;
+    }
+
     setSaving(true);
     try {
       const validDiscounts = rows
@@ -227,7 +273,23 @@ export default function DiscountTable() {
         spacing={1}
         sx={{ mb: 3 }}
       >
-        <Typography variant="h6">Edit Discounts</Typography>
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <Typography variant="h6">Edit Discounts</Typography>
+          <IconButton 
+            onClick={toggleLock} 
+            disabled={lockLoading}
+            size="small"
+            sx={{ 
+              color: isLocked ? 'error.main' : 'success.main',
+              '&:hover': {
+                backgroundColor: isLocked ? 'error.light' : 'success.light',
+                opacity: 0.1
+              }
+            }}
+          >
+            {isLocked ? <LockIcon /> : <LockOpenIcon />}
+          </IconButton>
+        </Stack>
         <Typography variant="body1">
           Discounts will always be computed as applied to the subtotal. For instance, if the subtotal is
           $1000 with a $50 voucher, 10% off discount, and 100 dollar off discount, it will be as follows:
@@ -242,6 +304,7 @@ export default function DiscountTable() {
           <Button
             variant="outlined"
             size="small"
+            disabled={isLocked}
             sx={{
               fontWeight: 200,
               color: "error.dark",
@@ -260,12 +323,22 @@ export default function DiscountTable() {
             Clear
           </Button>
 
-          <Button variant="outlined" size="small" onClick={handleReset}>
+          <Button 
+            variant="outlined" 
+            size="small" 
+            onClick={handleReset}
+            disabled={isLocked}
+          >
             Reset
           </Button>
         </Stack>
 
-        <Button variant="contained" size="small" onClick={handleAddRow}>
+        <Button 
+          variant="contained" 
+          size="small" 
+          onClick={handleAddRow}
+          disabled={isLocked}
+        >
           Add Discount
         </Button>
       </Stack>
@@ -347,6 +420,7 @@ export default function DiscountTable() {
                                 onChange={(e) =>
                                   handleEdit(row.id, "name", e.target.value)
                                 }
+                                disabled={isLocked}
                               />
                             </Box>
                           </TableCell>
@@ -361,11 +435,12 @@ export default function DiscountTable() {
                                 }
                               }}
                               size="small"
+                              disabled={isLocked}
                             >
-                              <ToggleButton value="percent" aria-label="percent">
+                              <ToggleButton value="percent" aria-label="percent" disabled={isLocked}>
                                 <PercentIcon fontSize="small" />
                               </ToggleButton>
-                              <ToggleButton value="dollar" aria-label="dollar">
+                              <ToggleButton value="dollar" aria-label="dollar" disabled={isLocked}>
                                 <AttachMoneyIcon fontSize="small" />
                               </ToggleButton>
                             </ToggleButtonGroup>
@@ -395,6 +470,7 @@ export default function DiscountTable() {
                                 inputMode: row.type === "percent" ? "numeric" : "decimal",
                                 pattern: row.type === "percent" ? "[0-9]*" : "[0-9]*\\.?[0-9]*"
                               }}
+                              disabled={isLocked}
                             />
                           </TableCell>
 
@@ -402,6 +478,7 @@ export default function DiscountTable() {
                             <IconButton
                               size="small"
                               onClick={() => handleDelete(row.id)}
+                              disabled={isLocked}
                             >
                               <DeleteIcon fontSize="small" />
                             </IconButton>
@@ -428,7 +505,7 @@ export default function DiscountTable() {
         <Button 
           variant="contained" 
           onClick={handleSave}
-          disabled={!hasChanges() || saving}
+          disabled={!hasChanges() || saving || isLocked}
         >
           {saving ? "Saving..." : "Save"}
         </Button>
