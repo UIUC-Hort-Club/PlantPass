@@ -20,6 +20,7 @@ import ItemsTable from "./SubComponents/ItemsTable";
 import DiscountsTable from "./SubComponents/DiscountsTable";
 import Receipt from "./SubComponents/Receipt";
 import ConfirmationDialog from "../common/ConfirmationDialog";
+import LoadingSpinner from "../common/LoadingSpinner";
 import { readTransaction } from "../../api/transaction_interface/readTransaction";
 import { getRecentUnpaidTransactions } from "../../api/transaction_interface/getRecentUnpaidTransactions";
 import { updateTransaction } from "../../api/transaction_interface/updateTransaction";
@@ -52,6 +53,7 @@ function OrderLookup() {
   });
   const [showSettings, setShowSettings] = useState(false);
   const [tempLimit, setTempLimit] = useState(recentOrdersLimit);
+  const [loadingRecentOrders, setLoadingRecentOrders] = useState(true);
   
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -60,11 +62,14 @@ function OrderLookup() {
   }, [recentOrdersLimit]);
 
   const fetchRecentOrders = async () => {
+    setLoadingRecentOrders(true);
     try {
       const orders = await getRecentUnpaidTransactions(recentOrdersLimit);
       setRecentOrders(orders);
     } catch (err) {
       console.error("Error fetching recent orders:", err);
+    } finally {
+      setLoadingRecentOrders(false);
     }
   };
 
@@ -432,7 +437,9 @@ function OrderLookup() {
             </Box>
           )}
 
-          {recentOrdersLimit === 0 ? null : recentOrders.length === 0 ? (
+          {recentOrdersLimit === 0 ? null : loadingRecentOrders ? (
+            <LoadingSpinner message="Loading recent orders..." />
+          ) : recentOrders.length === 0 ? (
             <Typography variant="body2" color="text.secondary">
               No unpaid orders found
             </Typography>
