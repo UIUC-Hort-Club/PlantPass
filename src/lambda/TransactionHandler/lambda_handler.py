@@ -1,5 +1,10 @@
 import json
 import logging
+import sys
+import os
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
+from response_utils import create_response
 from database_interface import (
     create_transaction,
     read_transaction,
@@ -19,91 +24,74 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
-    logger.info(f"Received event: {json.dumps(event)}")
-
     try:
         route_key = event.get("routeKey", "")
         path_params = event.get("pathParameters") or {}
         body = json.loads(event.get("body", "{}"))
 
-        logger.info(f"Route: {route_key}, Path params: {path_params}, Body: {body}")
-
         if route_key == "POST /transactions":
+            transaction = create_transaction(body)
+            
             try:
-                transaction = create_transaction(body)
-                logger.info("Transaction saved successfully")
-                
-                try:
-                    notify_transaction_update('created', transaction)
-                except Exception as notify_error:
-                    logger.error(f"Failed to send WebSocket notification: {notify_error}")
-                
-                return response(201, {"message": "Transaction created successfully", "transaction": transaction})
-            except Exception as e:
-                logger.error(f"Error saving transaction: {e}", exc_info=True)
-                return response(500, {"message": "Error saving transaction", "error": str(e)})
+                notify_transaction_update('created', transaction)
+            except Exception as notify_error:
+                logger.error(f"Failed to send WebSocket notification: {notify_error}")
+            
+            return create_response(201, {"message": "Transaction created successfully", "transaction": transaction})
 
         elif route_key == "GET /transactions/{purchase_id}":
             purchase_id = path_params.get("purchase_id")
             if not purchase_id:
-                logger.warning("purchase_id missing in GET request")
-                return response(400, {"message": "purchase_id required"})
+                return create_response(400, {"message": "purchase_id required"})
             
             transaction = read_transaction(purchase_id)
             if not transaction:
-                return response(404, {"message": "Transaction not found"})
+                return create_response(404, {"message": "Transaction not found"})
             
-            logger.info(f"Transaction retrieved: {transaction}")
-            return response(200, transaction)
+            return create_response(200, transaction)
         
         elif route_key == "GET /transactions/recent-unpaid":
             query_params = event.get("queryStringParameters") or {}
             limit = int(query_params.get("limit", 5))
             
             recent_transactions = get_recent_unpaid_transactions(limit)
-            logger.info(f"Retrieved {len(recent_transactions)} recent unpaid transactions")
-            return response(200, {"transactions": recent_transactions})
+            return create_response(200, {"transactions": recent_transactions})
 
         elif route_key == "PUT /transactions/{purchase_id}":
             purchase_id = path_params.get("purchase_id")
             if not purchase_id:
-                return response(400, {"message": "purchase_id required"})
+                return create_response(400, {"message": "purchase_id required"})
             
             updated_transaction = update_transaction(purchase_id, body)
-            logger.info(f"Transaction updated: {updated_transaction}")
             
             try:
                 notify_transaction_update('updated', updated_transaction)
             except Exception as notify_error:
                 logger.error(f"Failed to send WebSocket notification: {notify_error}")
             
-            return response(200, {"transaction": updated_transaction})
+            return create_response(200, {"transaction": updated_transaction})
 
         elif route_key == "DELETE /transactions/{purchase_id}":
             purchase_id = path_params.get("purchase_id")
             if not purchase_id:
-                return response(400, {"message": "purchase_id required"})
+                return create_response(400, {"message": "purchase_id required"})
             
             delete_transaction(purchase_id)
-            logger.info(f"Transaction deleted: {purchase_id}")
             
             try:
                 notify_transaction_update('deleted', {'purchase_id': purchase_id})
             except Exception as notify_error:
                 logger.error(f"Failed to send WebSocket notification: {notify_error}")
             
-            return response(204, {})
+            return create_response(204, {})
         
         elif route_key == "GET /transactions/sales-analytics":
             analytics = compute_sales_analytics()
-            logger.info(f"Analytics computed: {analytics}")
-            return response(200, analytics)
+            return create_response(200, analytics)
 
         elif route_key == "GET /transactions/export-data":
             transactions = export_transaction_data()
             csv_export = generate_csv_export(transactions)
-            
-            logger.info(f"Generated CSV export: {csv_export['filename']}")
             
             return {
                 "statusCode": 200,
@@ -122,30 +110,17 @@ def lambda_handler(event, context):
 
         elif route_key == "DELETE /transactions/clear-all":
             cleared_count = clear_all_transactions()
-            logger.info(f"Cleared {cleared_count} transactions")
             
             try:
                 notify_transaction_update('cleared', {'cleared_count': cleared_count})
             except Exception as notify_error:
                 logger.error(f"Failed to send WebSocket notification: {notify_error}")
             
-            return response(200, {"message": f"Successfully cleared {cleared_count} transactions", "cleared_count": cleared_count})
+            return create_response(200, {"message": f"Successfully cleared {cleared_count} transactions", "cleared_count": cleared_count})
 
         else:
-            logger.warning(f"Unknown route: {route_key}")
-            return response(404, {"message": "Route not found"})
+            return create_response(404, {"message": "Route not found"})
 
     except Exception as e:
         logger.error(f"Error processing request: {e}", exc_info=True)
-        return response(500, {"message": str(e)})
-
-def response(status_code, body):
-    return {
-        "statusCode": status_code,
-        "headers": {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type"
-        },
-        "body": json.dumps(body)
-    }
+        return create_response(500, {"message": str(e)})
