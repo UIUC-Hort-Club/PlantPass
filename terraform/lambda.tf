@@ -1,6 +1,3 @@
-# -------------------------
-# Lambda IAM Role
-# -------------------------
 resource "aws_iam_role" "lambda_exec" {
   name = "plantpass_lambda_role"
   assume_role_policy = jsonencode({
@@ -19,13 +16,11 @@ resource "aws_iam_role" "lambda_exec" {
   }
 }
 
-# Attach basic execution policy
 resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
   role       = aws_iam_role.lambda_exec.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# S3 access policy for Admin Lambda
 resource "aws_iam_role_policy" "lambda_s3_access" {
   name = "AdminLambdaS3Access"
   role = aws_iam_role.lambda_exec.id
@@ -45,7 +40,6 @@ resource "aws_iam_role_policy" "lambda_s3_access" {
   })
 }
 
-# DynamoDB access policy for Lambda functions
 resource "aws_iam_role_policy" "lambda_dynamodb_access" {
   name = "LambdaDynamoDBAccess"
   role = aws_iam_role.lambda_exec.id
@@ -76,9 +70,6 @@ resource "aws_iam_role_policy" "lambda_dynamodb_access" {
   })
 }
 
-# -------------------------
-# CloudWatch Log Group
-# -------------------------
 resource "aws_cloudwatch_log_group" "transaction_handler_logs" {
   name              = "/aws/lambda/TransactionHandler"
   retention_in_days = 14
@@ -115,10 +106,6 @@ resource "aws_cloudwatch_log_group" "discounts_handler_logs" {
   }
 }
 
-# -------------------------
-# Lambda Functions
-# -------------------------
-# Transaction Lambda
 resource "aws_lambda_function" "transaction_handler" {
   function_name    = "TransactionHandler"
   filename         = var.transaction_lambda_zip_path
@@ -143,7 +130,6 @@ resource "aws_lambda_function" "transaction_handler" {
   }
 }
 
-# Admin Lambda
 resource "aws_lambda_function" "admin" {
   function_name    = "plantpass-admin"
   filename         = var.admin_lambda_zip_path
@@ -163,7 +149,6 @@ resource "aws_lambda_function" "admin" {
       PASSWORD_KEY    = "password.json"
       JWT_SECRET      = "super-secret-key"
 
-      # Reset token configuration (used for password reset flow)
       RESET_TOKEN_HASH = var.reset_token_hash
       RESET_ENABLED    = "true"
     }
@@ -178,7 +163,6 @@ resource "aws_lambda_function" "admin" {
   }
 }
 
-# Products Lambda
 resource "aws_lambda_function" "products_handler" {
   function_name    = "ProductsHandler"
   filename         = var.products_lambda_zip_path
@@ -201,7 +185,6 @@ resource "aws_lambda_function" "products_handler" {
   }
 }
 
-# Discounts Lambda
 resource "aws_lambda_function" "discounts_handler" {
   function_name    = "DiscountsHandler"
   filename         = var.discounts_lambda_zip_path
@@ -224,10 +207,6 @@ resource "aws_lambda_function" "discounts_handler" {
   }
 }
 
-# -------------------------
-# Lambda Permissions for API Gateway
-# -------------------------
-# Transaction Lambda
 resource "aws_lambda_permission" "apigw_transaction" {
   statement_id  = "AllowAPIGatewayInvokeTransaction"
   action        = "lambda:InvokeFunction"
@@ -236,7 +215,6 @@ resource "aws_lambda_permission" "apigw_transaction" {
   source_arn    = "${aws_apigatewayv2_api.frontend_api.execution_arn}/*/*"
 }
 
-# Admin Lambda
 resource "aws_lambda_permission" "apigw_admin" {
   statement_id  = "AllowAPIGatewayInvokeAdmin"
   action        = "lambda:InvokeFunction"
@@ -245,7 +223,6 @@ resource "aws_lambda_permission" "apigw_admin" {
   source_arn    = "${aws_apigatewayv2_api.frontend_api.execution_arn}/*/*"
 }
 
-# Products Lambda
 resource "aws_lambda_permission" "apigw_products" {
   statement_id  = "AllowAPIGatewayInvokeProducts"
   action        = "lambda:InvokeFunction"
@@ -254,7 +231,6 @@ resource "aws_lambda_permission" "apigw_products" {
   source_arn    = "${aws_apigatewayv2_api.frontend_api.execution_arn}/*/*"
 }
 
-# Discounts Lambda
 resource "aws_lambda_permission" "apigw_discounts" {
   statement_id  = "AllowAPIGatewayInvokeDiscounts"
   action        = "lambda:InvokeFunction"
@@ -263,9 +239,6 @@ resource "aws_lambda_permission" "apigw_discounts" {
   source_arn    = "${aws_apigatewayv2_api.frontend_api.execution_arn}/*/*"
 }
 
-# -------------------------
-# Lambda Layers for Dependencies
-# -------------------------
 resource "aws_lambda_layer_version" "auth_deps" {
   layer_name          = "plantpass-auth-deps"
   filename            = var.auth_layer_zip_path
