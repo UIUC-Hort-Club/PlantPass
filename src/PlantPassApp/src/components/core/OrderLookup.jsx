@@ -265,11 +265,6 @@ function OrderLookup() {
 
       const updatedTransaction = await updateTransaction(currentTransactionID, updateData);
       
-      setTotals({
-        subtotal: updatedTransaction.receipt.subtotal,
-        discount: updatedTransaction.receipt.discount,
-        grandTotal: updatedTransaction.receipt.total,
-      });
       setReceiptData({
         totals: {
           subtotal: updatedTransaction.receipt.subtotal,
