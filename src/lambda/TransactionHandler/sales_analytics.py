@@ -17,6 +17,9 @@ def compute_sales_analytics():
     """
     Compute sales analytics such as total sales, average order value, etc.
     
+    Analytics (cards and graph) only include PAID transactions.
+    Transaction table includes all transactions regardless of payment status.
+    
     Returns analytics grouped into 30-minute time blocks aligned to clock boundaries.
     """
     try:
@@ -40,8 +43,8 @@ def compute_sales_analytics():
         
         transactions = decimal_to_float(transactions)
         
+        paid_transactions = []
         total_sales = 0.0
-        total_orders = len(transactions)
         total_units_sold = 0
         sales_by_time_bucket = {}
         transaction_summaries = []
@@ -51,28 +54,32 @@ def compute_sales_analytics():
             transaction = Transaction.from_db_record(transaction_data)
             summary = transaction.get_summary()
             
-            total_sales += summary["grand_total"]
-            total_units_sold += summary["total_quantity"]
             transaction_summaries.append(summary)
             
-            # Group by time buckets
-            timestamp = transaction.timestamp
-            if timestamp:
-                dt = datetime.fromtimestamp(timestamp, tz=timezone.utc)
-                minute = 0 if dt.minute < 30 else 30
-                bucket_time = dt.replace(minute=minute, second=0, microsecond=0)
-                bucket_key = bucket_time.strftime("%m-%d-%Y %I:%M %p")
+            is_paid = summary.get("paid", False)
+            if is_paid is True or is_paid == "true" or str(is_paid).lower() == "true":
+                paid_transactions.append(transaction)
+                total_sales += summary["grand_total"]
+                total_units_sold += summary["total_quantity"]
                 
-                if bucket_key not in sales_by_time_bucket:
-                    sales_by_time_bucket[bucket_key] = 0.0
-                sales_by_time_bucket[bucket_key] += summary["grand_total"]
+                timestamp = transaction.timestamp
+                if timestamp:
+                    dt = datetime.fromtimestamp(timestamp, tz=timezone.utc)
+                    minute = 0 if dt.minute < 30 else 30
+                    bucket_time = dt.replace(minute=minute, second=0, microsecond=0)
+                    bucket_key = bucket_time.strftime("%m-%d-%Y %I:%M %p")
+                    
+                    if bucket_key not in sales_by_time_bucket:
+                        sales_by_time_bucket[bucket_key] = 0.0
+                    sales_by_time_bucket[bucket_key] += summary["grand_total"]
+        
+        total_orders = len(paid_transactions)
         
         average_items_per_order = total_units_sold / total_orders if total_orders > 0 else 0.0
         average_order_value = total_sales / total_orders if total_orders > 0 else 0.0
         
-        # Fill in empty time buckets
-        if transactions:
-            timestamps = [t.get("timestamp", 0) for t in transactions if t.get("timestamp")]
+        if paid_transactions:
+            timestamps = [t.timestamp for t in paid_transactions if t.timestamp]
             if timestamps:
                 min_time = min(timestamps)
                 max_time = max(timestamps)
