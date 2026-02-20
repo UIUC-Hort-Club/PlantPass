@@ -33,9 +33,10 @@ def send_receipt_email(recipient_email, transaction_data):
         # Build items list
         items_html = ""
         for item in items:
+            item_name = item.get('item') or item.get('name', 'N/A')
             items_html += f"""
             <tr>
-                <td style="padding: 8px; border-bottom: 1px solid #ddd;">{item.get('name', 'N/A')}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd;">{item_name}</td>
                 <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: center;">{item.get('quantity', 0)}</td>
                 <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right;">${item.get('price_ea', 0):.2f}</td>
                 <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right;">${item.get('quantity', 0) * item.get('price_ea', 0):.2f}</td>
@@ -99,7 +100,8 @@ Order ID: {purchase_id}
 Items:
 """
         for item in items:
-            text_body += f"{item.get('name', 'N/A')} x{item.get('quantity', 0)} @ ${item.get('price_ea', 0):.2f} = ${item.get('quantity', 0) * item.get('price_ea', 0):.2f}\n"
+            item_name = item.get('item') or item.get('name', 'N/A')
+            text_body += f"{item_name} x{item.get('quantity', 0)} @ ${item.get('price_ea', 0):.2f} = ${item.get('quantity', 0) * item.get('price_ea', 0):.2f}\n"
         
         text_body += f"\nSubtotal: ${receipt.get('subtotal', 0):.2f}\n"
         if receipt.get('discount', 0) > 0:
