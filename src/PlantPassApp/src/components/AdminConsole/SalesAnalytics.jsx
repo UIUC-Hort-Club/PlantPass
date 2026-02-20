@@ -28,6 +28,7 @@ import {
   ListItemText,
   TableSortLabel,
   Chip,
+  Tooltip as MuiTooltip,
 } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { Line } from "react-chartjs-2";
@@ -373,14 +374,16 @@ function SalesAnalytics() {
         sx={{ mb: 3 }}
       >
         <Typography variant="h6">Sales Flow Dashboard</Typography>
-        <Chip
-          label="Live"
-          size="small"
-          color={showLive ? "success" : "default"}
-          variant="outlined"
-          onClick={handleLiveToggle}
-          sx={{ cursor: 'pointer' }}
-        />
+        <MuiTooltip title={showLive ? "Click to disable live updates" : "Click to enable live updates"}>
+          <Chip
+            label="Live"
+            size="small"
+            color={showLive ? "success" : "default"}
+            variant={showLive ? "filled" : "outlined"}
+            onClick={handleLiveToggle}
+            sx={{ cursor: 'pointer' }}
+          />
+        </MuiTooltip>
       </Stack>
 
       <Grid container spacing={2} sx={{ mb: { xs: 2, sm: 3 } }}>
@@ -527,9 +530,9 @@ function SalesAnalytics() {
                     py: 1,
                   }}
                 >
-                  <Stack direction="row" spacing={2} alignItems="center" sx={{ flexWrap: "wrap", gap: 1 }}>
+                  <Stack direction="row" spacing={0.5} alignItems="center" sx={{ flexWrap: "wrap", gap: 1 }}>
                     {/* Export button with info icon - hidden on mobile */}
-                    <Stack direction="row" spacing={0.5} alignItems="center" sx={{ display: { xs: 'none', sm: 'flex' } }}>
+                    <Stack direction="row" spacing={1} alignItems="center" sx={{ display: { xs: 'none', sm: 'flex' } }}>
                       <IconButton
                         size="small"
                         onClick={() => setShowExportInfoDialog(true)}
