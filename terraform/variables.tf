@@ -61,3 +61,18 @@ variable "enable_custom_domain" {
   default     = true
   description = "Set to true after ACM certificate is validated in Cloudflare"
 }
+
+variable "email_lambda_zip_path" {
+  type        = string
+  description = "Path to EmailHandler Lambda ZIP relative to Terraform working directory"
+}
+
+variable "sender_email" {
+  type        = string
+  description = "Email address to send emails from (must be verified in SES)"
+}
+
+variable "uiuc_hort_club_email" {
+  type        = string
+  description = "UIUC Horticulture Club email address for password reset emails"
+}

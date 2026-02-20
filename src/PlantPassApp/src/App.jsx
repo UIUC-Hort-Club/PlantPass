@@ -14,8 +14,9 @@ import OrderEntry from "./components/core/OrderEntry";
 import OrderLookup from "./components/core/OrderLookup";
 import AdminConsole from "./components/AdminConsole/AdminConsole";
 import AdminPasswordModal from "./components/AdminConsole/AdminPasswordModal";
+import ForgotPasswordDialog from "./components/AdminConsole/ForgotPasswordDialog";
 import NavigationMenu from "./components/Navigation/NavigationMenu";
-import { NotificationProvider } from "./contexts/NotificationContext";
+import { NotificationProvider, useNotification } from "./contexts/NotificationContext";
 
 function TabPanel({ children, value, index }) {
   return (
@@ -44,6 +45,7 @@ export default function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminTabIndex, setAdminTabIndex] = useState(0);
   const [adminModalOpen, setAdminModalOpen] = useState(false);
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
   const [adminError, setAdminError] = useState("");
 
   /* =========================
@@ -65,6 +67,11 @@ export default function App() {
      ========================= */
   const handleAdminClick = () => {
     setAdminModalOpen(true);
+  };
+
+  const handleForgotPassword = () => {
+    setAdminModalOpen(false);
+    setForgotPasswordOpen(true);
   };
 
   const handleAdminPasswordSubmit = (_password) => {
@@ -181,6 +188,15 @@ export default function App() {
           }}
           onSubmit={handleAdminPasswordSubmit}
           error={adminError}
+          onForgotPassword={handleForgotPassword}
+        />
+        
+        {/* =========================
+          Forgot password dialog
+         ========================= */}
+        <ForgotPasswordDialog
+          open={forgotPasswordOpen}
+          onClose={() => setForgotPasswordOpen(false)}
         />
       </Box>
     </NotificationProvider>

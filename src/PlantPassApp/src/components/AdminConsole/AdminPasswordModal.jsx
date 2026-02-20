@@ -12,11 +12,12 @@ import {
   Box,
   LinearProgress,
   FormHelperText,
+  Link,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import PasswordField from "../common/PasswordField";
 
-export default function AdminPasswordModal({ open, onClose, onSubmit, error }) {
+export default function AdminPasswordModal({ open, onClose, onSubmit, error, onForgotPassword }) {
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -79,18 +80,44 @@ export default function AdminPasswordModal({ open, onClose, onSubmit, error }) {
           </FormHelperText>
         </DialogContent>
 
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button
-            onClick={handleClose}
-            variant="outlined"
-            disabled={submitting}
-          >
-            Cancel
-          </Button>
+        <DialogActions sx={{ px: 3, pb: 3, justifyContent: "space-between" }}>
+          {onForgotPassword && (
+            <Link
+              component="button"
+              type="button"
+              variant="body2"
+              onClick={(e) => {
+                e.preventDefault();
+                onForgotPassword();
+              }}
+              disabled={submitting}
+              sx={{ 
+                cursor: "pointer",
+                color: "text.primary",
+                fontWeight: 500,
+                textDecoration: "underline",
+                "&:hover": {
+                  color: "primary.main"
+                }
+              }}
+            >
+              Forgot password?
+            </Link>
+          )}
+          
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <Button
+              onClick={handleClose}
+              variant="outlined"
+              disabled={submitting}
+            >
+              Cancel
+            </Button>
 
-          <Button type="submit" variant="contained" disabled={submitting}>
-            Enter
-          </Button>
+            <Button type="submit" variant="contained" disabled={submitting}>
+              Enter
+            </Button>
+          </Box>
         </DialogActions>
 
         {submitting && <LinearProgress />}

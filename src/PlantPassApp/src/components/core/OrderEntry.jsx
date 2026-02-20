@@ -32,6 +32,7 @@ function OrderEntry() {
   const [selectedDiscounts, setSelectedDiscounts] = useState([]);
   const [receiptData, setReceiptData] = useState(null);
   const [voucher, setVoucher] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
   const [currentTransactionID, setCurrentTransactionID] = useState("");
   const [transactionIDDialogOpen, setTransactionIDDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -47,6 +48,7 @@ function OrderEntry() {
     setTransactionIDDialogOpen(false);
     setSelectedDiscounts([]);
     setReceiptData(null);
+    setCustomerEmail("");
   };
 
   const handleTransactionIDClose = () => {
@@ -144,6 +146,7 @@ function OrderEntry() {
         }),
       discounts: discountsWithSelection,
       voucher: Number(voucher) || 0,
+      email: customerEmail || "",
     };
 
     if (Object.values(quantities).every(qty => !qty || parseInt(qty) === 0)) {
@@ -249,7 +252,18 @@ function OrderEntry() {
         <Stack
           direction="row"
           justifyContent="right"
+          spacing={1}
         >
+          <TextField
+            label="Customer Email (Optional)"
+            type="email"
+            size="small"
+            value={customerEmail}
+            onChange={(e) => setCustomerEmail(e.target.value)}
+            placeholder="email@example.com"
+            sx={{ width: 250 }}
+            helperText="Receive receipt via email"
+          />
           <TextField
             label="Voucher"
             type="text"
