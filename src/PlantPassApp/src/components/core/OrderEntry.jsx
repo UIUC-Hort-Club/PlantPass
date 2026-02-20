@@ -311,9 +311,10 @@ function OrderEntry() {
 
       <Box sx={{ mt: 2 }}>
         <Stack
-          direction="row"
+          direction={{ xs: "column", sm: "row" }}
+          spacing={2}
           justifyContent="space-between"
-          alignItems="center"
+          alignItems={{ xs: "stretch", sm: "center" }}
         >
           <TextField
             label="Customer Email (Optional)"
@@ -335,6 +336,7 @@ function OrderEntry() {
             onClick={handleEnterOrder}
             size="small"
             disabled={!!currentTransactionID}
+            sx={{ minWidth: { xs: '100%', sm: 'auto' } }}
           >
             Enter
           </Button>
