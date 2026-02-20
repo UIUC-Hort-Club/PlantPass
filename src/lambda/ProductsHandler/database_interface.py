@@ -1,18 +1,15 @@
-import boto3
 import logging
 import os
 from botocore.exceptions import ClientError
 from decimal import Decimal
+from dynamodb_client import get_table
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-dynamodb = boto3.resource('dynamodb')
-table_name = os.environ.get('PRODUCTS_TABLE', 'products')
-table = dynamodb.Table(table_name)
+table = get_table('PRODUCTS_TABLE', 'products')
 
 def get_all_products():
-    """Return a list of all products ordered by sort_order."""
     try:
         response = table.scan()
         products = response.get('Items', [])
@@ -28,24 +25,12 @@ def get_all_products():
                 product['sort_order'] = 0
         
         products.sort(key=lambda x: x.get('sort_order', 0))
-        
-        logger.info(f"Retrieved {len(products)} products from database")
         return products
     except ClientError as e:
         logger.error(f"Error retrieving products: {e}")
         raise Exception(f"Failed to retrieve products: {e}")
 
 def replace_all_products(products_data):
-    """
-    Replace all products in the database with the provided list.
-    This will delete all existing products and create new ones.
-    
-    products_data: List of product dictionaries with keys:
-    - SKU: str
-    - item: str  
-    - price_ea: float
-    - sort_order: int
-    """
     try:
         existing_products = get_all_products()
         
@@ -53,12 +38,9 @@ def replace_all_products(products_data):
             for product in existing_products:
                 batch.delete_item(Key={'SKU': product['SKU']})
         
-        logger.info(f"Deleted {len(existing_products)} existing products")
-        
         created_count = 0
         with table.batch_writer() as batch:
             for product_data in products_data:
-                # Validate required fields
                 if 'SKU' not in product_data or 'item' not in product_data or 'price_ea' not in product_data:
                     logger.warning(f"Skipping invalid product data: {product_data}")
                     continue
@@ -73,7 +55,6 @@ def replace_all_products(products_data):
                 batch.put_item(Item=item)
                 created_count += 1
         
-        logger.info(f"Created {created_count} new products")
         return {"deleted": len(existing_products), "created": created_count}
         
     except ClientError as e:
