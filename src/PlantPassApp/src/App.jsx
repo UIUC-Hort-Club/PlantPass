@@ -16,7 +16,7 @@ import AdminConsole from "./components/AdminConsole/AdminConsole";
 import AdminPasswordModal from "./components/AdminConsole/AdminPasswordModal";
 import ForgotPasswordDialog from "./components/AdminConsole/ForgotPasswordDialog";
 import NavigationMenu from "./components/Navigation/NavigationMenu";
-import { NotificationProvider, useNotification } from "./contexts/NotificationContext";
+import { NotificationProvider } from "./contexts/NotificationContext";
 
 function TabPanel({ children, value, index }) {
   return (
