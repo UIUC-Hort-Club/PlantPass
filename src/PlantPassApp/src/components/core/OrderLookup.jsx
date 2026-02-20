@@ -25,6 +25,7 @@ import { readTransaction } from "../../api/transaction_interface/readTransaction
 import { getRecentUnpaidTransactions } from "../../api/transaction_interface/getRecentUnpaidTransactions";
 import { updateTransaction } from "../../api/transaction_interface/updateTransaction";
 import { deleteTransaction } from "../../api/transaction_interface/deleteTransaction";
+import { getAllPaymentMethods } from "../../api/payment_methods_interface/getAllPaymentMethods";
 import { useNotification } from "../../contexts/NotificationContext";
 import { formatOrderId } from "../../utils/orderIdFormatter";
 
@@ -42,6 +43,7 @@ function OrderLookup() {
   const [currentTransactionID, setCurrentTransactionID] = useState("");
   const [error, setError] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentMethods, setPaymentMethods] = useState([]);
   const [customerEmail, setCustomerEmail] = useState("");
   const [transactionLoaded, setTransactionLoaded] = useState(false);
   const [isOrderCompleted, setIsOrderCompleted] = useState(false);
@@ -61,6 +63,19 @@ function OrderLookup() {
   useEffect(() => {
     fetchRecentOrders();
   }, [recentOrdersLimit]);
+
+  useEffect(() => {
+    loadPaymentMethods();
+  }, []);
+
+  const loadPaymentMethods = async () => {
+    try {
+      const methods = await getAllPaymentMethods();
+      setPaymentMethods(methods);
+    } catch (err) {
+      console.error("Error loading payment methods:", err);
+    }
+  };
 
   const fetchRecentOrders = async () => {
     setLoadingRecentOrders(true);
@@ -599,10 +614,11 @@ function OrderLookup() {
                   <MenuItem value="">
                     <em>Select Payment Method</em>
                   </MenuItem>
-                  <MenuItem value="Cash">Cash</MenuItem>
-                  <MenuItem value="Credit/Debit">Credit/Debit</MenuItem>
-                  <MenuItem value="Check">Check</MenuItem>
-                  <MenuItem value="Other">Other</MenuItem>
+                  {paymentMethods.map((method) => (
+                    <MenuItem key={method.name} value={method.name}>
+                      {method.name}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
               <Button

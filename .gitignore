@@ -46,3 +46,6 @@ __pycache__
 
 # Env files
 .env
+
+# Scripts
+scripts

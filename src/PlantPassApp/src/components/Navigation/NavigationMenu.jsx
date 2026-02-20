@@ -7,6 +7,7 @@ const ADMIN_MENU = [
   "View Analytics",
   "Edit Products",
   "Edit Discounts",
+  "Edit Payment Methods",
   "Reset Password",
 ];
 

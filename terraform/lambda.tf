@@ -64,7 +64,8 @@ resource "aws_iam_role_policy" "lambda_dynamodb_access" {
           aws_dynamodb_table.transactions.arn,
           "${aws_dynamodb_table.transactions.arn}/index/*",
           aws_dynamodb_table.websocket_connections.arn,
-          aws_dynamodb_table.temp_passwords.arn
+          aws_dynamodb_table.temp_passwords.arn,
+          aws_dynamodb_table.payment_methods.arn
         ]
       }
     ]
@@ -100,6 +101,15 @@ resource "aws_cloudwatch_log_group" "products_handler_logs" {
 
 resource "aws_cloudwatch_log_group" "discounts_handler_logs" {
   name              = "/aws/lambda/DiscountsHandler"
+  retention_in_days = 14
+
+  tags = {
+    application = "plantpass"
+  }
+}
+
+resource "aws_cloudwatch_log_group" "payment_methods_handler_logs" {
+  name              = "/aws/lambda/PaymentMethodsHandler"
   retention_in_days = 14
 
   tags = {
@@ -208,6 +218,28 @@ resource "aws_lambda_function" "discounts_handler" {
   }
 }
 
+resource "aws_lambda_function" "payment_methods_handler" {
+  function_name    = "PaymentMethodsHandler"
+  filename         = var.payment_methods_lambda_zip_path
+  handler          = "lambda_handler.lambda_handler"
+  runtime          = "python3.11"
+  role             = aws_iam_role.lambda_exec.arn
+  source_code_hash = filebase64sha256(var.payment_methods_lambda_zip_path)
+  depends_on = [
+    aws_cloudwatch_log_group.payment_methods_handler_logs
+  ]
+
+  environment {
+    variables = {
+      PAYMENT_METHODS_TABLE = aws_dynamodb_table.payment_methods.name
+    }
+  }
+
+  tags = {
+    application = "plantpass"
+  }
+}
+
 resource "aws_lambda_permission" "apigw_transaction" {
   statement_id  = "AllowAPIGatewayInvokeTransaction"
   action        = "lambda:InvokeFunction"
@@ -236,6 +268,14 @@ resource "aws_lambda_permission" "apigw_discounts" {
   statement_id  = "AllowAPIGatewayInvokeDiscounts"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.discounts_handler.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.frontend_api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "apigw_payment_methods" {
+  statement_id  = "AllowAPIGatewayInvokePaymentMethods"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.payment_methods_handler.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.frontend_api.execution_arn}/*/*"
 }

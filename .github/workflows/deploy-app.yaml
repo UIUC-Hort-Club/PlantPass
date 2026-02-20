@@ -54,6 +54,11 @@ jobs:
           cd src/lambda/DiscountsHandler
           zip -r ../../../terraform/discounts_handler_lambda_package.zip .
 
+      - name: Package Payment Methods Lambda
+        run: |
+          cd src/lambda/PaymentMethodsHandler
+          zip -r ../../../terraform/payment_methods_handler_lambda_package.zip .
+
       - name: Package WebSocket Lambda
         run: |
           cd src/lambda/WebSocketHandler
@@ -73,6 +78,7 @@ jobs:
             terraform/admin_password_lambda_package.zip
             terraform/products_handler_lambda_package.zip
             terraform/discounts_handler_lambda_package.zip
+            terraform/payment_methods_handler_lambda_package.zip
             terraform/websocket_handler_lambda_package.zip
             terraform/emailhandler_lambda_package.zip
             terraform/auth_layer.zip
@@ -115,6 +121,7 @@ jobs:
             -var "admin_lambda_zip_path=admin_password_lambda_package.zip" \
             -var "products_lambda_zip_path=products_handler_lambda_package.zip" \
             -var "discounts_lambda_zip_path=discounts_handler_lambda_package.zip" \
+            -var "payment_methods_lambda_zip_path=payment_methods_handler_lambda_package.zip" \
             -var "websocket_lambda_zip_path=websocket_handler_lambda_package.zip" \
             -var "email_lambda_zip_path=emailhandler_lambda_package.zip" \
             -var "auth_layer_zip_path=auth_layer.zip" \
