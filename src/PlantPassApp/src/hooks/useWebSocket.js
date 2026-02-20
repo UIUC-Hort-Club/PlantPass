@@ -18,12 +18,30 @@ export function useWebSocket(url, onMessage, options = {}) {
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
   const reconnectAttemptsRef = useRef(0);
+  const onMessageRef = useRef(onMessage);
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState(null);
+
+  // Keep onMessage ref up to date
+  useEffect(() => {
+    onMessageRef.current = onMessage;
+  }, [onMessage]);
 
   const connect = useCallback(() => {
     if (!enabled || !url) {
       return;
+    }
+
+    // Prevent duplicate connections
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      console.log('WebSocket already connected, skipping...');
+      return;
+    }
+
+    // Close any existing connection
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
     }
 
     try {
@@ -41,8 +59,8 @@ export function useWebSocket(url, onMessage, options = {}) {
         try {
           const data = JSON.parse(event.data);
           console.log('WebSocket message received:', data);
-          if (onMessage) {
-            onMessage(data);
+          if (onMessageRef.current) {
+            onMessageRef.current(data);
           }
         } catch (error) {
           console.error('Error parsing WebSocket message:', error);
@@ -79,7 +97,7 @@ export function useWebSocket(url, onMessage, options = {}) {
       console.error('Error creating WebSocket:', error);
       setConnectionError(error.message);
     }
-  }, [url, enabled, onMessage, reconnectInterval, maxReconnectAttempts]);
+  }, [url, enabled, reconnectInterval, maxReconnectAttempts]);
 
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {
