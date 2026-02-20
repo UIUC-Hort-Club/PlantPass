@@ -24,7 +24,7 @@ function ForgotPasswordDialog({ open, onClose }) {
     try {
       await requestPasswordReset();
       setSuccess(true);
-    } catch (error) {
+    } catch {
       setError("Failed to send password reset email. Please try again.");
     } finally {
       setLoading(false);
