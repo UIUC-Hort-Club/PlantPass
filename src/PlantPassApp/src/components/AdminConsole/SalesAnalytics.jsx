@@ -86,7 +86,9 @@ function SalesAnalytics() {
   const [order, setOrder] = useState('desc');
   const [lastUpdated, setLastUpdated] = useState(null);
   const [showLive, setShowLive] = useState(false);
+  const [liveEnabled, setLiveEnabled] = useState(true);
   const disconnectTimeoutRef = useRef(null);
+  const refreshDebounceRef = useRef(null);
   
   const loadAnalytics = useCallback(async (isRefresh = false, isSilent = false) => {
     try {
@@ -128,19 +130,26 @@ function SalesAnalytics() {
   
   const handleWebSocketMessage = useCallback((message) => {
     if (message.type === 'transaction_update') {
-      loadAnalytics(true, true);
-      setLastUpdated(new Date());
+      if (refreshDebounceRef.current) {
+        clearTimeout(refreshDebounceRef.current);
+      }
+      
+      refreshDebounceRef.current = setTimeout(() => {
+        loadAnalytics(true, true);
+        setLastUpdated(new Date());
+        refreshDebounceRef.current = null;
+      }, 2000);
     }
   }, [loadAnalytics]);
 
-  const { isConnected } = useWebSocket(
+  const { isConnected, disconnect, reconnect } = useWebSocket(
     WEBSOCKET_URL,
     handleWebSocketMessage,
-    { enabled: !!WEBSOCKET_URL }
+    { enabled: liveEnabled && !!WEBSOCKET_URL }
   );
 
   useEffect(() => {
-    if (isConnected) {
+    if (isConnected && liveEnabled) {
       if (disconnectTimeoutRef.current) {
         clearTimeout(disconnectTimeoutRef.current);
         disconnectTimeoutRef.current = null;
@@ -156,8 +165,23 @@ function SalesAnalytics() {
       if (disconnectTimeoutRef.current) {
         clearTimeout(disconnectTimeoutRef.current);
       }
+      if (refreshDebounceRef.current) {
+        clearTimeout(refreshDebounceRef.current);
+      }
     };
-  }, [isConnected]);
+  }, [isConnected, liveEnabled]);
+
+  const handleLiveToggle = () => {
+    if (liveEnabled) {
+      setLiveEnabled(false);
+      disconnect();
+      setShowLive(false);
+    } else {
+      setLiveEnabled(true);
+      reconnect();
+      loadAnalytics(true, false);
+    }
+  };
 
   useEffect(() => {
     loadAnalytics();
@@ -348,14 +372,14 @@ function SalesAnalytics() {
         sx={{ mb: 3 }}
       >
         <Typography variant="h6">Sales Flow Console</Typography>
-        {showLive && (
-          <Chip
-            label="Live"
-            size="small"
-            color="success"
-            variant="outlined"
-          />
-        )}
+        <Chip
+          label="Live"
+          size="small"
+          color={showLive ? "success" : "default"}
+          variant="outlined"
+          onClick={handleLiveToggle}
+          sx={{ cursor: 'pointer' }}
+        />
       </Stack>
 
       <Grid container spacing={2} sx={{ mb: 3 }}>
