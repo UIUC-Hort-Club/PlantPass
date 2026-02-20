@@ -63,7 +63,8 @@ resource "aws_iam_role_policy" "lambda_dynamodb_access" {
           aws_dynamodb_table.products.arn,
           aws_dynamodb_table.transactions.arn,
           "${aws_dynamodb_table.transactions.arn}/index/*",
-          aws_dynamodb_table.websocket_connections.arn
+          aws_dynamodb_table.websocket_connections.arn,
+          aws_dynamodb_table.temp_passwords.arn
         ]
       }
     ]
@@ -122,6 +123,7 @@ resource "aws_lambda_function" "transaction_handler" {
       TRANSACTIONS_TABLE = aws_dynamodb_table.transactions.name
       CONNECTIONS_TABLE  = aws_dynamodb_table.websocket_connections.name
       WEBSOCKET_ENDPOINT = "https://${aws_apigatewayv2_api.websocket_api.id}.execute-api.${var.aws_region}.amazonaws.com/${aws_apigatewayv2_stage.websocket_stage.name}"
+      EMAIL_LAMBDA_ARN   = aws_lambda_function.email_handler.arn
     }
   }
 
@@ -148,9 +150,8 @@ resource "aws_lambda_function" "admin" {
       PASSWORD_BUCKET = aws_s3_bucket.admin_password.bucket
       PASSWORD_KEY    = "password.json"
       JWT_SECRET      = "super-secret-key"
-
-      RESET_TOKEN_HASH = var.reset_token_hash
-      RESET_ENABLED    = "true"
+      EMAIL_LAMBDA_ARN = aws_lambda_function.email_handler.arn
+      TEMP_PASSWORD_TABLE = aws_dynamodb_table.temp_passwords.name
     }
   }
 
@@ -243,4 +244,49 @@ resource "aws_lambda_layer_version" "auth_deps" {
   layer_name          = "plantpass-auth-deps"
   filename            = var.auth_layer_zip_path
   compatible_runtimes = ["python3.11"]
+}
+
+# -------------------------
+# Email Handler Lambda
+# -------------------------
+
+resource "aws_cloudwatch_log_group" "email_handler_logs" {
+  name              = "/aws/lambda/EmailHandler"
+  retention_in_days = 14
+
+  tags = {
+    application = "plantpass"
+  }
+}
+
+resource "aws_lambda_function" "email_handler" {
+  function_name    = "EmailHandler"
+  filename         = var.email_lambda_zip_path
+  handler          = "lambda_handler.lambda_handler"
+  runtime          = "python3.11"
+  role             = aws_iam_role.lambda_exec.arn
+  source_code_hash = filebase64sha256(var.email_lambda_zip_path)
+  timeout          = 30
+  depends_on = [
+    aws_cloudwatch_log_group.email_handler_logs
+  ]
+
+  environment {
+    variables = {
+      SENDER_EMAIL          = var.sender_email
+      UIUC_HORT_CLUB_EMAIL = var.uiuc_hort_club_email
+    }
+  }
+
+  tags = {
+    application = "plantpass"
+  }
+}
+
+resource "aws_lambda_permission" "apigw_email" {
+  statement_id  = "AllowAPIGatewayInvokeEmail"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.email_handler.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.frontend_api.execution_arn}/*/*"
 }

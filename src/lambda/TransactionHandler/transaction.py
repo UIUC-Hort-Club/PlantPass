@@ -25,6 +25,7 @@ class Transaction:
         self.items = self.data.get("items", [])
         self.input_discounts = self.data.get("discounts", [])
         self.club_voucher = self.data.get("voucher", 0)
+        self.customer_email = self.data.get("email", "")
         
         self.payment = {
             "method": "",
@@ -40,6 +41,7 @@ class Transaction:
         self.items = self.data.get("items", [])
         self.discounts = self.data.get("discounts", [])
         self.club_voucher = self.data.get("club_voucher", 0)
+        self.customer_email = self.data.get("customer_email", "")
         self.payment = self.data.get("payment", {"method": "", "paid": False})
         self.receipt = self.data.get("receipt", {})
     
@@ -164,6 +166,7 @@ class Transaction:
             "items": self.items,
             "discounts": self.discounts,
             "club_voucher": self.club_voucher,
+            "customer_email": self.customer_email,
             "payment": self.payment,
             "receipt": self.receipt
         }

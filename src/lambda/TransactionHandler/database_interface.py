@@ -1,6 +1,7 @@
 import os
 import json
 import logging
+import boto3
 from decimal import Decimal
 from botocore.exceptions import ClientError
 from decimal_utils import decimal_to_float
@@ -11,6 +12,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 table = get_table('TRANSACTIONS_TABLE', 'transactions')
+lambda_client = boto3.client('lambda')
+EMAIL_LAMBDA_ARN = os.environ.get('EMAIL_LAMBDA_ARN')
 
 def create_transaction(transaction_data):
     max_retries = 5
@@ -64,6 +67,9 @@ def update_transaction(transaction_id, updated_data):
         
         transaction = Transaction.from_db_record(existing_data)
         
+        # Track if payment status changed to paid
+        was_paid = transaction.payment.get('paid', False)
+        
         if "items" in updated_data:
             transaction.update_items(updated_data["items"])
             
@@ -79,7 +85,31 @@ def update_transaction(transaction_id, updated_data):
         db_item = transaction.to_db_record()
         table.put_item(Item=db_item)
         
-        return transaction.to_dict()
+        transaction_dict = transaction.to_dict()
+        
+        # Send receipt email if order just completed and email provided
+        is_now_paid = transaction.payment.get('paid', False)
+        if not was_paid and is_now_paid and transaction.customer_email and EMAIL_LAMBDA_ARN:
+            try:
+                email_payload = {
+                    "routeKey": "POST /email/receipt",
+                    "body": json.dumps({
+                        "email": transaction.customer_email,
+                        "transaction": transaction_dict
+                    })
+                }
+                
+                lambda_client.invoke(
+                    FunctionName=EMAIL_LAMBDA_ARN,
+                    InvocationType='Event',
+                    Payload=json.dumps(email_payload)
+                )
+                
+                logger.info(f"Receipt email triggered for {transaction.customer_email}")
+            except Exception as e:
+                logger.error(f"Failed to trigger receipt email: {e}")
+        
+        return transaction_dict
         
     except ClientError as e:
         logger.error(f"DynamoDB error updating transaction {transaction_id}: {e}")

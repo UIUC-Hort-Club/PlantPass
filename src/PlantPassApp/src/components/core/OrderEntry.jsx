@@ -32,6 +32,7 @@ function OrderEntry() {
   const [selectedDiscounts, setSelectedDiscounts] = useState([]);
   const [receiptData, setReceiptData] = useState(null);
   const [voucher, setVoucher] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
   const [currentTransactionID, setCurrentTransactionID] = useState("");
   const [transactionIDDialogOpen, setTransactionIDDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -47,6 +48,7 @@ function OrderEntry() {
     setTransactionIDDialogOpen(false);
     setSelectedDiscounts([]);
     setReceiptData(null);
+    setCustomerEmail("");
   };
 
   const handleTransactionIDClose = () => {
@@ -144,6 +146,7 @@ function OrderEntry() {
         }),
       discounts: discountsWithSelection,
       voucher: Number(voucher) || 0,
+      email: customerEmail || "",
     };
 
     if (Object.values(quantities).every(qty => !qty || parseInt(qty) === 0)) {
@@ -249,6 +252,7 @@ function OrderEntry() {
         <Stack
           direction="row"
           justifyContent="right"
+          spacing={1}
         >
           <TextField
             label="Voucher"
@@ -307,16 +311,32 @@ function OrderEntry() {
 
       <Box sx={{ mt: 2 }}>
         <Stack
-          direction="row"
-          justifyContent="flex-end"
-          alignItems="center"
+          direction={{ xs: "column", sm: "row" }}
+          spacing={2}
+          justifyContent="space-between"
+          alignItems={{ xs: "stretch", sm: "center" }}
         >
+          <TextField
+            label="Customer Email (Optional)"
+            type="email"
+            size="small"
+            value={customerEmail}
+            onChange={(e) => setCustomerEmail(e.target.value)}
+            placeholder="email@example.com"
+            sx={{ width: { xs: '100%', sm: 300 } }}
+            helperText="Receive receipt via email"
+            inputProps={{
+              inputMode: "email",
+              autoComplete: "email"
+            }}
+          />
           <Button
             variant="contained"
             color="primary"
             onClick={handleEnterOrder}
             size="small"
             disabled={!!currentTransactionID}
+            sx={{ minWidth: { xs: '100%', sm: 'auto' } }}
           >
             Enter
           </Button>

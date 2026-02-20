@@ -59,6 +59,11 @@ jobs:
           cd src/lambda/WebSocketHandler
           zip -r ../../../terraform/websocket_handler_lambda_package.zip .
 
+      - name: Package Email Lambda
+        run: |
+          cd src/lambda/EmailHandler
+          zip -r ../../../terraform/emailhandler_lambda_package.zip .
+
       - name: Upload Lambda ZIPs
         uses: actions/upload-artifact@v4
         with:
@@ -69,6 +74,7 @@ jobs:
             terraform/products_handler_lambda_package.zip
             terraform/discounts_handler_lambda_package.zip
             terraform/websocket_handler_lambda_package.zip
+            terraform/emailhandler_lambda_package.zip
             terraform/auth_layer.zip
 
   deploy-infra:
@@ -110,8 +116,11 @@ jobs:
             -var "products_lambda_zip_path=products_handler_lambda_package.zip" \
             -var "discounts_lambda_zip_path=discounts_handler_lambda_package.zip" \
             -var "websocket_lambda_zip_path=websocket_handler_lambda_package.zip" \
+            -var "email_lambda_zip_path=emailhandler_lambda_package.zip" \
             -var "auth_layer_zip_path=auth_layer.zip" \
-            -var "reset_token_hash=${{ secrets.RESET_TOKEN_HASH }}"
+            -var "reset_token_hash=${{ secrets.RESET_TOKEN_HASH }}" \
+            -var "sender_email=${{ secrets.SENDER_EMAIL }}" \
+            -var "uiuc_hort_club_email=${{ secrets.UIUC_HORT_CLUB_EMAIL }}"
 
       - name: Get outputs
         id: bucket
