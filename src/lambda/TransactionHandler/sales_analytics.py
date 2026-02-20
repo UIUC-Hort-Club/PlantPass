@@ -6,6 +6,9 @@ from botocore.exceptions import ClientError
 from utils import decimal_to_float
 from transaction import Transaction
 
+# Central Standard Time (UTC-6)
+CST = timezone(timedelta(hours=-6))
+
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
@@ -64,7 +67,7 @@ def compute_sales_analytics():
                 
                 timestamp = transaction.timestamp
                 if timestamp:
-                    dt = datetime.fromtimestamp(timestamp, tz=timezone.utc)
+                    dt = datetime.fromtimestamp(timestamp, tz=CST)
                     minute = 0 if dt.minute < 30 else 30
                     bucket_time = dt.replace(minute=minute, second=0, microsecond=0)
                     bucket_key = bucket_time.strftime("%m-%d-%Y %I:%M %p")
@@ -84,8 +87,8 @@ def compute_sales_analytics():
                 min_time = min(timestamps)
                 max_time = max(timestamps)
                 
-                current_time = datetime.fromtimestamp(min_time, tz=timezone.utc)
-                end_time = datetime.fromtimestamp(max_time, tz=timezone.utc)
+                current_time = datetime.fromtimestamp(min_time, tz=CST)
+                end_time = datetime.fromtimestamp(max_time, tz=CST)
                 
                 while current_time <= end_time:
                     minute = 0 if current_time.minute < 30 else 30
