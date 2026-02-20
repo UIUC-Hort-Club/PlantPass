@@ -78,6 +78,10 @@ export default function App() {
     setIsAdmin(true);
     setAdminModalOpen(false);
     setAdminError("");
+    
+    // @PASSWORD
+    // @TODO
+    // UNDO in the future
 
     // return authenticateAdmin(password)
     //   .then(() => {
