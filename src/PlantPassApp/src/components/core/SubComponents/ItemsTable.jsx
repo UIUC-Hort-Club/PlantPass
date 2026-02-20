@@ -1,4 +1,3 @@
-// src/components/ItemsTable.jsx
 import React from "react";
 import {
   Table,
@@ -30,7 +29,7 @@ export default function ItemsTable({
         sx={{ 
           maxHeight: 800, 
           overflowY: "auto",
-          overflowX: "auto" // Enable horizontal scrolling on mobile
+          overflowX: "auto"
         }}
       >
         <Table size="small" sx={{ minWidth: 500 }}>
@@ -66,7 +65,7 @@ export default function ItemsTable({
                       min: 0,
                       step: 1,
                       pattern: "[0-9]*",
-                      inputMode: "numeric" // Trigger numeric keyboard on mobile
+                      inputMode: "numeric"
                     }}
                     onKeyDown={(e) => {
                       if (e.key === '.' || e.key === '-' || e.key === 'e' || e.key === 'E') {
@@ -79,7 +78,7 @@ export default function ItemsTable({
                     sx={{
                       minWidth: 80,
                       '& .MuiInputBase-input': {
-                        minHeight: 44, // Ensure touch target size
+                        minHeight: 44,
                         boxSizing: 'border-box'
                       }
                     }}

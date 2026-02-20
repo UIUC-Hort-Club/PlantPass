@@ -54,6 +54,11 @@ jobs:
           cd src/lambda/DiscountsHandler
           zip -r ../../../terraform/discounts_handler_lambda_package.zip .
 
+      - name: Package WebSocket Lambda
+        run: |
+          cd src/lambda/WebSocketHandler
+          zip -r ../../../terraform/websocket_handler_lambda_package.zip .
+
       - name: Upload Lambda ZIPs
         uses: actions/upload-artifact@v4
         with:
@@ -63,6 +68,7 @@ jobs:
             terraform/admin_password_lambda_package.zip
             terraform/products_handler_lambda_package.zip
             terraform/discounts_handler_lambda_package.zip
+            terraform/websocket_handler_lambda_package.zip
             terraform/auth_layer.zip
 
   deploy-infra:
@@ -70,6 +76,7 @@ jobs:
     needs: prepare-lambda
     outputs:
       frontend_bucket_name: ${{ steps.bucket.outputs.frontend_bucket_name }}
+      cloudfront_distribution_id: ${{ steps.bucket.outputs.cloudfront_distribution_id }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -102,15 +109,18 @@ jobs:
             -var "admin_lambda_zip_path=admin_password_lambda_package.zip" \
             -var "products_lambda_zip_path=products_handler_lambda_package.zip" \
             -var "discounts_lambda_zip_path=discounts_handler_lambda_package.zip" \
+            -var "websocket_lambda_zip_path=websocket_handler_lambda_package.zip" \
             -var "auth_layer_zip_path=auth_layer.zip" \
             -var "reset_token_hash=${{ secrets.RESET_TOKEN_HASH }}"
 
-      - name: Get frontend bucket name
+      - name: Get outputs
         id: bucket
         working-directory: ./terraform
         run: |
           BUCKET=$(terraform output frontend_bucket_name | tr -d '"')
+          DISTRIBUTION_ID=$(terraform output cloudfront_distribution_id | tr -d '"')
           echo "frontend_bucket_name=$BUCKET" >> $GITHUB_OUTPUT
+          echo "cloudfront_distribution_id=$DISTRIBUTION_ID" >> $GITHUB_OUTPUT
 
   deploy-frontend:
     runs-on: ubuntu-latest
@@ -148,8 +158,15 @@ jobs:
 
       - name: Create runtime config
         run: |
-          echo "window.APP_CONFIG = { API_ENDPOINT: '${{ secrets.API_ENDPOINT }}' };" > ./src/PlantPassApp/dist/config.js
+          echo "window.APP_CONFIG = { API_ENDPOINT: '${{ secrets.API_ENDPOINT }}', WEBSOCKET_URL: '${{ secrets.WEBSOCKET_URL }}' };" > ./src/PlantPassApp/dist/config.js
 
       - name: Deploy frontend to S3
         run: |
           aws s3 sync ./src/PlantPassApp/dist/ s3://${{ needs.deploy-infra.outputs.frontend_bucket_name }} --delete
+
+      - name: Invalidate CloudFront cache
+        if: needs.deploy-infra.outputs.cloudfront_distribution_id != ''
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ needs.deploy-infra.outputs.cloudfront_distribution_id }} \
+            --paths "/*"

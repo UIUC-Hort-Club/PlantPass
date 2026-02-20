@@ -13,6 +13,7 @@ from sales_analytics import (
     clear_all_transactions
 )
 from csv_export import generate_csv_export
+from websocket_notifier import notify_transaction_update
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -31,6 +32,12 @@ def lambda_handler(event, context):
             try:
                 transaction = create_transaction(body)
                 logger.info("Transaction saved successfully")
+                
+                try:
+                    notify_transaction_update('created', transaction)
+                except Exception as notify_error:
+                    logger.error(f"Failed to send WebSocket notification: {notify_error}")
+                
                 return response(201, {"message": "Transaction created successfully", "transaction": transaction})
             except Exception as e:
                 logger.error(f"Error saving transaction: {e}", exc_info=True)
@@ -50,7 +57,6 @@ def lambda_handler(event, context):
             return response(200, transaction)
         
         elif route_key == "GET /transactions/recent-unpaid":
-            # Get limit from query parameters, default to 5
             query_params = event.get("queryStringParameters") or {}
             limit = int(query_params.get("limit", 5))
             
@@ -65,6 +71,12 @@ def lambda_handler(event, context):
             
             updated_transaction = update_transaction(purchase_id, body)
             logger.info(f"Transaction updated: {updated_transaction}")
+            
+            try:
+                notify_transaction_update('updated', updated_transaction)
+            except Exception as notify_error:
+                logger.error(f"Failed to send WebSocket notification: {notify_error}")
+            
             return response(200, {"transaction": updated_transaction})
 
         elif route_key == "DELETE /transactions/{purchase_id}":
@@ -74,7 +86,13 @@ def lambda_handler(event, context):
             
             delete_transaction(purchase_id)
             logger.info(f"Transaction deleted: {purchase_id}")
-            return response(204, {})  # 204 No Content
+            
+            try:
+                notify_transaction_update('deleted', {'purchase_id': purchase_id})
+            except Exception as notify_error:
+                logger.error(f"Failed to send WebSocket notification: {notify_error}")
+            
+            return response(204, {})
         
         elif route_key == "GET /transactions/sales-analytics":
             analytics = compute_sales_analytics()
@@ -87,7 +105,6 @@ def lambda_handler(event, context):
             
             logger.info(f"Generated CSV export: {csv_export['filename']}")
             
-            # Return base64-encoded zip file
             return {
                 "statusCode": 200,
                 "headers": {
@@ -106,6 +123,12 @@ def lambda_handler(event, context):
         elif route_key == "DELETE /transactions/clear-all":
             cleared_count = clear_all_transactions()
             logger.info(f"Cleared {cleared_count} transactions")
+            
+            try:
+                notify_transaction_update('cleared', {'cleared_count': cleared_count})
+            except Exception as notify_error:
+                logger.error(f"Failed to send WebSocket notification: {notify_error}")
+            
             return response(200, {"message": f"Successfully cleared {cleared_count} transactions", "cleared_count": cleared_count})
 
         else:

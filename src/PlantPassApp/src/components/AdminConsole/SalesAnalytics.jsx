@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Container,
   Grid,
@@ -26,6 +26,7 @@ import {
   ListItem,
   ListItemText,
   TableSortLabel,
+  Chip,
 } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { Line } from "react-chartjs-2";
@@ -38,11 +39,14 @@ import {
   Title,
   Tooltip,
   Legend,
+  Filler,
 } from "chart.js";
 import { fetchSalesAnalytics } from "../../api/transaction_interface/fetchSalesAnalytics";
 import { clearAllTransactions } from "../../api/transaction_interface/clearAllTransactions";
 import { exportData as exportDataAPI } from "../../api/transaction_interface/exportData";
 import { useNotification } from "../../contexts/NotificationContext";
+import { useWebSocket } from "../../hooks/useWebSocket";
+import { WEBSOCKET_URL } from "../../api/config";
 import LoadingSpinner from "../common/LoadingSpinner";
 import MetricCard from "./MetricCard";
 import ConfirmationDialog from "../common/ConfirmationDialog";
@@ -56,6 +60,7 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
+  Filler
 );
 
 function SalesAnalytics() {
@@ -71,7 +76,6 @@ function SalesAnalytics() {
     transactions: []
   });
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [showClearDialog, setShowClearDialog] = useState(false);
   const [showExportInfoDialog, setShowExportInfoDialog] = useState(false);
@@ -80,25 +84,25 @@ function SalesAnalytics() {
   const rowsPerPage = 20;
   const [orderBy, setOrderBy] = useState('timestamp');
   const [order, setOrder] = useState('desc');
-
-  const loadAnalytics = async (isRefresh = false) => {
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [showLive, setShowLive] = useState(false);
+  const disconnectTimeoutRef = useRef(null);
+  
+  const loadAnalytics = useCallback(async (isRefresh = false, isSilent = false) => {
     try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
+      if (!isRefresh) {
         setLoading(true);
       }
       setError(null);
       const data = await fetchSalesAnalytics();
       
-      // Debug: Log transaction data to see paid field
-      console.log('Analytics data received:', data);
-      if (data.transactions && data.transactions.length > 0) {
-        console.log('Sample transaction:', data.transactions[0]);
+      setAnalytics(data);
+      
+      if (!lastUpdated) {
+        setLastUpdated(new Date());
       }
       
-      setAnalytics(data);
-      if (isRefresh) {
+      if (isRefresh && !isSilent) {
         showSuccess("Analytics refreshed successfully");
       }
     } catch (error) {
@@ -114,29 +118,61 @@ function SalesAnalytics() {
       }
       
       setError(errorMessage);
-      showError(errorMessage);
+      if (!isSilent) {
+        showError(errorMessage);
+      }
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
-  };
+  }, [lastUpdated, showSuccess, showError]);
+  
+  const handleWebSocketMessage = useCallback((message) => {
+    if (message.type === 'transaction_update') {
+      loadAnalytics(true, true);
+      setLastUpdated(new Date());
+    }
+  }, [loadAnalytics]);
+
+  const { isConnected } = useWebSocket(
+    WEBSOCKET_URL,
+    handleWebSocketMessage,
+    { enabled: !!WEBSOCKET_URL }
+  );
+
+  useEffect(() => {
+    if (isConnected) {
+      if (disconnectTimeoutRef.current) {
+        clearTimeout(disconnectTimeoutRef.current);
+        disconnectTimeoutRef.current = null;
+      }
+      setShowLive(true);
+    } else {
+      disconnectTimeoutRef.current = setTimeout(() => {
+        setShowLive(false);
+      }, 5000);
+    }
+
+    return () => {
+      if (disconnectTimeoutRef.current) {
+        clearTimeout(disconnectTimeoutRef.current);
+      }
+    };
+  }, [isConnected]);
 
   useEffect(() => {
     loadAnalytics();
-  }, []);
+  }, [loadAnalytics]);
 
   const exportData = async () => {
     try {
       const { filename, content, contentType } = await exportDataAPI();
       
-      // Decode base64 to binary
       const binaryString = atob(content);
       const bytes = new Uint8Array(binaryString.length);
       for (let i = 0; i < binaryString.length; i++) {
         bytes[i] = binaryString.charCodeAt(i);
       }
       
-      // Create blob and download
       const blob = new Blob([bytes], { type: contentType });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -266,7 +302,6 @@ function SalesAnalytics() {
         bValue = b.grand_total;
         break;
       case 'paid':
-        // Handle paid field - ensure it's treated as boolean
         aValue = (a.paid === true || a.paid === 'true') ? 1 : 0;
         bValue = (b.paid === true || b.paid === 'true') ? 1 : 0;
         break;
@@ -313,15 +348,14 @@ function SalesAnalytics() {
         sx={{ mb: 3 }}
       >
         <Typography variant="h6">Sales Flow Console</Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          size="small"
-          onClick={() => loadAnalytics(true)}
-          disabled={refreshing}
-        >
-          {refreshing ? "Refreshing..." : "Refresh"}
-        </Button>
+        {showLive && (
+          <Chip
+            label="Live"
+            size="small"
+            color="success"
+            variant="outlined"
+          />
+        )}
       </Stack>
 
       <Grid container spacing={2} sx={{ mb: 3 }}>

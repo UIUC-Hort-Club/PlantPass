@@ -62,7 +62,6 @@ function OrderEntry() {
 
   const handleTransactionIDClose = () => {
     setTransactionIDDialogOpen(false);
-    // Scroll to receipt after modal closes
     setTimeout(() => {
       receiptRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
