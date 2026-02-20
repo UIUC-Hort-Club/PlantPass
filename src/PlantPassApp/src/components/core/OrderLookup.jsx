@@ -356,7 +356,7 @@ function OrderLookup() {
   };
 
   return (
-    <Container maxWidth="md">
+    <Container maxWidth="md" sx={{ px: { xs: 0.5, sm: 3 } }}>
       <Stack
         direction="row"
         spacing={2}

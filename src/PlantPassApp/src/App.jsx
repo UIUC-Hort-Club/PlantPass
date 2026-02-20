@@ -101,15 +101,15 @@ export default function App() {
           display: "flex",
           flexDirection: "column",
           backgroundColor: "white",
-          py: { xs: 1, sm: 2 },
-          px: { xs: 1, sm: 2 },
+          py: { xs: 0.5, sm: 2 },
+          px: { xs: 0.5, sm: 2 },
         }}
       >
         {/* =========================
           App header
          ========================= */}
-        <AppBar position="static" elevation={0} sx={{ mb: 2 }}>
-          <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+        <AppBar position="static" elevation={0} sx={{ mb: { xs: 1, sm: 2 } }}>
+          <Toolbar sx={{ display: "flex", justifyContent: "space-between", minHeight: { xs: 48, sm: 64 }, px: { xs: 1, sm: 2 } }}>
             {/* Logo + title */}
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <Box
