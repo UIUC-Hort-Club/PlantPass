@@ -255,16 +255,6 @@ function OrderEntry() {
           spacing={1}
         >
           <TextField
-            label="Customer Email (Optional)"
-            type="email"
-            size="small"
-            value={customerEmail}
-            onChange={(e) => setCustomerEmail(e.target.value)}
-            placeholder="email@example.com"
-            sx={{ width: 250 }}
-            helperText="Receive receipt via email"
-          />
-          <TextField
             label="Voucher"
             type="text"
             size="small"
@@ -322,9 +312,23 @@ function OrderEntry() {
       <Box sx={{ mt: 2 }}>
         <Stack
           direction="row"
-          justifyContent="flex-end"
+          justifyContent="space-between"
           alignItems="center"
         >
+          <TextField
+            label="Customer Email (Optional)"
+            type="email"
+            size="small"
+            value={customerEmail}
+            onChange={(e) => setCustomerEmail(e.target.value)}
+            placeholder="email@example.com"
+            sx={{ width: { xs: '100%', sm: 300 } }}
+            helperText="Receive receipt via email"
+            inputProps={{
+              inputMode: "email",
+              autoComplete: "email"
+            }}
+          />
           <Button
             variant="contained"
             color="primary"
