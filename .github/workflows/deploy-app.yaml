@@ -160,3 +160,18 @@ jobs:
       - name: Deploy frontend to S3
         run: |
           aws s3 sync ./src/PlantPassApp/dist/ s3://${{ needs.deploy-infra.outputs.frontend_bucket_name }} --delete
+
+      - name: Get CloudFront Distribution ID
+        id: cloudfront
+        run: |
+          cd terraform
+          terraform init -input=false
+          DISTRIBUTION_ID=$(terraform output -raw cloudfront_distribution_id 2>/dev/null || echo "")
+          echo "distribution_id=$DISTRIBUTION_ID" >> $GITHUB_OUTPUT
+
+      - name: Invalidate CloudFront cache
+        if: steps.cloudfront.outputs.distribution_id != ''
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ steps.cloudfront.outputs.distribution_id }} \
+            --paths "/*"
