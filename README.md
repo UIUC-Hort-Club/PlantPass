@@ -13,11 +13,12 @@ PlantPass is a point-of-sale application developed for the UIUC Horticulture Clu
 ## Features
 
 - Order entry with product selection and discount application
-- Transaction lookup and modification
+- Transaction lookup and modification with recent unpaid orders display
 - Payment processing with multiple payment methods
 - Admin console with sales analytics and data export
 - Product and discount management
 - Real-time sales tracking and reporting
+- Loading indicators for improved user experience
 
 ## Local Development
 

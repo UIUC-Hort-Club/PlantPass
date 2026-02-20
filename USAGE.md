@@ -35,7 +35,15 @@ Search for and modify existing orders that have not been completed.
 5. Select a payment method from the dropdown
 6. Click "Complete Order" to finalize the transaction
 
-The Order Lookup screen also displays recent unpaid orders for quick access. Click any order in the list to load it immediately. Use the gear icon to configure how many recent orders are displayed (0-20).
+#### Recent Unpaid Orders
+
+The Order Lookup screen displays recent unpaid orders for quick access:
+
+- A loading spinner appears while orders are being fetched
+- Click any order in the list to load it immediately
+- Use the gear icon to configure how many recent orders are displayed (0-20)
+- Set to 0 to disable the recent orders display
+- Orders show the Order ID, number of items, total amount, and timestamp
 
 Completed orders are marked as view-only and cannot be modified. Orders can be deleted using the "Delete Order" button if needed.
 
