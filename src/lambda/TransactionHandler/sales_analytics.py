@@ -1,19 +1,17 @@
 import os
 import logging
 from datetime import datetime, timezone, timedelta
-import boto3
 from botocore.exceptions import ClientError
-from utils import decimal_to_float
+from decimal_utils import decimal_to_float
+from dynamodb_client import get_table
 from transaction import Transaction
 
-# Central Standard Time (UTC-6)
 CST = timezone(timedelta(hours=-6))
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table(os.environ.get('TRANSACTIONS_TABLE', 'transactions'))
+table = get_table('TRANSACTIONS_TABLE', 'transactions')
 
 
 def compute_sales_analytics():
