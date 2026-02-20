@@ -1,5 +1,10 @@
 import json
 import logging
+import sys
+import os
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
+from response_utils import create_response
 from database_interface import (
     get_all_products,
     replace_all_products
@@ -15,36 +20,18 @@ def lambda_handler(event, context):
 
         if route_key == "GET /products":
             products = get_all_products()
-            logger.info(f"Retrieved {len(products)} products")
-            return response(200, products)
+            return create_response(200, products)
 
         elif route_key == "PUT /products":
-            try:
-                if not isinstance(body, list):
-                    return response(400, {"message": "Request body must be a list of products"})
-                
-                result = replace_all_products(body)
-                logger.info(f"Replaced products: {result}")
-                return response(200, {"message": "Products replaced successfully", "result": result})
-            except Exception as e:
-                logger.error(f"Error replacing products: {e}", exc_info=True)
-                return response(500, {"message": "Error replacing products", "error": str(e)})
+            if not isinstance(body, list):
+                return create_response(400, {"message": "Request body must be a list of products"})
+            
+            result = replace_all_products(body)
+            return create_response(200, {"message": "Products replaced successfully", "result": result})
 
         else:
-            logger.warning(f"Unknown route: {route_key}")
-            return response(404, {"message": "Route not found"})
+            return create_response(404, {"message": "Route not found"})
 
     except Exception as e:
         logger.error(f"Error processing request: {e}", exc_info=True)
-        return response(500, {"message": str(e)})
-
-def response(status_code, body):
-    return {
-        "statusCode": status_code,
-        "headers": {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET,PUT,OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type"
-        },
-        "body": json.dumps(body)
-    }
+        return create_response(500, {"message": str(e)})
