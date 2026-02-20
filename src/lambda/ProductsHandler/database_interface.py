@@ -1,10 +1,7 @@
 import logging
 import os
-import sys
 from botocore.exceptions import ClientError
 from decimal import Decimal
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
 from dynamodb_client import get_table
 
 logger = logging.getLogger()

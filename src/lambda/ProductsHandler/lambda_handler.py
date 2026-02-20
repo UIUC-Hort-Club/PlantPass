@@ -1,9 +1,5 @@
 import json
 import logging
-import sys
-import os
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
 from response_utils import create_response
 from database_interface import (
     get_all_products,

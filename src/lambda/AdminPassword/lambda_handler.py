@@ -1,13 +1,10 @@
 import json
 import logging
 import os
-import sys
 import boto3
 import bcrypt
 import jwt
 import datetime
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
 from response_utils import create_response
 
 logger = logging.getLogger()

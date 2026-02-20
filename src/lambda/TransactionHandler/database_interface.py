@@ -1,11 +1,8 @@
 import os
 import json
 import logging
-import sys
 from decimal import Decimal
 from botocore.exceptions import ClientError
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
 from decimal_utils import decimal_to_float
 from dynamodb_client import get_table
 from transaction import Transaction
