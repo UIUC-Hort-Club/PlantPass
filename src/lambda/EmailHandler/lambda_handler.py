@@ -96,7 +96,7 @@ def send_receipt_email(recipient_email, transaction_data):
         """
         
         text_body = f"""
-PlantPass Receipt
+Spring Plant Fair 2026 Receipt
 Order ID: {purchase_id}
 
 Items:

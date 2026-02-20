@@ -269,6 +269,7 @@ function OrderLookup() {
           }),
         discounts: discountsWithSelection,
         voucher: Number(voucher) || 0,
+        email: customerEmail || ""
       };
 
       const updatedTransaction = await updateTransaction(currentTransactionID, updateData);
@@ -578,6 +579,10 @@ function OrderLookup() {
                 placeholder="email@example.com"
                 helperText="Receipt will be sent to this email when order is completed"
                 sx={{ maxWidth: 400, mx: "auto", display: "block" }}
+                inputProps={{
+                  inputMode: "email",
+                  autoComplete: "email"
+                }}
               />
             </Box>
           )}
