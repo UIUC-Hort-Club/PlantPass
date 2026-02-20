@@ -30,12 +30,6 @@ function OrderEntry() {
   const [quantities, setQuantities] = useState({});
   const [subtotals, setSubtotals] = useState({});
   const [selectedDiscounts, setSelectedDiscounts] = useState([]);
-  // eslint-disable-next-line no-unused-vars
-  const [totals, setTotals] = useState({
-    subtotal: 0,
-    discount: 0,
-    grandTotal: 0,
-  });
   const [receiptData, setReceiptData] = useState(null);
   const [voucher, setVoucher] = useState("");
   const [currentTransactionID, setCurrentTransactionID] = useState("");
@@ -52,11 +46,6 @@ function OrderEntry() {
     setCurrentTransactionID("");
     setTransactionIDDialogOpen(false);
     setSelectedDiscounts([]);
-    setTotals({
-      subtotal: 0,
-      discount: 0,
-      grandTotal: 0,
-    });
     setReceiptData(null);
   };
 
@@ -165,11 +154,6 @@ function OrderEntry() {
     createTransaction(transaction)
       .then((response) => {
         setCurrentTransactionID(response.purchase_id);
-        setTotals({
-          subtotal: response.receipt.subtotal,
-          discount: response.receipt.discount,
-          grandTotal: response.receipt.total,
-        });
         setReceiptData({
           totals: {
             subtotal: response.receipt.subtotal,
@@ -223,11 +207,6 @@ function OrderEntry() {
 
     updateTransaction(currentTransactionID, updateData)
       .then((response) => {
-        setTotals({
-          subtotal: response.receipt.subtotal,
-          discount: response.receipt.discount,
-          grandTotal: response.receipt.total,
-        });
         setReceiptData({
           totals: {
             subtotal: response.receipt.subtotal,

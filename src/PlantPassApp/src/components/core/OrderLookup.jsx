@@ -36,12 +36,6 @@ function OrderLookup() {
   const [quantities, setQuantities] = useState({});
   const [subtotals, setSubtotals] = useState({});
   const [selectedDiscounts, setSelectedDiscounts] = useState([]);
-  // eslint-disable-next-line no-unused-vars
-  const [totals, setTotals] = useState({
-    subtotal: 0,
-    discount: 0,
-    grandTotal: 0,
-  });
   const [receiptData, setReceiptData] = useState(null);
   const [voucher, setVoucher] = useState("");
   const [currentTransactionID, setCurrentTransactionID] = useState("");
@@ -95,11 +89,6 @@ function OrderLookup() {
     setPaymentMethod("");
     setOrderId("");
     setError("");
-    setTotals({
-      subtotal: 0,
-      discount: 0,
-      grandTotal: 0,
-    });
     setReceiptData(null);
     setShowRecentOrders(true);
     fetchRecentOrders();
@@ -222,12 +211,6 @@ function OrderLookup() {
     setSelectedDiscounts(selectedDiscountNames);
 
     setVoucher(transaction.club_voucher || 0);
-
-    setTotals({
-      subtotal: transaction.receipt?.subtotal || 0,
-      discount: transaction.receipt?.discount || 0,
-      grandTotal: transaction.receipt?.total || 0,
-    });
 
     setReceiptData({
       totals: {
