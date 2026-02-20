@@ -179,8 +179,15 @@ export default function ProductTable() {
       return;
     }
 
-    if (duplicateSKUs.length > 0) {
-      showError("Please fix duplicate SKUs before saving");
+    // Check for validation errors including duplicates
+    const validationErrors = validateSKUs(rows);
+    if (validationErrors.length > 0) {
+      const duplicateErrors = validationErrors.filter(err => err.includes("duplicate"));
+      if (duplicateErrors.length > 0) {
+        showError(duplicateErrors[0]); // Show the first duplicate error
+      } else {
+        showError(validationErrors[0]); // Show the first validation error
+      }
       return;
     }
 

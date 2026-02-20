@@ -8,20 +8,18 @@ export const validateSKUs = (rows) => {
       return;
     }
     
-    if (row.sku.length !== 5) {
-      errors.push(`Row ${index + 1}: SKU must be exactly 5 characters`);
-    }
-    
-    if (!/^[A-Z]{2}\d{3}$/.test(row.sku)) {
-      errors.push(`Row ${index + 1}: SKU must be 2 letters followed by 3 numbers (e.g., AB123)`);
+    // Check if SKU contains only alphanumeric characters (uppercase)
+    if (!/^[A-Z0-9]+$/.test(row.sku)) {
+      errors.push(`Row ${index + 1}: SKU must contain only uppercase letters and numbers`);
     }
     
     skuCounts[row.sku] = (skuCounts[row.sku] || 0) + 1;
   });
   
+  // Check for duplicates
   Object.entries(skuCounts).forEach(([sku, count]) => {
     if (count > 1) {
-      errors.push(`SKU "${sku}" is used ${count} times - SKUs must be unique`);
+      errors.push(`Please fix duplicate SKUs: "${sku}" is used ${count} times`);
     }
   });
   
