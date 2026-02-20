@@ -372,7 +372,7 @@ function SalesAnalytics() {
         alignItems="center"
         sx={{ mb: 3 }}
       >
-        <Typography variant="h6">Sales Flow Console</Typography>
+        <Typography variant="h6">Sales Flow Dashboard</Typography>
         <Chip
           label="Live"
           size="small"
