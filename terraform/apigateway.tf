@@ -54,6 +54,13 @@ resource "aws_apigatewayv2_integration" "payment_methods_lambda_integration" {
   payload_format_version = "2.0"
 }
 
+resource "aws_apigatewayv2_integration" "lock_lambda_integration" {
+  api_id                 = aws_apigatewayv2_api.frontend_api.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.lock_handler.arn
+  payload_format_version = "2.0"
+}
+
 # -------------------------
 # API Gateway Stage
 # -------------------------
@@ -218,6 +225,21 @@ resource "aws_apigatewayv2_route" "replace_all_payment_methods" {
   api_id    = aws_apigatewayv2_api.frontend_api.id
   route_key = "PUT /payment-methods"
   target    = "integrations/${aws_apigatewayv2_integration.payment_methods_lambda_integration.id}"
+}
+
+# -------------------------
+# Lock Lambda Routes
+# -------------------------
+resource "aws_apigatewayv2_route" "get_lock_state" {
+  api_id    = aws_apigatewayv2_api.frontend_api.id
+  route_key = "GET /lock/{resourceType}"
+  target    = "integrations/${aws_apigatewayv2_integration.lock_lambda_integration.id}"
+}
+
+resource "aws_apigatewayv2_route" "set_lock_state" {
+  api_id    = aws_apigatewayv2_api.frontend_api.id
+  route_key = "PUT /lock/{resourceType}"
+  target    = "integrations/${aws_apigatewayv2_integration.lock_lambda_integration.id}"
 }
 
 # -------------------------

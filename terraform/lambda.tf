@@ -65,7 +65,8 @@ resource "aws_iam_role_policy" "lambda_dynamodb_access" {
           "${aws_dynamodb_table.transactions.arn}/index/*",
           aws_dynamodb_table.websocket_connections.arn,
           aws_dynamodb_table.temp_passwords.arn,
-          aws_dynamodb_table.payment_methods.arn
+          aws_dynamodb_table.payment_methods.arn,
+          aws_dynamodb_table.locks.arn
         ]
       }
     ]
@@ -110,6 +111,15 @@ resource "aws_cloudwatch_log_group" "discounts_handler_logs" {
 
 resource "aws_cloudwatch_log_group" "payment_methods_handler_logs" {
   name              = "/aws/lambda/PaymentMethodsHandler"
+  retention_in_days = 14
+
+  tags = {
+    application = "plantpass"
+  }
+}
+
+resource "aws_cloudwatch_log_group" "lock_handler_logs" {
+  name              = "/aws/lambda/LockHandler"
   retention_in_days = 14
 
   tags = {
@@ -240,6 +250,28 @@ resource "aws_lambda_function" "payment_methods_handler" {
   }
 }
 
+resource "aws_lambda_function" "lock_handler" {
+  function_name    = "LockHandler"
+  filename         = var.lock_lambda_zip_path
+  handler          = "lambda_handler.lambda_handler"
+  runtime          = "python3.11"
+  role             = aws_iam_role.lambda_exec.arn
+  source_code_hash = filebase64sha256(var.lock_lambda_zip_path)
+  depends_on = [
+    aws_cloudwatch_log_group.lock_handler_logs
+  ]
+
+  environment {
+    variables = {
+      LOCK_TABLE_NAME = aws_dynamodb_table.locks.name
+    }
+  }
+
+  tags = {
+    application = "plantpass"
+  }
+}
+
 resource "aws_lambda_permission" "apigw_transaction" {
   statement_id  = "AllowAPIGatewayInvokeTransaction"
   action        = "lambda:InvokeFunction"
@@ -276,6 +308,14 @@ resource "aws_lambda_permission" "apigw_payment_methods" {
   statement_id  = "AllowAPIGatewayInvokePaymentMethods"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.payment_methods_handler.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.frontend_api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "apigw_lock" {
+  statement_id  = "AllowAPIGatewayInvokeLock"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.lock_handler.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.frontend_api.execution_arn}/*/*"
 }
