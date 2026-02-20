@@ -69,6 +69,11 @@ jobs:
           cd src/lambda/EmailHandler
           zip -r ../../../terraform/emailhandler_lambda_package.zip .
 
+      - name: Package Lock Lambda
+        run: |
+          cd src/lambda/LockHandler
+          zip -r ../../../terraform/lockhandler_lambda_package.zip .
+
       - name: Upload Lambda ZIPs
         uses: actions/upload-artifact@v4
         with:
@@ -81,6 +86,7 @@ jobs:
             terraform/payment_methods_handler_lambda_package.zip
             terraform/websocket_handler_lambda_package.zip
             terraform/emailhandler_lambda_package.zip
+            terraform/lockhandler_lambda_package.zip
             terraform/auth_layer.zip
 
   deploy-infra:
@@ -124,6 +130,7 @@ jobs:
             -var "payment_methods_lambda_zip_path=payment_methods_handler_lambda_package.zip" \
             -var "websocket_lambda_zip_path=websocket_handler_lambda_package.zip" \
             -var "email_lambda_zip_path=emailhandler_lambda_package.zip" \
+            -var "lock_lambda_zip_path=lockhandler_lambda_package.zip" \
             -var "auth_layer_zip_path=auth_layer.zip" \
             -var "reset_token_hash=${{ secrets.RESET_TOKEN_HASH }}" \
             -var "sender_email=${{ secrets.SENDER_EMAIL }}" \
