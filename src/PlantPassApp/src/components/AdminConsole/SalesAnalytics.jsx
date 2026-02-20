@@ -11,6 +11,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TableFooter,
   Paper,
   Box,
   Button,
@@ -417,10 +418,10 @@ function SalesAnalytics() {
         </Grid>
       </Grid>
 
-      <TableContainer component={Paper} sx={{ mb: { xs: 2, sm: 3 }, overflowX: 'auto' }}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>Revenue Over Time</Typography>
+      <Card sx={{ mb: { xs: 2, sm: 3 } }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>Revenue Over Time</Typography>
+          <Box sx={{ overflowX: 'auto', width: '100%' }}>
             {hasChartData ? (
               <Box sx={{ height: 300, minWidth: 600 }}>
                 <Line
@@ -435,9 +436,9 @@ function SalesAnalytics() {
                 </Typography>
               </Box>
             )}
-          </CardContent>
-        </Card>
-      </TableContainer>
+          </Box>
+        </CardContent>
+      </Card>
 
       <TableContainer component={Paper}>
         <Table>
@@ -512,71 +513,81 @@ function SalesAnalytics() {
               </TableRow>
             )}
           </TableBody>
+          <TableFooter>
+            <TableRow>
+              <TableCell colSpan={5} sx={{ p: 0, border: 0 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    flexWrap: "wrap",
+                    gap: 1,
+                    px: 2,
+                    py: 1,
+                  }}
+                >
+                  <Stack direction="row" spacing={2} alignItems="center" sx={{ flexWrap: "wrap", gap: 1 }}>
+                    {/* Export button with info icon - hidden on mobile */}
+                    <Stack direction="row" spacing={0.5} alignItems="center" sx={{ display: { xs: 'none', sm: 'flex' } }}>
+                      <IconButton
+                        size="small"
+                        onClick={() => setShowExportInfoDialog(true)}
+                        sx={{ 
+                          backgroundColor: 'info.main',
+                          color: 'white',
+                          '&:hover': {
+                            backgroundColor: 'info.dark',
+                          }
+                        }}
+                      >
+                        <InfoOutlinedIcon fontSize="small" />
+                      </IconButton>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={exportData}
+                      >
+                        Export Data
+                      </Button>
+                    </Stack>
+
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      sx={{
+                        fontWeight: 200,
+                        color: "error.dark",
+                        borderColor: "error.light",
+                        backgroundColor: "rgba(211, 47, 47, 0.08)",
+                        borderWidth: 2,
+                        "&:hover": {
+                          backgroundColor: "error.main",
+                          color: "white",
+                          borderColor: "error.main",
+                        },
+                      }}
+                      onClick={clearRecords}
+                      disabled={clearing}
+                    >
+                      {clearing ? "Clearing..." : "Clear Records"}
+                    </Button>
+                  </Stack>
+
+                  <TablePagination
+                    rowsPerPageOptions={[rowsPerPage]}
+                    component="div"
+                    count={sortedTransactions.length}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    onPageChange={handleChangePage}
+                    sx={{ border: 0 }}
+                  />
+                </Box>
+              </TableCell>
+            </TableRow>
+          </TableFooter>
         </Table>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            px: 2,
-          }}
-        >
-          <Stack direction="row" spacing={2} alignItems="center">
-            {/* Export button with info icon */}
-            <Stack direction="row" spacing={0.5} alignItems="center">
-              <IconButton
-                size="small"
-                onClick={() => setShowExportInfoDialog(true)}
-                sx={{ 
-                  backgroundColor: 'info.main',
-                  color: 'white',
-                  '&:hover': {
-                    backgroundColor: 'info.dark',
-                  }
-                }}
-              >
-                <InfoOutlinedIcon fontSize="small" />
-              </IconButton>
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={exportData}
-              >
-                Export Data
-              </Button>
-            </Stack>
-
-            <Button
-              variant="outlined"
-              size="small"
-              sx={{
-                fontWeight: 200,
-                color: "error.dark",
-                borderColor: "error.light",
-                backgroundColor: "rgba(211, 47, 47, 0.08)",
-                borderWidth: 2,
-                "&:hover": {
-                  backgroundColor: "error.main",
-                  color: "white",
-                  borderColor: "error.main",
-                },
-              }}
-              onClick={clearRecords}
-              disabled={clearing}
-            >
-              {clearing ? "Clearing..." : "Clear Records"}
-            </Button>
-          </Stack>
-
-          <TablePagination
-            rowsPerPageOptions={[rowsPerPage]}
-            component="div"
-            count={sortedTransactions.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-          />
-        </Box>
       </TableContainer>
 
       <ConfirmationDialog
