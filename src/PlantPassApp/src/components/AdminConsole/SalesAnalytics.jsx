@@ -344,7 +344,7 @@ function SalesAnalytics() {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Container maxWidth="lg" sx={{ mt: { xs: 1, sm: 4 }, mb: { xs: 1, sm: 4 }, px: { xs: 0.5, sm: 3 } }}>
         <LoadingSpinner message="Loading analytics..." />
       </Container>
     );
@@ -352,7 +352,7 @@ function SalesAnalytics() {
 
   if (error) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Container maxWidth="lg" sx={{ mt: { xs: 1, sm: 4 }, mb: { xs: 1, sm: 4 }, px: { xs: 0.5, sm: 3 } }}>
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
         </Alert>
@@ -364,7 +364,7 @@ function SalesAnalytics() {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth="lg" sx={{ mt: { xs: 1, sm: 4 }, mb: { xs: 1, sm: 4 }, px: { xs: 0.5, sm: 3 } }}>
       <Stack
         direction="row"
         justifyContent="space-between"
@@ -382,7 +382,7 @@ function SalesAnalytics() {
         />
       </Stack>
 
-      <Grid container spacing={2} sx={{ mb: 3 }}>
+      <Grid container spacing={2} sx={{ mb: { xs: 2, sm: 3 } }}>
         <Grid item xs={12} sm={6} md={2.4}>
           <MetricCard 
             title="Total Revenue" 
@@ -417,25 +417,27 @@ function SalesAnalytics() {
         </Grid>
       </Grid>
 
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>Revenue Over Time</Typography>
-          {hasChartData ? (
-            <Box sx={{ height: 300 }}>
-              <Line
-                data={chartData}
-                options={chartOptions}
-              />
-            </Box>
-          ) : (
-            <Box sx={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Typography variant="body2" color="text.secondary">
-                No sales data available for chart
-              </Typography>
-            </Box>
-          )}
-        </CardContent>
-      </Card>
+      <TableContainer component={Paper} sx={{ mb: { xs: 2, sm: 3 }, overflowX: 'auto' }}>
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>Revenue Over Time</Typography>
+            {hasChartData ? (
+              <Box sx={{ height: 300, minWidth: 600 }}>
+                <Line
+                  data={chartData}
+                  options={chartOptions}
+                />
+              </Box>
+            ) : (
+              <Box sx={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Typography variant="body2" color="text.secondary">
+                  No sales data available for chart
+                </Typography>
+              </Box>
+            )}
+          </CardContent>
+        </Card>
+      </TableContainer>
 
       <TableContainer component={Paper}>
         <Table>
