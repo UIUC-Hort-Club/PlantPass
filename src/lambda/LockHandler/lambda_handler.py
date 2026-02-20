@@ -1,18 +1,24 @@
 import json
 import os
+import logging
 from dynamodb_client import get_dynamodb_client
 from response_utils import create_response
 
 LOCK_TABLE_NAME = os.environ.get('LOCK_TABLE_NAME', 'PlantPass-Locks')
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
     """
     Handle lock state operations for admin resources
     """
     try:
-        http_method = event.get('httpMethod', '')
+        route_key = event.get('routeKey', '')
         path_parameters = event.get('pathParameters', {})
         resource_type = path_parameters.get('resourceType', '')
+        
+        logger.info(f"Route Key: {route_key}, Resource Type: {resource_type}")
         
         if not resource_type:
             return create_response(400, {'message': 'Resource type is required'})
@@ -22,16 +28,17 @@ def lambda_handler(event, context):
         if resource_type not in valid_resources:
             return create_response(400, {'message': f'Invalid resource type. Must be one of: {", ".join(valid_resources)}'})
         
-        if http_method == 'GET':
+        # Match route pattern
+        if route_key.startswith('GET /lock/'):
             return get_lock_state(resource_type)
-        elif http_method == 'PUT':
+        elif route_key.startswith('PUT /lock/'):
             body = json.loads(event.get('body', '{}'))
             return set_lock_state(resource_type, body)
         else:
-            return create_response(405, {'message': 'Method not allowed'})
+            return create_response(404, {'message': f'Route not found: {route_key}'})
             
     except Exception as e:
-        print(f"Error in lambda_handler: {str(e)}")
+        logger.error(f"Error in lambda_handler: {str(e)}", exc_info=True)
         return create_response(500, {'message': 'Internal server error'})
 
 
