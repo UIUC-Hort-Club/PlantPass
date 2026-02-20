@@ -418,10 +418,10 @@ function SalesAnalytics() {
         </Grid>
       </Grid>
 
-      <TableContainer component={Paper} sx={{ mb: { xs: 2, sm: 3 }, overflowX: 'auto' }}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>Revenue Over Time</Typography>
+      <Card sx={{ mb: { xs: 2, sm: 3 } }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>Revenue Over Time</Typography>
+          <Box sx={{ overflowX: 'auto', width: '100%' }}>
             {hasChartData ? (
               <Box sx={{ height: 300, minWidth: 600 }}>
                 <Line
@@ -436,9 +436,9 @@ function SalesAnalytics() {
                 </Typography>
               </Box>
             )}
-          </CardContent>
-        </Card>
-      </TableContainer>
+          </Box>
+        </CardContent>
+      </Card>
 
       <TableContainer component={Paper}>
         <Table>
