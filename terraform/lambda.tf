@@ -275,7 +275,6 @@ resource "aws_lambda_function" "email_handler" {
     variables = {
       SENDER_EMAIL          = var.sender_email
       UIUC_HORT_CLUB_EMAIL = var.uiuc_hort_club_email
-      AWS_REGION           = var.aws_region
     }
   }
 

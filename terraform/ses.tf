@@ -2,15 +2,8 @@
 # SES Email Configuration
 # -------------------------
 
-# SES Email Identity (Domain or Email)
-resource "aws_ses_email_identity" "sender" {
-  email = var.sender_email
-}
-
-# SES Email Identity for UIUC Hort Club
-resource "aws_ses_email_identity" "uiuc_hort_club" {
-  email = var.uiuc_hort_club_email
-}
+# Note: Email identities must be manually verified in AWS SES Console
+# Terraform will not create/verify them to avoid permission issues
 
 # IAM Policy for Lambda to send emails via SES
 resource "aws_iam_role_policy" "lambda_ses_access" {

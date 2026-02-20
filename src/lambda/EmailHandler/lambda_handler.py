@@ -7,7 +7,7 @@ from botocore.exceptions import ClientError
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-ses = boto3.client('ses', region_name=os.environ.get('AWS_REGION', 'us-east-1'))
+ses = boto3.client('ses', region_name=os.environ.get('AWS_DEFAULT_REGION', 'us-east-1'))
 
 SENDER_EMAIL = os.environ['SENDER_EMAIL']
 UIUC_HORT_CLUB_EMAIL = os.environ.get('UIUC_HORT_CLUB_EMAIL', 'hortclub@example.com')
