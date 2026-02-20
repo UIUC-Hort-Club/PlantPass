@@ -76,6 +76,7 @@ jobs:
     needs: prepare-lambda
     outputs:
       frontend_bucket_name: ${{ steps.bucket.outputs.frontend_bucket_name }}
+      cloudfront_distribution_id: ${{ steps.bucket.outputs.cloudfront_distribution_id }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -117,7 +118,9 @@ jobs:
         working-directory: ./terraform
         run: |
           BUCKET=$(terraform output frontend_bucket_name | tr -d '"')
+          DISTRIBUTION_ID=$(terraform output cloudfront_distribution_id | tr -d '"')
           echo "frontend_bucket_name=$BUCKET" >> $GITHUB_OUTPUT
+          echo "cloudfront_distribution_id=$DISTRIBUTION_ID" >> $GITHUB_OUTPUT
 
   deploy-frontend:
     runs-on: ubuntu-latest
@@ -161,17 +164,9 @@ jobs:
         run: |
           aws s3 sync ./src/PlantPassApp/dist/ s3://${{ needs.deploy-infra.outputs.frontend_bucket_name }} --delete
 
-      - name: Get CloudFront Distribution ID
-        id: cloudfront
-        run: |
-          cd terraform
-          terraform init -input=false
-          DISTRIBUTION_ID=$(terraform output -raw cloudfront_distribution_id 2>/dev/null || echo "")
-          echo "distribution_id=$DISTRIBUTION_ID" >> $GITHUB_OUTPUT
-
       - name: Invalidate CloudFront cache
-        if: steps.cloudfront.outputs.distribution_id != ''
+        if: needs.deploy-infra.outputs.cloudfront_distribution_id != ''
         run: |
           aws cloudfront create-invalidation \
-            --distribution-id ${{ steps.cloudfront.outputs.distribution_id }} \
+            --distribution-id ${{ needs.deploy-infra.outputs.cloudfront_distribution_id }} \
             --paths "/*"
