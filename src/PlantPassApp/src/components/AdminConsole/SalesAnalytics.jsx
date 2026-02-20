@@ -528,8 +528,8 @@ function SalesAnalytics() {
                   }}
                 >
                   <Stack direction="row" spacing={2} alignItems="center" sx={{ flexWrap: "wrap", gap: 1 }}>
-                    {/* Export button with info icon */}
-                    <Stack direction="row" spacing={0.5} alignItems="center">
+                    {/* Export button with info icon - hidden on mobile */}
+                    <Stack direction="row" spacing={0.5} alignItems="center" sx={{ display: { xs: 'none', sm: 'flex' } }}>
                       <IconButton
                         size="small"
                         onClick={() => setShowExportInfoDialog(true)}
