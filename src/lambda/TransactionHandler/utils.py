@@ -12,21 +12,6 @@ def generate_random_id():
     second_part = ''.join(random.choices(letters, k=3))
     return f"{first_part}-{second_part}"
 
-def validate_transaction_id(transaction_id):
-    """Validates that the transaction ID does not exist in the database"""
-    try:
-        dynamodb = boto3.resource('dynamodb')
-        table = dynamodb.Table(os.environ.get('TRANSACTIONS_TABLE', 'transactions'))
-        
-        response = table.get_item(Key={'purchase_id': transaction_id})
-        
-        return 'Item' not in response
-        
-    except ClientError:
-        return False
-    except Exception:
-        return False
-
 def decimal_to_float(obj):
     """Convert Decimal objects to float for JSON serialization"""
     if isinstance(obj, Decimal):

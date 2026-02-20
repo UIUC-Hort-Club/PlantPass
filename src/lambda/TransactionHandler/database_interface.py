@@ -23,25 +23,38 @@ def create_transaction(transaction_data):
     Returns:
         dict: Created transaction data
     """
-    try:
-        logger.info("Starting transaction creation...")
-        
-        # Create Transaction object from JSON input
-        transaction = Transaction.from_json(transaction_data)
-        
-        # Convert to database format and save
-        db_item = transaction.to_db_record()
-        table.put_item(Item=db_item)
-        
-        logger.info(f"Transaction created successfully in database: {transaction.purchase_id}")
-        return transaction.to_dict()
-
-    except ClientError as e:
-        logger.error(f"DynamoDB error creating transaction: {e}", exc_info=True)
-        raise Exception(f"Failed to create transaction: {e}")
-    except Exception as e:
-        logger.error(f"Error creating transaction: {e}", exc_info=True)
-        raise Exception(f"Failed to create transaction: {e}")
+    max_retries = 5
+    
+    for attempt in range(max_retries):
+        try:
+            logger.info(f"Starting transaction creation (attempt {attempt + 1}/{max_retries})...")
+            
+            # Create Transaction object from JSON input
+            transaction = Transaction.from_json(transaction_data)
+            
+            # Convert to database format and save with conditional write
+            db_item = transaction.to_db_record()
+            table.put_item(
+                Item=db_item,
+                ConditionExpression='attribute_not_exists(purchase_id)'
+            )
+            
+            logger.info(f"Transaction created successfully in database: {transaction.purchase_id}")
+            return transaction.to_dict()
+            
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
+                # ID collision - retry with new ID
+                logger.warning(f"Transaction ID collision on attempt {attempt + 1}, retrying...")
+                if attempt == max_retries - 1:
+                    raise Exception("Failed to generate unique transaction ID after multiple attempts")
+                continue
+            else:
+                logger.error(f"DynamoDB error creating transaction: {e}", exc_info=True)
+                raise Exception(f"Failed to create transaction: {e}")
+        except Exception as e:
+            logger.error(f"Error creating transaction: {e}", exc_info=True)
+            raise Exception(f"Failed to create transaction: {e}")
 
 def read_transaction(transaction_id):
     """
