@@ -2,7 +2,7 @@ import json
 import logging
 from datetime import datetime, timezone
 from decimal import Decimal
-from utils import generate_random_id, validate_transaction_id
+from utils import generate_random_id
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -37,14 +37,8 @@ class Transaction:
         logger.info("Initializing transaction from JSON input")
         logger.info(f"Input data: {json.dumps(self.data, indent=2)}")
         
-        # Could be slow as more transactions get written
-        # implement caching?
-        while True:
-            purchase_id = generate_random_id()
-            if validate_transaction_id(purchase_id):
-                break
-        
-        self.purchase_id = purchase_id
+        # Generate random ID - collision handling done at database write level
+        self.purchase_id = generate_random_id()
         self.timestamp = self.data.get("timestamp", int(datetime.now(timezone.utc).timestamp()))
         self.items = self.data.get("items", [])
         self.input_discounts = self.data.get("discounts", [])
