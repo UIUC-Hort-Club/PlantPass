@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
-import { Snackbar, Alert } from '@mui/material';
+import { Snackbar, Alert, useMediaQuery, useTheme } from '@mui/material';
 
 const NotificationContext = createContext();
 
@@ -13,6 +13,8 @@ export const useNotification = () => {
 
 export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const showNotification = (severity, message, duration = 4000) => {
     const id = Date.now() + Math.random();
@@ -60,9 +62,16 @@ export const NotificationProvider = ({ children }) => {
           open={true}
           autoHideDuration={notification.duration}
           onClose={() => removeNotification(notification.id)}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+          anchorOrigin={
+            isMobile 
+              ? { vertical: 'top', horizontal: 'center' }
+              : { vertical: 'bottom', horizontal: 'left' }
+          }
           sx={{ 
-            mb: `${index * 60}px`,
+            ...(isMobile 
+              ? { mt: `${index * 60 + 8}px` }
+              : { mb: `${index * 60}px` }
+            ),
             zIndex: 9999 + index 
           }}
         >
