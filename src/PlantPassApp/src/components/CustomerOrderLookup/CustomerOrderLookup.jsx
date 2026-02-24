@@ -70,17 +70,24 @@ export default function CustomerOrderLookup() {
     <Box
       sx={{
         minHeight: "100vh",
-        backgroundColor: "#f5f5f5",
+        background: "linear-gradient(180deg, #F8F9FA 0%, #FFFFFF 100%)",
       }}
     >
       {/* Header */}
-      <AppBar position="static" elevation={0}>
+      <AppBar 
+        position="static" 
+        elevation={0}
+        sx={{
+          background: "#FFFFFF",
+          borderBottom: "3px solid #52B788",
+          boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.08)",
+        }}
+      >
         <Toolbar>
           <IconButton
             edge="start"
-            color="inherit"
             onClick={() => navigate("/")}
-            sx={{ mr: 2 }}
+            sx={{ mr: 2, color: "#2D6A4F" }}
           >
             <ArrowBackIcon />
           </IconButton>
