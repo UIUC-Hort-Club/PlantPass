@@ -62,7 +62,7 @@ export default function ItemsTable({
             </TableRow>
           </TableHead>
           <TableBody>
-            {stockItems.map((item, index) => (
+            {stockItems.map((item) => (
               <TableRow 
                 key={item.SKU}
                 sx={{

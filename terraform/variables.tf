@@ -52,6 +52,11 @@ variable "lock_lambda_zip_path" {
   description = "Path to LockHandler Lambda ZIP relative to Terraform working directory"
 }
 
+variable "feature_toggles_lambda_zip_path" {
+  type        = string
+  description = "Path to FeatureTogglesHandler Lambda ZIP relative to Terraform working directory"
+}
+
 variable "auth_layer_zip_path" {
   type = string
 }

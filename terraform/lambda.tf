@@ -66,7 +66,8 @@ resource "aws_iam_role_policy" "lambda_dynamodb_access" {
           aws_dynamodb_table.websocket_connections.arn,
           aws_dynamodb_table.temp_passwords.arn,
           aws_dynamodb_table.payment_methods.arn,
-          aws_dynamodb_table.locks.arn
+          aws_dynamodb_table.locks.arn,
+          aws_dynamodb_table.feature_toggles.arn
         ]
       }
     ]
@@ -120,6 +121,15 @@ resource "aws_cloudwatch_log_group" "payment_methods_handler_logs" {
 
 resource "aws_cloudwatch_log_group" "lock_handler_logs" {
   name              = "/aws/lambda/LockHandler"
+  retention_in_days = 14
+
+  tags = {
+    application = "plantpass"
+  }
+}
+
+resource "aws_cloudwatch_log_group" "feature_toggles_handler_logs" {
+  name              = "/aws/lambda/FeatureTogglesHandler"
   retention_in_days = 14
 
   tags = {
@@ -272,6 +282,28 @@ resource "aws_lambda_function" "lock_handler" {
   }
 }
 
+resource "aws_lambda_function" "feature_toggles_handler" {
+  function_name    = "FeatureTogglesHandler"
+  filename         = var.feature_toggles_lambda_zip_path
+  handler          = "lambda_handler.lambda_handler"
+  runtime          = "python3.11"
+  role             = aws_iam_role.lambda_exec.arn
+  source_code_hash = filebase64sha256(var.feature_toggles_lambda_zip_path)
+  depends_on = [
+    aws_cloudwatch_log_group.feature_toggles_handler_logs
+  ]
+
+  environment {
+    variables = {
+      FEATURE_TOGGLES_TABLE_NAME = aws_dynamodb_table.feature_toggles.name
+    }
+  }
+
+  tags = {
+    application = "plantpass"
+  }
+}
+
 resource "aws_lambda_permission" "apigw_transaction" {
   statement_id  = "AllowAPIGatewayInvokeTransaction"
   action        = "lambda:InvokeFunction"
@@ -316,6 +348,14 @@ resource "aws_lambda_permission" "apigw_lock" {
   statement_id  = "AllowAPIGatewayInvokeLock"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.lock_handler.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.frontend_api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "apigw_feature_toggles" {
+  statement_id  = "AllowAPIGatewayInvokeFeatureToggles"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.feature_toggles_handler.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.frontend_api.execution_arn}/*/*"
 }

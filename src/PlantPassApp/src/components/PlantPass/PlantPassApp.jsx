@@ -18,6 +18,7 @@ import AdminConsole from "../AdminConsole/AdminConsole";
 import AdminPasswordModal from "../AdminConsole/AdminPasswordModal";
 import ForgotPasswordDialog from "../AdminConsole/ForgotPasswordDialog";
 import NavigationMenu from "../Navigation/NavigationMenu";
+import { useFeatureToggles } from "../../contexts/FeatureToggleContext";
 
 function TabPanel({ children, value, index }) {
   return (
@@ -29,6 +30,7 @@ function TabPanel({ children, value, index }) {
 
 export default function PlantPassApp() {
   const navigate = useNavigate();
+  const { features } = useFeatureToggles();
   
   /* =========================
      Theme / responsiveness
@@ -69,6 +71,13 @@ export default function PlantPassApp() {
      Admin handlers
      ========================= */
   const handleAdminClick = () => {
+    // If password protection is disabled, grant immediate access
+    if (!features.passwordProtectAdmin) {
+      setIsAdmin(true);
+      return;
+    }
+    
+    // Otherwise, show password modal
     setAdminModalOpen(true);
   };
 
