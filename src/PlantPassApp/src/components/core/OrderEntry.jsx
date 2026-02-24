@@ -20,9 +20,11 @@ import { useNotification } from "../../contexts/NotificationContext";
 import { transformProductsData, initializeProductQuantities } from "../../utils/productTransformer";
 import { transformDiscountsForOrder } from "../../utils/discountTransformer";
 import LoadingSpinner from "../common/LoadingSpinner";
+import { useFeatureToggles } from "../../contexts/FeatureToggleContext";
 
 function OrderEntry() {
   const { showSuccess, showWarning, showError } = useNotification();
+  const { features, loading: featuresLoading } = useFeatureToggles();
   const receiptRef = useRef(null);
   
   const [products, setProducts] = useState([]);
@@ -36,6 +38,11 @@ function OrderEntry() {
   const [currentTransactionID, setCurrentTransactionID] = useState("");
   const [transactionIDDialogOpen, setTransactionIDDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Debug: Log feature toggle state
+  useEffect(() => {
+    console.log("Feature Toggles:", features);
+  }, [features]);
 
   const computedSubtotal = Object.values(subtotals)
     .reduce((sum, val) => sum + (parseFloat(val) || 0), 0)
@@ -146,7 +153,8 @@ function OrderEntry() {
         }),
       discounts: discountsWithSelection,
       voucher: Number(voucher) || 0,
-      email: customerEmail || "",
+      // If email collection is disabled, always send empty string
+      email: features.collectEmailAddresses ? (customerEmail || "") : "",
     };
 
     if (Object.values(quantities).every(qty => !qty || parseInt(qty) === 0)) {
@@ -328,20 +336,22 @@ function OrderEntry() {
           justifyContent="space-between"
           alignItems={{ xs: "stretch", sm: "center" }}
         >
-          <TextField
-            label="Customer Email (Optional)"
-            type="email"
-            size="small"
-            value={customerEmail}
-            onChange={(e) => setCustomerEmail(e.target.value)}
-            placeholder="email@example.com"
-            sx={{ width: { xs: '100%', sm: 300 } }}
-            helperText="Receive receipt via email"
-            inputProps={{
-              inputMode: "email",
-              autoComplete: "email"
-            }}
-          />
+          {features.collectEmailAddresses && (
+            <TextField
+              label="Customer Email (Optional)"
+              type="email"
+              size="small"
+              value={customerEmail}
+              onChange={(e) => setCustomerEmail(e.target.value)}
+              placeholder="email@example.com"
+              sx={{ width: { xs: '100%', sm: 300 } }}
+              helperText="Receive receipt via email"
+              inputProps={{
+                inputMode: "email",
+                autoComplete: "email"
+              }}
+            />
+          )}
           <Button
             variant="contained"
             color="primary"

@@ -6,6 +6,7 @@ import ResetPassword from "./ResetPassword";
 import EditProducts from "./EditProducts";
 import EditDiscounts from "./EditDiscounts";
 import EditPaymentMethods from "./EditPaymentMethods";
+import FeatureToggles from "./FeatureToggles";
 
 function AdminTabPanel({ value, index, children }) {
   return value === index ? <Box sx={{ mt: 2 }}>{children}</Box> : null;
@@ -43,6 +44,10 @@ export default function AdminConsole({ tabIndex }) {
         </AdminTabPanel>
 
         <AdminTabPanel value={tabIndex} index={4}>
+          <FeatureToggles />
+        </AdminTabPanel>
+
+        <AdminTabPanel value={tabIndex} index={5}>
           <ResetPassword />
         </AdminTabPanel>
       </Paper>
