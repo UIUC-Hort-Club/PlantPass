@@ -1,5 +1,5 @@
 import { useFeatureToggles } from "../../contexts/FeatureToggleContext";
-import { Box, Paper, Typography } from "@mui/material";
+import { Paper, Typography } from "@mui/material";
 
 /**
  * Temporary debug component to display feature toggle state

@@ -49,7 +49,7 @@ export default function CustomerOrderLookup() {
       } else {
         setError("Order not found");
       }
-    } catch (err) {
+    } catch {
       setError("Failed to load order. Please check the order ID and try again.");
     } finally {
       setLoading(false);

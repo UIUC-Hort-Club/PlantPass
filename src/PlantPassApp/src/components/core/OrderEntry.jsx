@@ -24,7 +24,7 @@ import { useFeatureToggles } from "../../contexts/FeatureToggleContext";
 
 function OrderEntry() {
   const { showSuccess, showWarning, showError } = useNotification();
-  const { features, loading: featuresLoading } = useFeatureToggles();
+  const { features } = useFeatureToggles();
   const receiptRef = useRef(null);
   
   const [products, setProducts] = useState([]);
