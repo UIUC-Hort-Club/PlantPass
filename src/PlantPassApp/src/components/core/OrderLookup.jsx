@@ -28,9 +28,11 @@ import { deleteTransaction } from "../../api/transaction_interface/deleteTransac
 import { getAllPaymentMethods } from "../../api/payment_methods_interface/getAllPaymentMethods";
 import { useNotification } from "../../contexts/NotificationContext";
 import { formatOrderId } from "../../utils/orderIdFormatter";
+import { useFeatureToggles } from "../../contexts/FeatureToggleContext";
 
 function OrderLookup() {
   const { showSuccess } = useNotification();
+  const { features } = useFeatureToggles();
   
   const [orderId, setOrderId] = useState("");
   const [products, setProducts] = useState([]);
@@ -341,7 +343,8 @@ function OrderLookup() {
           method: paymentMethod,
           paid: true
         },
-        email: customerEmail || ""
+        // If email collection is disabled, always send empty string
+        email: features.collectEmailAddresses ? (customerEmail || "") : ""
       };
 
       await updateTransaction(currentTransactionID, paymentData);
@@ -582,7 +585,7 @@ function OrderLookup() {
             />
           )}
 
-          {!isOrderCompleted && (
+          {!isOrderCompleted && features.collectEmailAddresses && (
             <Box sx={{ mt: 2 }}>
               <TextField
                 label="Customer Email (Optional)"
