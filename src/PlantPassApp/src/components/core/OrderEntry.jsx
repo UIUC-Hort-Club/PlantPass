@@ -229,14 +229,14 @@ function OrderEntry() {
 
   if (loading) {
     return (
-      <Container maxWidth="md" sx={{ px: { xs: 0.5, sm: 3 } }}>
+      <Container maxWidth="md" sx={{ px: { xs: 1, sm: 3 } }}>
         <LoadingSpinner message="Loading products..." />
       </Container>
     );
   }
 
   return (
-    <Container maxWidth="md" sx={{ px: { xs: 0.5, sm: 3 } }}>
+    <Container maxWidth="md" sx={{ px: { xs: 1, sm: 3 } }}>
       <ItemsTable
         stockItems={products}
         quantities={quantities}

@@ -346,7 +346,7 @@ function SalesAnalytics() {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ mt: { xs: 1, sm: 4 }, mb: { xs: 1, sm: 4 }, px: { xs: 0.5, sm: 3 } }}>
+      <Container maxWidth="lg" sx={{ mt: { xs: 1, sm: 4 }, mb: { xs: 1, sm: 4 }, px: { xs: 1, sm: 3 } }}>
         <LoadingSpinner message="Loading analytics..." />
       </Container>
     );
@@ -354,7 +354,7 @@ function SalesAnalytics() {
 
   if (error) {
     return (
-      <Container maxWidth="lg" sx={{ mt: { xs: 1, sm: 4 }, mb: { xs: 1, sm: 4 }, px: { xs: 0.5, sm: 3 } }}>
+      <Container maxWidth="lg" sx={{ mt: { xs: 1, sm: 4 }, mb: { xs: 1, sm: 4 }, px: { xs: 1, sm: 3 } }}>
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
         </Alert>
@@ -366,7 +366,7 @@ function SalesAnalytics() {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: { xs: 1, sm: 4 }, mb: { xs: 1, sm: 4 }, px: { xs: 0.5, sm: 3 } }}>
+    <Container maxWidth="lg" sx={{ mt: { xs: 1, sm: 4 }, mb: { xs: 1, sm: 4 }, px: { xs: 1, sm: 3 } }}>
       <Stack
         direction="row"
         justifyContent="space-between"

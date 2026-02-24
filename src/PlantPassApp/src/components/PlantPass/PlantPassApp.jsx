@@ -115,7 +115,7 @@ export default function PlantPassApp() {
         flexDirection: "column",
         backgroundColor: "white",
         py: { xs: 0.5, sm: 2 },
-        px: { xs: 0.5, sm: 2 },
+        px: 0,
       }}
     >
       {/* =========================
