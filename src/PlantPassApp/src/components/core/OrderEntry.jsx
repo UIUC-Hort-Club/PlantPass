@@ -229,14 +229,14 @@ function OrderEntry() {
 
   if (loading) {
     return (
-      <Container maxWidth="md" sx={{ px: { xs: 0.5, sm: 3 } }}>
+      <Container maxWidth="md" sx={{ px: { xs: 1, sm: 3 } }}>
         <LoadingSpinner message="Loading products..." />
       </Container>
     );
   }
 
   return (
-    <Container maxWidth="md" sx={{ px: { xs: 0.5, sm: 3 } }}>
+    <Container maxWidth="md" sx={{ px: { xs: 1, sm: 3 } }}>
       <ItemsTable
         stockItems={products}
         quantities={quantities}
@@ -244,15 +244,19 @@ function OrderEntry() {
         onQuantityChange={handleQuantityChange}
       />
 
-      <Stack
-        direction="column"
-        spacing={1}
-        sx={{mt: '15px'}}
+      <Box 
+        sx={{ 
+          mt: 3,
+          p: 2.5,
+          background: "linear-gradient(135deg, #F8F9FA 0%, #E8F5E9 100%)",
+          borderRadius: 3,
+          border: "1px solid #E9ECEF",
+        }}
       >
         <Stack
-          direction="row"
-          justifyContent="right"
-          spacing={1}
+          direction="column"
+          alignItems="flex-end"
+          spacing={2}
         >
           <TextField
             label="Voucher"
@@ -275,17 +279,17 @@ function OrderEntry() {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <Typography fontWeight={700}>$</Typography>
+                  <Typography fontWeight={700} color="#2D6A4F">$</Typography>
                 </InputAdornment>
               ),
             }}
-            sx={{ width: 120 }}
+            sx={{ 
+              width: 140,
+              '& .MuiOutlinedInput-root': {
+                background: '#FFFFFF',
+              }
+            }}
           />            
-        </Stack>
-        <Stack
-          direction="row"
-          justifyContent="right"
-        >
           <TextField
             label="Subtotal"
             size="small"
@@ -294,14 +298,22 @@ function OrderEntry() {
               readOnly: true,
               startAdornment: (
                 <InputAdornment position="start">
-                  <Typography fontWeight={700}>$</Typography>
+                  <Typography fontWeight={700} color="#2D6A4F">$</Typography>
                 </InputAdornment>
               ),
             }}
-            sx={{ width: 140 }}
+            sx={{ 
+              width: 140,
+              '& .MuiOutlinedInput-root': {
+                background: '#FFFFFF',
+                fontWeight: 700,
+                fontSize: '1.1rem',
+                color: '#2D6A4F',
+              }
+            }}
           />            
         </Stack>
-      </Stack>
+      </Box>
 
       <DiscountsTable
         discounts={discounts}
@@ -309,7 +321,7 @@ function OrderEntry() {
         onDiscountToggle={handleDiscountToggle}
       />
 
-      <Box sx={{ mt: 2 }}>
+      <Box sx={{ mt: 3 }}>
         <Stack
           direction={{ xs: "column", sm: "row" }}
           spacing={2}
@@ -334,11 +346,24 @@ function OrderEntry() {
             variant="contained"
             color="primary"
             onClick={handleEnterOrder}
-            size="small"
+            size="large"
             disabled={!!currentTransactionID}
-            sx={{ minWidth: { xs: '100%', sm: 'auto' } }}
+            sx={{ 
+              minWidth: { xs: '100%', sm: 160 },
+              py: 1.5,
+              fontSize: '1.1rem',
+              fontWeight: 700,
+              boxShadow: '0px 4px 12px rgba(45, 106, 79, 0.3)',
+              '&:hover': {
+                boxShadow: '0px 6px 20px rgba(45, 106, 79, 0.4)',
+              },
+              '&:disabled': {
+                background: '#E9ECEF',
+                color: '#6C757D',
+              }
+            }}
           >
-            Enter
+            Enter Order
           </Button>
         </Stack>          
       </Box>

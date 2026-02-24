@@ -14,7 +14,35 @@ import {
   Alert,
 } from "@mui/material";
 
-function Receipt({ totals, transactionId, discounts = [], voucher = 0 }) {
+function Receipt({ totals, transactionId, discounts = [], voucher = 0, transaction, readOnly = false }) {
+  // If transaction object is provided, extract data from it
+  let displayTransactionId = transactionId;
+  let displayDiscounts = discounts;
+  let displayVoucher = voucher;
+  let displayTotals = totals;
+  let displayItems = [];
+
+  if (transaction) {
+    displayTransactionId = transaction.purchase_id;
+    displayDiscounts = transaction.discounts || [];
+    displayVoucher = transaction.voucher || 0;
+    displayItems = transaction.items || [];
+    
+    // Calculate totals from transaction
+    const subtotal = displayItems.reduce((sum, item) => 
+      sum + (item.price_ea * item.quantity), 0
+    );
+    const totalDiscounts = displayDiscounts.reduce((sum, discount) => 
+      sum + (discount.amount_off || 0), 0
+    );
+    const grandTotal = subtotal - totalDiscounts - displayVoucher;
+    
+    displayTotals = {
+      subtotal,
+      grandTotal
+    };
+  }
+
   return (
     <Container
       sx={{ mt: 3 }}
@@ -28,15 +56,41 @@ function Receipt({ totals, transactionId, discounts = [], voucher = 0 }) {
         }}
       >
         <Typography variant="h6" gutterBottom color={"black"} align="center">
-          Transaction Receipt
+          {readOnly ? "Order Details" : "Transaction Receipt"}
         </Typography>
 
-        {transactionId ? (
+        {displayTransactionId ? (
           <Alert severity="success">
-            <strong>Transaction ID:</strong> {transactionId}
+            <strong>{readOnly ? "Order ID" : "Transaction ID"}:</strong> {displayTransactionId}
           </Alert>
         ) : (
           <Alert severity="warning">No transaction ID found.</Alert>
+        )}
+
+        {/* Items table for read-only mode */}
+        {readOnly && displayItems.length > 0 && (
+          <TableContainer component={Paper} elevation={0} sx={{ mt: 2, mb: 2 }}>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell><strong>Item</strong></TableCell>
+                  <TableCell align="right"><strong>Qty</strong></TableCell>
+                  <TableCell align="right"><strong>Price</strong></TableCell>
+                  <TableCell align="right"><strong>Total</strong></TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {displayItems.map((item, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{item.item}</TableCell>
+                    <TableCell align="right">{item.quantity}</TableCell>
+                    <TableCell align="right">${Number(item.price_ea).toFixed(2)}</TableCell>
+                    <TableCell align="right">${(item.price_ea * item.quantity).toFixed(2)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
         )}
 
         <Typography
@@ -45,7 +99,7 @@ function Receipt({ totals, transactionId, discounts = [], voucher = 0 }) {
           color={"black"}
           align="right"
         >
-          Subtotal: ${Number(totals.subtotal || 0).toFixed(2)}
+          Subtotal: ${Number(displayTotals?.subtotal || 0).toFixed(2)}
         </Typography>
 
         <TableContainer component={Paper} elevation={0}>
@@ -61,7 +115,7 @@ function Receipt({ totals, transactionId, discounts = [], voucher = 0 }) {
               </TableRow>
             </TableHead>
             <TableBody>
-              {discounts.map((discount, index) => (
+              {displayDiscounts.map((discount, index) => (
                 <TableRow key={index}>
                   <TableCell 
                     sx={{ 
@@ -82,10 +136,10 @@ function Receipt({ totals, transactionId, discounts = [], voucher = 0 }) {
                 </TableRow>
               ))}
 
-              {voucher > 0 && (
+              {displayVoucher > 0 && (
                 <TableRow>
                   <TableCell>Club Voucher</TableCell>
-                  <TableCell>-${Number(voucher).toFixed(2)}</TableCell>
+                  <TableCell>-${Number(displayVoucher).toFixed(2)}</TableCell>
                 </TableRow>
               )}
             </TableBody>
@@ -104,7 +158,7 @@ function Receipt({ totals, transactionId, discounts = [], voucher = 0 }) {
             color="black"
             align="right"
           >
-            Grand Total: ${Number(totals.grandTotal || 0).toFixed(2)}
+            Grand Total: ${Number(displayTotals?.grandTotal || 0).toFixed(2)}
           </Typography>
         </Stack>
       </Box>
