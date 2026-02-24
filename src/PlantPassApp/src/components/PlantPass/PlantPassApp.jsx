@@ -113,16 +113,25 @@ export default function PlantPassApp() {
         mx: "auto",
         display: "flex",
         flexDirection: "column",
-        backgroundColor: "white",
-        py: { xs: 0.5, sm: 2 },
+        background: "linear-gradient(180deg, #F8F9FA 0%, #FFFFFF 100%)",
+        py: { xs: 0, sm: 2 },
         px: 0,
       }}
     >
       {/* =========================
         App header
        ========================= */}
-      <AppBar position="static" elevation={0} sx={{ mb: { xs: 1, sm: 2 } }}>
-        <Toolbar sx={{ display: "flex", justifyContent: "space-between", minHeight: { xs: 48, sm: 64 }, px: { xs: 1, sm: 2 } }}>
+      <AppBar 
+        position="static" 
+        elevation={0} 
+        sx={{ 
+          mb: { xs: 2, sm: 3 },
+          background: "#FFFFFF",
+          borderBottom: "3px solid #52B788",
+          boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.08)",
+        }}
+      >
+        <Toolbar sx={{ display: "flex", justifyContent: "space-between", minHeight: { xs: 56, sm: 70 }, px: { xs: 2, sm: 3 } }}>
           {/* Logo + title */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Box
@@ -140,21 +149,21 @@ export default function PlantPassApp() {
 
           {/* Header actions */}
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <IconButton color="inherit" onClick={() => navigate("/")}>
+            <IconButton sx={{ color: "#2D6A4F" }} onClick={() => navigate("/")}>
               <HomeIcon />
             </IconButton>
             
             {!isAdmin ? (
-              <IconButton color="inherit" onClick={handleAdminClick}>
+              <IconButton sx={{ color: "#2D6A4F" }} onClick={handleAdminClick}>
                 <SupervisorAccountIcon />
               </IconButton>
             ) : (
-              <IconButton color="inherit" onClick={handleHomeClick}>
+              <IconButton sx={{ color: "#2D6A4F" }} onClick={handleHomeClick}>
                 <PublicIcon />
               </IconButton>
             )}
 
-            <IconButton edge="end" color="inherit" onClick={handleMenuOpen}>
+            <IconButton edge="end" sx={{ color: "#2D6A4F" }} onClick={handleMenuOpen}>
               <MenuIcon />
             </IconButton>
           </Box>

@@ -21,39 +21,62 @@ export default function ItemsTable({
 }) {
   return (
     <Box>
-      <Typography variant="h6" sx={{ mb: 1 }}>
-          Product Listings {readOnly && "(View Only)"}
+      <Typography 
+        variant="h6" 
+        sx={{ 
+          mb: 2,
+          fontWeight: 700,
+          color: "#2D6A4F",
+          fontSize: { xs: "1.25rem", sm: "1.5rem" },
+        }}
+      >
+        Product Listings {readOnly && "(View Only)"}
       </Typography>
       <TableContainer 
         component={Paper} 
+        elevation={0}
         sx={{ 
           maxHeight: 800, 
           overflowY: "auto",
-          overflowX: "auto"
+          overflowX: "auto",
+          border: "1px solid #E9ECEF",
+          borderRadius: 3,
+          background: "#FFFFFF",
         }}
       >
-        <Table size="small" sx={{ minWidth: 500 }}>
+        <Table size="small" sx={{ minWidth: { xs: 'auto', sm: 500 } }}>
           <TableHead>
-            <TableRow>
-              <TableCell sx={{ minWidth: 120 }}>
-                <strong>Item</strong>
+            <TableRow sx={{ background: "linear-gradient(135deg, #F8F9FA 0%, #E8F5E9 100%)" }}>
+              <TableCell sx={{ minWidth: 120, fontWeight: 700, color: "#2D6A4F", py: 2 }}>
+                Item
               </TableCell>
-              <TableCell sx={{ minWidth: 80 }}>
-                <strong>Price</strong>
+              <TableCell sx={{ minWidth: 80, fontWeight: 700, color: "#2D6A4F", py: 2 }}>
+                Price
               </TableCell>
-              <TableCell sx={{ minWidth: 100 }}>
-                <strong>Quantity</strong>
+              <TableCell sx={{ minWidth: 100, fontWeight: 700, color: "#2D6A4F", py: 2 }}>
+                Quantity
               </TableCell>
-              <TableCell sx={{ minWidth: 100 }}>
-                <strong>Total Price</strong>
+              <TableCell sx={{ minWidth: 100, fontWeight: 700, color: "#2D6A4F", py: 2 }}>
+                Total Price
               </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {stockItems.map((item) => (
-              <TableRow key={item.SKU}>
-                <TableCell>{item.Name}</TableCell>
-                <TableCell>
+            {stockItems.map((item, index) => (
+              <TableRow 
+                key={item.SKU}
+                sx={{
+                  '&:nth-of-type(odd)': {
+                    backgroundColor: '#FAFBFC',
+                  },
+                  '&:hover': {
+                    backgroundColor: '#F1F8F4',
+                  },
+                  transition: 'background-color 0.2s ease',
+                }}
+              >
+                <TableCell sx={{ fontWeight: 500, color: "#212529" }}>{item.Name}</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: "#52B788" }}>
                   ${(item.Price || 0).toFixed(2)}
                 </TableCell>
                 <TableCell>
@@ -79,12 +102,13 @@ export default function ItemsTable({
                       minWidth: 80,
                       '& .MuiInputBase-input': {
                         minHeight: 44,
-                        boxSizing: 'border-box'
+                        boxSizing: 'border-box',
+                        fontWeight: 600,
                       }
                     }}
                   />
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ fontWeight: 700, color: "#2D6A4F", fontSize: "1rem" }}>
                   ${subtotals[item.SKU]}
                 </TableCell>
               </TableRow>
