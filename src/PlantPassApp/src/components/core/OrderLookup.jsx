@@ -286,7 +286,7 @@ function OrderLookup() {
           }),
         discounts: discountsWithSelection,
         voucher: Number(voucher) || 0,
-        email: customerEmail || ""
+        email: features.collectEmailAddresses ? (customerEmail || "") : ""
       };
 
       const updatedTransaction = await updateTransaction(currentTransactionID, updateData);

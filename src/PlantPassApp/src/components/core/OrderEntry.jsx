@@ -39,11 +39,6 @@ function OrderEntry() {
   const [transactionIDDialogOpen, setTransactionIDDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Debug: Log feature toggle state
-  useEffect(() => {
-    console.log("Feature Toggles:", features);
-  }, [features]);
-
   const computedSubtotal = Object.values(subtotals)
     .reduce((sum, val) => sum + (parseFloat(val) || 0), 0)
     .toFixed(2);
