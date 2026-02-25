@@ -11,6 +11,7 @@ import {
   Alert,
 } from "@mui/material";
 import LockIcon from "@mui/icons-material/Lock";
+import { apiRequest } from "../../api/apiClient";
 
 export default function PlantPassAccessModal({ open, onClose, onSuccess }) {
   const [passphrase, setPassphrase] = useState("");
@@ -27,24 +28,15 @@ export default function PlantPassAccessModal({ open, onClose, onSuccess }) {
     setError("");
 
     try {
-      // Verify passphrase against stored value
-      const response = await fetch(`${window.APP_CONFIG?.API_BASE_URL || ""}/plantpass-access/verify`, {
+      await apiRequest("/plantpass-access/verify", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ passphrase }),
+        body: { passphrase },
       });
-
-      if (response.ok) {
-        onSuccess();
-        handleClose();
-      } else {
-        setError("Incorrect passphrase. Please try again.");
-      }
+      onSuccess();
+      handleClose();
     } catch (err) {
       console.error("Error verifying passphrase:", err);
-      setError("Failed to verify passphrase. Please try again.");
+      setError("Incorrect passphrase. Please try again.");
     } finally {
       setLoading(false);
     }
