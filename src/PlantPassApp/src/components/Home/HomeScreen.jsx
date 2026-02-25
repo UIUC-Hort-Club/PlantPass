@@ -1,10 +1,28 @@
+import { useState } from "react";
 import { Box, Card, CardActionArea, Typography, Container } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import SearchIcon from "@mui/icons-material/Search";
+import PlantPassAccessModal from "./PlantPassAccessModal";
+import { useFeatureToggles } from "../../contexts/FeatureToggleContext";
 
 export default function HomeScreen() {
   const navigate = useNavigate();
+  const { features } = useFeatureToggles();
+  const [passphraseModalOpen, setPassphraseModalOpen] = useState(false);
+
+  const handleStaffClick = () => {
+    // Check if PlantPass access protection is enabled
+    if (features.protectPlantPassAccess) {
+      setPassphraseModalOpen(true);
+    } else {
+      navigate("/plantpass");
+    }
+  };
+
+  const handlePassphraseSuccess = () => {
+    navigate("/plantpass");
+  };
 
   return (
     <Box
@@ -128,7 +146,7 @@ export default function HomeScreen() {
             }}
           >
             <CardActionArea
-              onClick={() => navigate("/plantpass")}
+              onClick={handleStaffClick}
               sx={{
                 p: { xs: 3, sm: 4 },
                 display: "flex",
@@ -250,6 +268,13 @@ export default function HomeScreen() {
           </Card>
         </Box>
       </Container>
+
+      {/* PlantPass Access Modal */}
+      <PlantPassAccessModal
+        open={passphraseModalOpen}
+        onClose={() => setPassphraseModalOpen(false)}
+        onSuccess={handlePassphraseSuccess}
+      />
     </Box>
   );
 }

@@ -79,6 +79,11 @@ jobs:
           cd src/lambda/FeatureTogglesHandler
           zip -r ../../../terraform/featuretoggleshandler_lambda_package.zip .
 
+      - name: Package PlantPass Access Lambda
+        run: |
+          cd src/lambda/PlantPassAccessHandler
+          zip -r ../../../terraform/plantpassaccess_lambda_package.zip .
+
       - name: Upload Lambda ZIPs
         uses: actions/upload-artifact@v4
         with:
@@ -93,6 +98,7 @@ jobs:
             terraform/emailhandler_lambda_package.zip
             terraform/lockhandler_lambda_package.zip
             terraform/featuretoggleshandler_lambda_package.zip
+            terraform/plantpassaccess_lambda_package.zip
             terraform/auth_layer.zip
 
   deploy-infra:
@@ -138,6 +144,7 @@ jobs:
             -var "email_lambda_zip_path=emailhandler_lambda_package.zip" \
             -var "lock_lambda_zip_path=lockhandler_lambda_package.zip" \
             -var "feature_toggles_lambda_zip_path=featuretoggleshandler_lambda_package.zip" \
+            -var "plantpass_access_lambda_zip_path=plantpassaccess_lambda_package.zip" \
             -var "auth_layer_zip_path=auth_layer.zip" \
             -var "reset_token_hash=${{ secrets.RESET_TOKEN_HASH }}" \
             -var "sender_email=${{ secrets.SENDER_EMAIL }}" \

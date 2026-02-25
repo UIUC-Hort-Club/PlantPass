@@ -9,6 +9,7 @@ const ADMIN_MENU = [
   "Edit Discounts",
   "Edit Payment Methods",
   "Feature Toggles",
+  "PlantPass Access",
   "Reset Password",
 ];
 

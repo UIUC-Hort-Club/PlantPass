@@ -12,7 +12,8 @@ logger.setLevel(logging.INFO)
 # Default feature toggle values
 DEFAULT_FEATURES = {
     'collectEmailAddresses': True,
-    'passwordProtectAdmin': True
+    'passwordProtectAdmin': True,
+    'protectPlantPassAccess': False
 }
 
 def lambda_handler(event, context):
@@ -54,7 +55,8 @@ def get_feature_toggles():
         # Return stored features or defaults
         features = {
             'collectEmailAddresses': item.get('collectEmailAddresses', DEFAULT_FEATURES['collectEmailAddresses']),
-            'passwordProtectAdmin': item.get('passwordProtectAdmin', DEFAULT_FEATURES['passwordProtectAdmin'])
+            'passwordProtectAdmin': item.get('passwordProtectAdmin', DEFAULT_FEATURES['passwordProtectAdmin']),
+            'protectPlantPassAccess': item.get('protectPlantPassAccess', DEFAULT_FEATURES['protectPlantPassAccess'])
         }
         
         return create_response(200, features)
@@ -71,15 +73,16 @@ def set_feature_toggles(body):
     try:
         collect_email = body.get('collectEmailAddresses')
         password_protect = body.get('passwordProtectAdmin')
+        protect_plantpass = body.get('protectPlantPassAccess')
         
         # Validate required fields
-        if collect_email is None or password_protect is None:
+        if collect_email is None or password_protect is None or protect_plantpass is None:
             return create_response(400, {
-                'message': 'Both collectEmailAddresses and passwordProtectAdmin are required'
+                'message': 'All feature toggle fields are required'
             })
         
         # Validate types
-        if not isinstance(collect_email, bool) or not isinstance(password_protect, bool):
+        if not isinstance(collect_email, bool) or not isinstance(password_protect, bool) or not isinstance(protect_plantpass, bool):
             return create_response(400, {
                 'message': 'Feature toggle values must be boolean'
             })
@@ -91,13 +94,15 @@ def set_feature_toggles(body):
             Item={
                 'config_id': 'feature_toggles',
                 'collectEmailAddresses': collect_email,
-                'passwordProtectAdmin': password_protect
+                'passwordProtectAdmin': password_protect,
+                'protectPlantPassAccess': protect_plantpass
             }
         )
         
         return create_response(200, {
             'collectEmailAddresses': collect_email,
             'passwordProtectAdmin': password_protect,
+            'protectPlantPassAccess': protect_plantpass,
             'message': 'Feature toggles updated successfully'
         })
         
