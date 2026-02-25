@@ -32,8 +32,9 @@ export default function PlantPassAccessModal({ open, onClose, onSuccess }) {
         method: "POST",
         body: { passphrase },
       });
+      setPassphrase("");
+      setError("");
       onSuccess();
-      handleClose();
     } catch (err) {
       console.error("Error verifying passphrase:", err);
       setError("Incorrect passphrase. Please try again.");
@@ -55,7 +56,18 @@ export default function PlantPassAccessModal({ open, onClose, onSuccess }) {
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
+    <Dialog 
+      open={open} 
+      onClose={handleClose} 
+      maxWidth="xs" 
+      fullWidth
+      BackdropProps={{
+        sx: {
+          backdropFilter: "blur(8px)",
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+        }
+      }}
+    >
       <DialogTitle>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <LockIcon color="primary" />
@@ -67,7 +79,7 @@ export default function PlantPassAccessModal({ open, onClose, onSuccess }) {
       
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          This area is restricted to Hort Club members. Please enter the passphrase to continue.
+          This area is restricted to Spring Plant Fair staff members. Please enter the passphrase to continue.
         </Typography>
 
         {error && (
