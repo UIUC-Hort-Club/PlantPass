@@ -10,6 +10,7 @@ import {
 import SaveIcon from "@mui/icons-material/Save";
 import { useNotification } from "../../contexts/NotificationContext";
 import LoadingSpinner from "../common/LoadingSpinner";
+import { apiRequest } from "../../api/apiClient";
 
 export default function PlantPassAccess() {
   const { showSuccess, showError } = useNotification();
@@ -24,12 +25,8 @@ export default function PlantPassAccess() {
   const loadPassphrase = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${window.APP_CONFIG?.API_BASE_URL || ""}/plantpass-access`);
-      
-      if (response.ok) {
-        const data = await response.json();
-        setPassphrase(data.passphrase || "");
-      }
+      const data = await apiRequest("/plantpass-access");
+      setPassphrase(data.passphrase || "");
     } catch (error) {
       console.error("Error loading passphrase:", error);
       showError("Failed to load passphrase");
@@ -46,20 +43,11 @@ export default function PlantPassAccess() {
 
     try {
       setSaving(true);
-      
-      const response = await fetch(`${window.APP_CONFIG?.API_BASE_URL || ""}/plantpass-access`, {
+      await apiRequest("/plantpass-access", {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ passphrase }),
+        body: { passphrase },
       });
-
-      if (response.ok) {
-        showSuccess("PlantPass passphrase saved successfully");
-      } else {
-        throw new Error("Failed to save passphrase");
-      }
+      showSuccess("PlantPass passphrase saved successfully");
     } catch (error) {
       console.error("Error saving passphrase:", error);
       showError("Failed to save passphrase");
@@ -92,7 +80,7 @@ export default function PlantPassAccess() {
         <TextField
           fullWidth
           label="PlantPass Passphrase"
-          type="password"
+          type="text"
           value={passphrase}
           onChange={(e) => setPassphrase(e.target.value)}
           helperText="Enter the passphrase that Hort Club members will use to access PlantPass"
