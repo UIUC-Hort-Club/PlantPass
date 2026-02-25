@@ -5,13 +5,13 @@ import {
   DialogContent,
   DialogActions,
   Button,
-  TextField,
   Box,
   Typography,
   Alert,
 } from "@mui/material";
 import LockIcon from "@mui/icons-material/Lock";
 import { apiRequest } from "../../api/apiClient";
+import PasswordField from "../common/PasswordField";
 
 export default function PlantPassAccessModal({ open, onClose, onSuccess }) {
   const [passphrase, setPassphrase] = useState("");
@@ -76,11 +76,11 @@ export default function PlantPassAccessModal({ open, onClose, onSuccess }) {
           </Alert>
         )}
 
-        <TextField
+        <PasswordField
+          id="plantpass-passphrase"
           autoFocus
           fullWidth
           label="Passphrase"
-          type="password"
           value={passphrase}
           onChange={(e) => setPassphrase(e.target.value)}
           onKeyPress={handleKeyPress}
