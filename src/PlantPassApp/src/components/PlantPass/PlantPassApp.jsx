@@ -64,7 +64,13 @@ export default function PlantPassApp() {
      Check PlantPass access on mount
      ========================= */
   useEffect(() => {
-    if (features.protectPlantPassAccess && !hasPlantPassAccess) {
+    // Check if user has already authenticated
+    const isAuthenticated = localStorage.getItem("plantpass_auth") === "true";
+    
+    if (isAuthenticated) {
+      setHasPlantPassAccess(true);
+      setPassphraseModalOpen(false);
+    } else if (features.protectPlantPassAccess && !hasPlantPassAccess) {
       setPassphraseModalOpen(true);
     }
   }, [features.protectPlantPassAccess, hasPlantPassAccess]);
@@ -73,6 +79,8 @@ export default function PlantPassApp() {
      PlantPass access handlers
      ========================= */
   const handlePassphraseSuccess = () => {
+    // Store authentication in localStorage
+    localStorage.setItem("plantpass_auth", "true");
     setHasPlantPassAccess(true);
     setPassphraseModalOpen(false);
   };
