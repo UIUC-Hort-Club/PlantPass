@@ -57,6 +57,11 @@ variable "feature_toggles_lambda_zip_path" {
   description = "Path to FeatureTogglesHandler Lambda ZIP relative to Terraform working directory"
 }
 
+variable "plantpass_access_lambda_zip_path" {
+  type        = string
+  description = "Path to PlantPassAccessHandler Lambda ZIP relative to Terraform working directory"
+}
+
 variable "auth_layer_zip_path" {
   type = string
 }

@@ -26,6 +26,7 @@ export function FeatureToggleProvider({ children }) {
     return {
       collectEmailAddresses: true,
       passwordProtectAdmin: true,
+      protectPlantPassAccess: false,
     };
   };
 

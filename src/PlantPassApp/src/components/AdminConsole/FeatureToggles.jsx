@@ -24,6 +24,7 @@ export default function FeatureToggles() {
   const [features, setFeatures] = useState({
     collectEmailAddresses: true,
     passwordProtectAdmin: true,
+    protectPlantPassAccess: false,
   });
 
   useEffect(() => {
@@ -145,6 +146,32 @@ export default function FeatureToggles() {
                   <Typography variant="body2" color="text.secondary">
                     When enabled, requires password authentication to access the admin console.
                     When disabled, clicking the Public icon button grants immediate access.
+                  </Typography>
+                </Box>
+              }
+            />
+          </Box>
+
+          <Divider />
+
+          {/* PlantPass Access Protection Toggle */}
+          <Box>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={features.protectPlantPassAccess}
+                  onChange={handleToggleChange("protectPlantPassAccess")}
+                  color="primary"
+                />
+              }
+              label={
+                <Box>
+                  <Typography variant="body1" fontWeight={600}>
+                    Protect PlantPass Access
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    When enabled, users must enter a passphrase to access the PlantPass checkout station.
+                    When disabled, anyone can access the checkout station from the home screen.
                   </Typography>
                 </Box>
               }
