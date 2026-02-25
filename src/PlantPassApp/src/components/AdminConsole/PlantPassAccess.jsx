@@ -67,13 +67,13 @@ export default function PlantPassAccess() {
       </Typography>
       
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Set the passphrase required to access the PlantPass checkout station.
+        Set the passphrase required to access the PlantPass checkout app.
         This restricts access to Hort Club members only.
       </Typography>
 
       <Alert severity="info" sx={{ mb: 3 }}>
         When the &quot;Protect PlantPass Access&quot; feature toggle is enabled, users will be
-        prompted to enter this passphrase before accessing the checkout station.
+        prompted to enter this passphrase before accessing the checkout app.
       </Alert>
 
       <Paper sx={{ p: 3 }}>

@@ -95,6 +95,10 @@ export default function FeatureToggles() {
         Enable or disable features for the PlantPass application.
       </Typography>
 
+      <Alert severity="info" sx={{ mb: 3 }}>
+        Please refresh the page after saving to see changes take effect.
+      </Alert>
+
       <Paper sx={{ p: 3 }}>
         <Stack spacing={3}>
           {/* Email Collection Toggle */}
