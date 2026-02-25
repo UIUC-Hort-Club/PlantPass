@@ -10,7 +10,6 @@ import {
 import MenuIcon from "@mui/icons-material/Menu";
 import SupervisorAccountIcon from "@mui/icons-material/SupervisorAccount";
 import PublicIcon from "@mui/icons-material/Public";
-import HomeIcon from "@mui/icons-material/Home";
 import { useNavigate } from "react-router-dom";
 import OrderEntry from "../core/OrderEntry";
 import OrderLookup from "../core/OrderLookup";
@@ -178,8 +177,19 @@ export default function PlantPassApp() {
         }}
       >
         <Toolbar sx={{ display: "flex", justifyContent: "space-between", minHeight: { xs: 56, sm: 70 }, px: { xs: 2, sm: 3 } }}>
-          {/* Logo + title */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          {/* Logo + title - clickable to go home */}
+          <Box 
+            sx={{ 
+              display: "flex", 
+              alignItems: "center", 
+              gap: 1,
+              cursor: "pointer",
+              "&:hover": {
+                opacity: 0.8
+              }
+            }}
+            onClick={() => navigate("/")}
+          >
             <Box
               component="img"
               src="/plantpass_logo_transp.png"
@@ -195,10 +205,6 @@ export default function PlantPassApp() {
 
           {/* Header actions */}
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <IconButton sx={{ color: "#2D6A4F" }} onClick={() => navigate("/")}>
-              <HomeIcon />
-            </IconButton>
-            
             {!isAdmin ? (
               <IconButton sx={{ color: "#2D6A4F" }} onClick={handleAdminClick}>
                 <SupervisorAccountIcon />

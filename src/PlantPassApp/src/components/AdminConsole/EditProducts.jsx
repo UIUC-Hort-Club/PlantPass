@@ -325,6 +325,9 @@ export default function ProductTable() {
               borderColor: "error.light",
               backgroundColor: "rgba(211, 47, 47, 0.08)",
               borderWidth: 2,
+              py: 0.5,
+              px: 2,
+              minHeight: 32,
               "&:hover": {
                 backgroundColor: "error.main",
                 color: "white",
@@ -342,6 +345,7 @@ export default function ProductTable() {
             size="small" 
             onClick={handleReset}
             disabled={isLocked}
+            sx={{ py: 0.5, px: 2, minHeight: 32 }}
           >
             Reset
           </Button>
@@ -352,6 +356,7 @@ export default function ProductTable() {
           size="small" 
           onClick={handleAddRow}
           disabled={isLocked}
+          sx={{ py: 0.5, px: 2, minHeight: 32 }}
         >
           Add Product
         </Button>
@@ -506,6 +511,7 @@ export default function ProductTable() {
           variant="contained" 
           onClick={handleSave}
           disabled={!hasChanges() || saving || isLocked}
+          sx={{ py: 0.5, px: 2, minHeight: 32 }}
         >
           {saving ? "Saving..." : "Save"}
         </Button>
