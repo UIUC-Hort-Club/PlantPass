@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   AppBar,
@@ -10,7 +10,6 @@ import {
 import MenuIcon from "@mui/icons-material/Menu";
 import SupervisorAccountIcon from "@mui/icons-material/SupervisorAccount";
 import PublicIcon from "@mui/icons-material/Public";
-import HomeIcon from "@mui/icons-material/Home";
 import { useNavigate } from "react-router-dom";
 import OrderEntry from "../core/OrderEntry";
 import OrderLookup from "../core/OrderLookup";
@@ -18,6 +17,7 @@ import AdminConsole from "../AdminConsole/AdminConsole";
 import AdminPasswordModal from "../AdminConsole/AdminPasswordModal";
 import ForgotPasswordDialog from "../AdminConsole/ForgotPasswordDialog";
 import NavigationMenu from "../Navigation/NavigationMenu";
+import PlantPassAccessModal from "../Home/PlantPassAccessModal";
 import { useFeatureToggles } from "../../contexts/FeatureToggleContext";
 
 function TabPanel({ children, value, index }) {
@@ -45,6 +45,12 @@ export default function PlantPassApp() {
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
 
   /* =========================
+     PlantPass access state
+     ========================= */
+  const [hasPlantPassAccess, setHasPlantPassAccess] = useState(false);
+  const [passphraseModalOpen, setPassphraseModalOpen] = useState(false);
+
+  /* =========================
      Admin state
      ========================= */
   const [isAdmin, setIsAdmin] = useState(false);
@@ -52,6 +58,36 @@ export default function PlantPassApp() {
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
   const [adminError, setAdminError] = useState("");
+
+  /* =========================
+     Check PlantPass access on mount
+     ========================= */
+  useEffect(() => {
+    // Check if user has already authenticated
+    const isAuthenticated = localStorage.getItem("plantpass_auth") === "true";
+    
+    if (isAuthenticated) {
+      setHasPlantPassAccess(true);
+      setPassphraseModalOpen(false);
+    } else if (features.protectPlantPassAccess && !hasPlantPassAccess) {
+      setPassphraseModalOpen(true);
+    }
+  }, [features.protectPlantPassAccess, hasPlantPassAccess]);
+
+  /* =========================
+     PlantPass access handlers
+     ========================= */
+  const handlePassphraseSuccess = () => {
+    // Store authentication in localStorage
+    localStorage.setItem("plantpass_auth", "true");
+    setHasPlantPassAccess(true);
+    setPassphraseModalOpen(false);
+  };
+
+  const handlePassphraseCancel = () => {
+    setPassphraseModalOpen(false);
+    navigate("/");
+  };
 
   /* =========================
      Menu handlers
@@ -141,8 +177,19 @@ export default function PlantPassApp() {
         }}
       >
         <Toolbar sx={{ display: "flex", justifyContent: "space-between", minHeight: { xs: 56, sm: 70 }, px: { xs: 2, sm: 3 } }}>
-          {/* Logo + title */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          {/* Logo + title - clickable to go home */}
+          <Box 
+            sx={{ 
+              display: "flex", 
+              alignItems: "center", 
+              gap: 1,
+              cursor: "pointer",
+              "&:hover": {
+                opacity: 0.8
+              }
+            }}
+            onClick={() => navigate("/")}
+          >
             <Box
               component="img"
               src="/plantpass_logo_transp.png"
@@ -158,10 +205,6 @@ export default function PlantPassApp() {
 
           {/* Header actions */}
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <IconButton sx={{ color: "#2D6A4F" }} onClick={() => navigate("/")}>
-              <HomeIcon />
-            </IconButton>
-            
             {!isAdmin ? (
               <IconButton sx={{ color: "#2D6A4F" }} onClick={handleAdminClick}>
                 <SupervisorAccountIcon />
@@ -191,19 +234,27 @@ export default function PlantPassApp() {
       {/* =========================
         Main content
        ========================= */}
-      {!isAdmin ? (
-        <>
-          <TabPanel value={tabIndex} index={0}>
-            <OrderEntry />
-          </TabPanel>
+      <Box
+        sx={{
+          filter: passphraseModalOpen ? "blur(8px)" : "none",
+          pointerEvents: passphraseModalOpen ? "none" : "auto",
+          transition: "filter 0.3s ease",
+        }}
+      >
+        {!isAdmin ? (
+          <>
+            <TabPanel value={tabIndex} index={0}>
+              <OrderEntry />
+            </TabPanel>
 
-          <TabPanel value={tabIndex} index={1}>
-            <OrderLookup />
-          </TabPanel>
-        </>
-      ) : (
-        <AdminConsole tabIndex={adminTabIndex} />
-      )}
+            <TabPanel value={tabIndex} index={1}>
+              <OrderLookup />
+            </TabPanel>
+          </>
+        ) : (
+          <AdminConsole tabIndex={adminTabIndex} />
+        )}
+      </Box>
 
       {/* =========================
         Admin password modal
@@ -225,6 +276,15 @@ export default function PlantPassApp() {
       <ForgotPasswordDialog
         open={forgotPasswordOpen}
         onClose={() => setForgotPasswordOpen(false)}
+      />
+
+      {/* =========================
+        PlantPass access modal
+       ========================= */}
+      <PlantPassAccessModal
+        open={passphraseModalOpen}
+        onClose={handlePassphraseCancel}
+        onSuccess={handlePassphraseSuccess}
       />
     </Box>
   );

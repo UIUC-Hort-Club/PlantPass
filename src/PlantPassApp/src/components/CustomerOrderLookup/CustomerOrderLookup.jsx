@@ -6,11 +6,9 @@ import {
   Button,
   Paper,
   Typography,
-  IconButton,
   AppBar,
   Toolbar,
 } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { readTransaction } from "../../api/transaction_interface/readTransaction";
 import Receipt from "../core/SubComponents/Receipt";
 import LoadingSpinner from "../common/LoadingSpinner";
@@ -84,20 +82,18 @@ export default function CustomerOrderLookup() {
         }}
       >
         <Toolbar>
-          <IconButton
-            edge="start"
-            onClick={() => navigate("/")}
-            sx={{ mr: 2, color: "#2D6A4F" }}
-          >
-            <ArrowBackIcon />
-          </IconButton>
           <Box
             component="img"
             src="/plantpass_logo_transp.png"
             alt="PlantPass Logo"
+            onClick={() => navigate("/")}
             sx={{
               height: 40,
               width: "auto",
+              cursor: "pointer",
+              "&:hover": {
+                opacity: 0.8
+              }
             }}
           />
         </Toolbar>

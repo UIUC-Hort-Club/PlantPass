@@ -33,23 +33,6 @@ export function FeatureToggleProvider({ children }) {
   const [features, setFeatures] = useState(getInitialFeatures);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadFeatureToggles();
-    
-    // Listen for storage changes (when toggles are saved)
-    const handleStorageChange = () => {
-      loadFeatureToggles();
-    };
-    
-    window.addEventListener("storage", handleStorageChange);
-    window.addEventListener("featureTogglesUpdated", handleStorageChange);
-    
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("featureTogglesUpdated", handleStorageChange);
-    };
-  }, []);
-
   const loadFeatureToggles = async () => {
     try {
       const response = await getFeatureToggles();
@@ -72,6 +55,38 @@ export function FeatureToggleProvider({ children }) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadFeatureToggles();
+    
+    // Listen for storage changes (when toggles are saved in other tabs)
+    const handleStorageChange = () => {
+      loadFeatureToggles();
+    };
+    
+    // Listen for custom events (when toggles are saved in same tab)
+    const handleFeatureTogglesUpdated = () => {
+      loadFeatureToggles();
+    };
+
+    // Refresh when tab becomes visible (user returns to tab)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log("Tab became visible, refreshing feature toggles");
+        loadFeatureToggles();
+      }
+    };
+    
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("featureTogglesUpdated", handleFeatureTogglesUpdated);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("featureTogglesUpdated", handleFeatureTogglesUpdated);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
 
   const refreshFeatureToggles = () => {
     loadFeatureToggles();
