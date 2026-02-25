@@ -2,15 +2,24 @@
 
 ## Overview
 
-PlantPass is a point-of-sale system designed for the UIUC Horticulture Club's Spring Plant Fair. This guide covers all features available to cashiers and administrators.
+PlantPass is a point-of-sale system designed for the UIUC Horticulture Club's Spring Plant Fair. This guide covers all features available to staff members and administrators.
 
 ## Getting Started
 
-Access PlantPass through your web browser at the provided URL. The application displays the PlantPass logo at the top with navigation controls.
+Access PlantPass through your web browser at the provided URL. You'll see the PlantPass logo and two options:
+
+- **Spring Plant Fair Staff**: Access the checkout station (may require a passphrase)
+- **Customer**: Look up existing orders
+
+Click the PlantPass logo at any time to return to the home screen.
+
+### Staff Access
+
+When accessing the PlantPass app, you may be prompted to enter a passphrase. This security feature can be enabled or disabled by administrators. Once you enter the correct passphrase, you won't need to enter it again until you close your browser.
 
 ## Main Features
 
-### Order Entry
+### Order Entry (for plant sale checkers)
 
 Create new customer orders by selecting products and applying discounts.
 
@@ -18,17 +27,18 @@ Create new customer orders by selecting products and applying discounts.
 2. View the running subtotal as you add items
 3. Enter a voucher amount if the customer has one (optional)
 4. Select applicable discounts by checking the boxes
-5. Click "Enter" to record the transaction
-6. A unique Order ID will be displayed for the customer
-7. Click "New Order" to start the next transaction
+5. Enter the customer's email address (if enabled)
+6. Click "Enter Order" to record the transaction
+7. A unique Order ID will be displayed for the customer
+8. Click "New Order" to start the next transaction
 
 After entering an order, you can click "Update This Order" to modify it before starting a new order.
 
-### Order Lookup
+### Order Lookup (for plant sale cashiers)
 
 Search for and modify existing orders that have not been completed.
 
-1. Enter the Order ID in the search field (format: ABC1234)
+1. Enter the Order ID in the search field (format: ABC-DEF)
 2. Click "Lookup" to retrieve the order
 3. Modify quantities, discounts, or voucher amounts as needed
 4. Click "Update Order" to save changes
@@ -39,9 +49,9 @@ Search for and modify existing orders that have not been completed.
 
 The Order Lookup screen displays recent unpaid orders for quick access:
 
-- A loading spinner appears while orders are being fetched
+- A loading indicator appears while orders are being fetched
 - Click any order in the list to load it immediately
-- Use the gear icon to configure how many recent orders are displayed (0-20)
+- Use the settings icon to configure how many recent orders are displayed (0-20)
 - Set to 0 to disable the recent orders display
 - Orders show the Order ID, number of items, total amount, and timestamp
 
@@ -49,15 +59,15 @@ Completed orders are marked as view-only and cannot be modified. Orders can be d
 
 ### Navigation Menu
 
-Access different sections of the application using the menu icon (three horizontal lines) in the top right corner:
+Access different sections using the menu icon (three horizontal lines) in the top right corner:
 
 - Order Entry: Create new orders
 - Order Lookup: Search and modify existing orders
-- Admin Console: Access administrative features (requires password)
+- Admin Console: Access administrative features (may require password)
 
 ## Admin Features
 
-Click the person icon in the top right corner to access the Admin Console. You will be prompted to enter the admin password.
+Click the person icon in the top right corner to access the Admin Console. You may be prompted to enter the admin password (if password protection is enabled).
 
 ### Sales Analytics
 
@@ -70,11 +80,11 @@ View comprehensive sales data and performance metrics:
 - Average Items per Order: Mean items per transaction
 - Revenue Over Time: Line chart showing sales trends
 
-Click "Refresh" to update the analytics with the latest data.
+Click "Refresh" to update the analytics with the latest data. The analytics automatically refresh when you return to the tab.
 
 ### Transaction Table
 
-View all transactions with details including Order ID, timestamp, units sold, and total amount. The table displays 20 transactions per page with pagination controls at the bottom.
+View all transactions with details including Order ID, timestamp, units sold, and total amount. The table displays 20 transactions per page with navigation controls at the bottom.
 
 ### Export Data
 
@@ -96,27 +106,71 @@ Manage the product catalog:
 
 1. View current products in the table
 2. Modify product names, SKUs, or prices by editing the fields
-3. Reorder products using drag handles on the left side
+3. Reorder products by dragging the handle icon on the left side
 4. Add new products using the "Add Product" button
 5. Delete products using the trash icon
-6. Click "Save Changes" to update the product list
+6. Click "Save" to update the product list
 
-Changes are saved to the database and will be reflected immediately in Order Entry.
+The lock icon shows whether products are currently being edited by another administrator. When locked, you cannot make changes until the other person finishes.
 
 ### Edit Discounts
 
 Manage available discounts:
 
 1. View current discounts in the table
-2. Modify discount names, types (percentage or fixed), and values
-3. Reorder discounts using drag handles
-4. Add new discounts using the "Add Discount" button
-5. Delete discounts using the trash icon
-6. Click "Save Changes" to update the discount list
+2. Modify discount names, types (percentage or dollar amount), and values
+3. Reorder discounts by dragging the handle icon
+4. Toggle between percentage (%) and dollar ($) discount types
+5. Add new discounts using the "Add Discount" button
+6. Delete discounts using the trash icon
+7. Click "Save" to update the discount list
 
 Discount types:
 - Percentage: Discount calculated as a percentage of the subtotal
-- Fixed: Flat dollar amount deducted from the subtotal
+- Dollar: Fixed dollar amount deducted from the subtotal
+
+The lock icon shows whether discounts are currently being edited by another administrator.
+
+### Edit Payment Methods
+
+Manage available payment options:
+
+1. View current payment methods in the table
+2. Modify payment method names by editing the fields
+3. Reorder payment methods by dragging the handle icon
+4. Add new payment methods using the "Add Payment Method" button
+5. Delete payment methods using the trash icon
+6. Click "Save" to update the payment method list
+
+Common payment methods include Cash, Credit/Debit, Check, and Venmo.
+
+### Feature Toggles
+
+Control application behavior with these settings:
+
+**Collect Email Addresses**
+- When enabled: Customers can provide their email address during checkout
+- When disabled: Email field is hidden and not collected
+
+**Password Protect Admin Console**
+- When enabled: Requires password to access admin features
+- When disabled: Admin console is immediately accessible
+
+**Protect PlantPass Access**
+- When enabled: Requires passphrase to access the staff checkout station
+- When disabled: Anyone can access the checkout station from the home screen
+
+Click "Save Changes" after adjusting any toggles. Changes take effect immediately across all open browser tabs.
+
+### PlantPass Access
+
+Set the passphrase required to access the PlantPass app (when protection is enabled):
+
+1. Enter the desired passphrase in the password field
+2. Click the eye icon to show/hide the passphrase as you type
+3. Click "Save Passphrase" to update
+
+This passphrase is separate from the admin password and is used to restrict access to the checkout station.
 
 ### Reset Password
 
@@ -125,35 +179,33 @@ Change the admin password:
 1. Enter the current password
 2. Enter the new password
 3. Confirm the new password
-4. Click "Reset Password" to save
+4. Click "Update Password" to save
 
-## Payment Methods
+Use the eye icon next to each password field to show or hide what you're typing.
 
-When completing an order in Order Lookup, select from the following payment methods:
+If you forget your password, click "Forgot Password?" and enter your email address to receive a password reset link.
 
-- Cash
-- Credit/Debit
-- Check
-- Other
+## Customer Order Lookup
 
-A payment method must be selected before an order can be completed.
+Customers can look up their orders without staff assistance:
 
-## Tips for Efficient Use
+1. From the home screen, click "Customer"
+2. Enter the Order ID provided at checkout
+3. Click "Search" to view the receipt
+4. The receipt shows all items, discounts, and the total amount
 
-- Use the recent orders list in Order Lookup for quick access to unpaid transactions
-- Keep the Order Entry screen open during busy periods for faster checkout
-- Export data regularly to maintain backup records
-- Use vouchers for club members or special promotions
-- Apply discounts before completing the order to ensure accurate totals
+Customers can also access their order directly by visiting the URL with their order ID: `hortclubplantpass.org/orders?id=ABC-DEF`
 
 ## Troubleshooting
 
 If you encounter issues:
 
+- Click the PlantPass logo to return to the home screen
 - Refresh the page to reload data
 - Check your internet connection
-- Verify the Order ID format when looking up transactions
-- Contact the administrator if problems persist
+- Verify the Order ID format when looking up transactions (ABC-DEF)
+- If you see a lock icon, another administrator is currently editing that section
+- Contact the developer if problems persist
 
 ## Contact
 

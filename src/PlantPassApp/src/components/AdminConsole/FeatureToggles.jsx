@@ -96,7 +96,6 @@ export default function FeatureToggles() {
       </Typography>
 
       <Alert severity="info" sx={{ mb: 3 }}>
-        Changes will be saved to localStorage and the backend (if available). 
         Please refresh the page after saving to see changes take effect.
       </Alert>
 
