@@ -52,10 +52,8 @@ def lambda_handler(event, context):
             logger.info("=== Admin Login Attempt ===")
             pw_hash = get_password_hash()
             password = body.get("password", "")
-            is_temp_password = body.get("is_temp_password", False)
             
             logger.info(f"Password length: {len(password)}")
-            logger.info(f"is_temp_password flag: {is_temp_password}")
             logger.info(f"Password hash from S3 exists: {bool(pw_hash)}")
 
             # Check regular password first
@@ -72,31 +70,28 @@ def lambda_handler(event, context):
                 logger.info("Regular password authenticated successfully")
                 return create_response(200, {"token": token, "requires_password_change": False})
             
-            # If not regular password and temp password flag is set, check temp password
-            if is_temp_password:
-                logger.info("Checking temporary password...")
-                temp_hash = get_temp_password_hash()
-                logger.info(f"Temp password hash exists: {bool(temp_hash)}")
+            # If regular password didn't match, check temp password
+            logger.info("Regular password failed, checking temporary password...")
+            temp_hash = get_temp_password_hash()
+            logger.info(f"Temp password hash exists: {bool(temp_hash)}")
+            
+            if temp_hash:
+                temp_match = bcrypt.checkpw(password.encode(), temp_hash.encode())
+                logger.info(f"Temp password match: {temp_match}")
                 
-                if temp_hash:
-                    temp_match = bcrypt.checkpw(password.encode(), temp_hash.encode())
-                    logger.info(f"Temp password match: {temp_match}")
-                    
-                    if temp_match:
-                        # Generate token but require password change
-                        token = jwt.encode(
-                            {"exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1),
-                             "temp": True},
-                            JWT_SECRET,
-                            algorithm="HS256"
-                        )
-                        delete_temp_password()
-                        logger.info("Temp password authenticated successfully")
-                        return create_response(200, {"token": token, "requires_password_change": True})
-                else:
-                    logger.warning("No temp password hash found in DynamoDB")
+                if temp_match:
+                    # Generate token but require password change
+                    token = jwt.encode(
+                        {"exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1),
+                         "temp": True},
+                        JWT_SECRET,
+                        algorithm="HS256"
+                    )
+                    delete_temp_password()
+                    logger.info("Temp password authenticated successfully")
+                    return create_response(200, {"token": token, "requires_password_change": True})
             else:
-                logger.info("is_temp_password flag not set, skipping temp password check")
+                logger.info("No temp password hash found in DynamoDB")
             
             logger.warning("Authentication failed - no password matched")
             return create_response(401, {"error": "Invalid password"})
