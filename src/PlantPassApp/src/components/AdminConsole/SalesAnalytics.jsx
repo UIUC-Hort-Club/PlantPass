@@ -101,10 +101,7 @@ function SalesAnalytics() {
       const data = await fetchSalesAnalytics();
       
       setAnalytics(data);
-      
-      if (!lastUpdated) {
-        setLastUpdated(new Date());
-      }
+      setLastUpdated(new Date());
       
       if (isRefresh && !isSilent) {
         showSuccess("Analytics refreshed successfully");
@@ -128,7 +125,7 @@ function SalesAnalytics() {
     } finally {
       setLoading(false);
     }
-  }, [lastUpdated, showSuccess, showError]);
+  }, [showSuccess, showError]);
   
   const handleWebSocketMessage = useCallback((message) => {
     if (message.type === 'transaction_update') {
@@ -187,7 +184,8 @@ function SalesAnalytics() {
 
   useEffect(() => {
     loadAnalytics();
-  }, [loadAnalytics]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const exportData = async () => {
     try {

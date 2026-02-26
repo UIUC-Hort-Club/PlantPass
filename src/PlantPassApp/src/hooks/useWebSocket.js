@@ -40,10 +40,19 @@ export function useWebSocket(url, onMessage, options = {}) {
 
     // Close WebSocket connection
     if (wsRef.current) {
-      // Remove event listeners to prevent reconnection on manual close
-      wsRef.current.onclose = null;
-      wsRef.current.close(1000, 'Manual disconnect');
+      const ws = wsRef.current;
       wsRef.current = null;
+      
+      // Remove event listeners to prevent reconnection on manual close
+      ws.onclose = null;
+      ws.onerror = null;
+      ws.onmessage = null;
+      ws.onopen = null;
+      
+      // Only close if not already closed
+      if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+        ws.close(1000, 'Manual disconnect');
+      }
     }
 
     setIsConnected(false);

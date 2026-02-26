@@ -25,6 +25,7 @@ export default function AdminConsolePage() {
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
   const [adminError, setAdminError] = useState("");
+  const [requiresPasswordChange, setRequiresPasswordChange] = useState(false);
 
   useEffect(() => {
     // Check if user has a valid admin token
@@ -73,11 +74,18 @@ export default function AdminConsolePage() {
 
   const handleAdminPasswordSubmit = (password) => {
     return authenticateAdmin(password)
-      .then(() => {
+      .then((result) => {
         // Token is now stored by authenticateAdmin
         setIsAuthenticated(true);
         setAdminModalOpen(false);
         setAdminError('');
+        
+        // Check if password change is required
+        if (result.requires_password_change) {
+          setRequiresPasswordChange(true);
+          // Navigate to reset password tab
+          setAdminTabIndex(6); // Reset Password tab
+        }
       })
       .catch((error) => {
         setAdminError('Password incorrect');
@@ -128,12 +136,13 @@ export default function AdminConsolePage() {
               display: "flex", 
               alignItems: "center", 
               gap: 1,
-              cursor: "pointer",
+              cursor: requiresPasswordChange ? "default" : "pointer",
+              opacity: requiresPasswordChange ? 0.5 : 1,
               "&:hover": {
-                opacity: 0.8
+                opacity: requiresPasswordChange ? 0.5 : 0.8
               }
             }}
-            onClick={() => navigate("/")}
+            onClick={requiresPasswordChange ? undefined : () => navigate("/")}
           >
             <Box
               component="img"
@@ -150,11 +159,20 @@ export default function AdminConsolePage() {
 
           {/* Header actions */}
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <IconButton sx={{ color: "#2D6A4F" }} onClick={handlePlantPassClick}>
+            <IconButton 
+              sx={{ color: "#2D6A4F" }} 
+              onClick={handlePlantPassClick}
+              disabled={requiresPasswordChange}
+            >
               <StorefrontIcon />
             </IconButton>
 
-            <IconButton edge="end" sx={{ color: "#2D6A4F" }} onClick={handleMenuOpen}>
+            <IconButton 
+              edge="end" 
+              sx={{ color: "#2D6A4F" }} 
+              onClick={handleMenuOpen}
+              disabled={requiresPasswordChange}
+            >
               <MenuIcon />
             </IconButton>
           </Box>
@@ -172,7 +190,11 @@ export default function AdminConsolePage() {
 
       {/* Main content */}
       {isAuthenticated && (
-        <AdminConsole tabIndex={adminTabIndex} />
+        <AdminConsole 
+          tabIndex={adminTabIndex} 
+          requiresPasswordChange={requiresPasswordChange}
+          onPasswordChanged={() => setRequiresPasswordChange(false)}
+        />
       )}
 
       {/* Admin password modal */}

@@ -13,7 +13,7 @@ function AdminTabPanel({ value, index, children }) {
   return value === index ? <Box sx={{ mt: 2 }}>{children}</Box> : null;
 }
 
-export default function AdminConsole({ tabIndex }) {
+export default function AdminConsole({ tabIndex, requiresPasswordChange, onPasswordChanged }) {
   return (
     <Box sx={{ mt: 2 }}>
       <Paper sx={{ p: 3 }}>
@@ -21,40 +21,59 @@ export default function AdminConsole({ tabIndex }) {
           Admin Console
         </Typography>
 
-        <Typography variant="body2" color="text.secondary" gutterBottom>
-          Welcome, Oh Great One.You are now in the admin console and have
-          elevated privileges!
-        </Typography>
+        {requiresPasswordChange ? (
+          <Typography variant="body2" color="error" fontWeight={600} gutterBottom>
+            ⚠️ You are using a temporary password. Please change your password immediately below.
+          </Typography>
+        ) : (
+          <Typography variant="body2" color="text.secondary" gutterBottom>
+            Welcome, Oh Great One. You are now in the admin console and have
+            elevated privileges!
+          </Typography>
+        )}
 
         <Divider sx={{ my: 2 }} />
 
-        <AdminTabPanel value={tabIndex} index={0}>
-          <SalesAnalytics />
-        </AdminTabPanel>
+        {requiresPasswordChange ? (
+          // Force user to reset password before accessing any other features
+          <ResetPassword 
+            requiresPasswordChange={requiresPasswordChange}
+            onPasswordChanged={onPasswordChanged}
+          />
+        ) : (
+          <>
+            <AdminTabPanel value={tabIndex} index={0}>
+              <SalesAnalytics />
+            </AdminTabPanel>
 
-        <AdminTabPanel value={tabIndex} index={1}>
-          <EditProducts />
-        </AdminTabPanel>
+            <AdminTabPanel value={tabIndex} index={1}>
+              <EditProducts />
+            </AdminTabPanel>
 
-        <AdminTabPanel value={tabIndex} index={2}>
-          <EditDiscounts />
-        </AdminTabPanel>
+            <AdminTabPanel value={tabIndex} index={2}>
+              <EditDiscounts />
+            </AdminTabPanel>
 
-        <AdminTabPanel value={tabIndex} index={3}>
-          <EditPaymentMethods />
-        </AdminTabPanel>
+            <AdminTabPanel value={tabIndex} index={3}>
+              <EditPaymentMethods />
+            </AdminTabPanel>
 
-        <AdminTabPanel value={tabIndex} index={4}>
-          <FeatureToggles />
-        </AdminTabPanel>
+            <AdminTabPanel value={tabIndex} index={4}>
+              <FeatureToggles />
+            </AdminTabPanel>
 
-        <AdminTabPanel value={tabIndex} index={5}>
-          <PlantPassAccess />
-        </AdminTabPanel>
+            <AdminTabPanel value={tabIndex} index={5}>
+              <PlantPassAccess />
+            </AdminTabPanel>
 
-        <AdminTabPanel value={tabIndex} index={6}>
-          <ResetPassword />
-        </AdminTabPanel>
+            <AdminTabPanel value={tabIndex} index={6}>
+              <ResetPassword 
+                requiresPasswordChange={requiresPasswordChange}
+                onPasswordChanged={onPasswordChanged}
+              />
+            </AdminTabPanel>
+          </>
+        )}
       </Paper>
     </Box>
   );

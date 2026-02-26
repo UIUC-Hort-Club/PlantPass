@@ -14,7 +14,7 @@ export async function authenticateAdmin(password) {
   }
 
   const data = await response.json();
-  const { token } = data;
+  const { token, requires_password_change } = data;
 
   // Store admin token (not the boolean flag)
   localStorage.setItem("admin_token", token);
@@ -23,7 +23,7 @@ export async function authenticateAdmin(password) {
   localStorage.removeItem("admin_auth");
   localStorage.removeItem("plantpass_auth");
 
-  return token;
+  return { token, requires_password_change };
 }
 
 export async function changePassword(oldPassword, newPassword) {

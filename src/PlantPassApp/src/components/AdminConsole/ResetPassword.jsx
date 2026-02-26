@@ -10,7 +10,7 @@ import {
 import { changePassword } from "../../api/authentication/passwordAuthentication";
 import PasswordField from "../common/PasswordField";
 
-function ResetPassword() {
+function ResetPassword({ requiresPasswordChange, onPasswordChanged }) {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -42,6 +42,11 @@ function ResetPassword() {
         setOldPassword("");
         setNewPassword("");
         setConfirmPassword("");
+        
+        // Notify parent that password was changed
+        if (onPasswordChanged) {
+          onPasswordChanged();
+        }
       })
       .catch((err) => {
         setNotificationMessage({
@@ -60,16 +65,25 @@ function ResetPassword() {
   return (
     <Box component="form" onSubmit={handleSubmit}>
       <Typography variant="h6">Reset Password</Typography>
+      
+      {requiresPasswordChange && (
+        <Alert severity="warning" sx={{ mt: 2, maxWidth: 600 }}>
+          You are using a temporary password. Please set a new permanent password below.
+          You can skip entering the old password.
+        </Alert>
+      )}
 
       <Stack spacing={2} sx={{ mt: 2, maxWidth: 400 }}>
-        <PasswordField
-          id="old-password"
-          label="Old Password"
-          value={oldPassword}
-          onChange={handleChange(setOldPassword)}
-        />
+        {!requiresPasswordChange && (
+          <PasswordField
+            id="old-password"
+            label="Old Password"
+            value={oldPassword}
+            onChange={handleChange(setOldPassword)}
+          />
+        )}
 
-        <div />
+        {!requiresPasswordChange && <div />}
 
         <PasswordField
           id="new-password"
