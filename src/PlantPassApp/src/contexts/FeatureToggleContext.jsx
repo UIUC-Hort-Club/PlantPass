@@ -19,7 +19,7 @@ export function FeatureToggleProvider({ children }) {
       if (stored) {
         return JSON.parse(stored);
       }
-    } catch (error) {
+    } catch {
       // Silently fall back to defaults
     }
     // Default values
@@ -39,7 +39,7 @@ export function FeatureToggleProvider({ children }) {
       setFeatures(response);
       // Also cache in localStorage
       localStorage.setItem("featureToggles", JSON.stringify(response));
-    } catch (error) {
+    } catch {
       // Fall back to localStorage if API fails
       const stored = localStorage.getItem("featureToggles");
       if (stored) {

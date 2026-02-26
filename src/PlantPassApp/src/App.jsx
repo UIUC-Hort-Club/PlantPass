@@ -15,6 +15,7 @@ export default function App() {
             <Route path="/" element={<HomeScreen />} />
             <Route path="/plantpass" element={<PlantPassApp />} />
             <Route path="/orders" element={<CustomerOrderLookup />} />
+            <Route path="/orders/:orderId" element={<CustomerOrderLookup />} />
             <Route path="/admin-console" element={<AdminConsolePage />} />
           </Routes>
         </Router>

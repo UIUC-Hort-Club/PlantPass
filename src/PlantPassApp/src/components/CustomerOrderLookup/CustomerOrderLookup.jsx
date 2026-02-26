@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
   TextField,
@@ -15,7 +15,7 @@ import LoadingSpinner from "../common/LoadingSpinner";
 import { formatOrderId } from "../../utils/orderIdFormatter";
 
 export default function CustomerOrderLookup() {
-  const [searchParams] = useSearchParams();
+  const { orderId: orderIdFromUrl } = useParams();
   const navigate = useNavigate();
   const [orderId, setOrderId] = useState("");
   const [transaction, setTransaction] = useState(null);
@@ -23,12 +23,11 @@ export default function CustomerOrderLookup() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const idFromUrl = searchParams.get("id");
-    if (idFromUrl) {
-      setOrderId(idFromUrl);
-      handleLookup(idFromUrl);
+    if (orderIdFromUrl) {
+      setOrderId(orderIdFromUrl);
+      handleLookup(orderIdFromUrl);
     }
-  }, [searchParams]);
+  }, [orderIdFromUrl]);
 
   const handleLookup = async (id = orderId) => {
     if (!id.trim()) {
