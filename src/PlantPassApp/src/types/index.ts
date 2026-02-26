@@ -233,8 +233,9 @@ export interface ApiResponse<T> {
 /**
  * API request options
  */
-export interface ApiRequestOptions extends RequestInit {
+export interface ApiRequestOptions extends Omit<RequestInit, 'body'> {
   timeout?: number;
+  body?: unknown;
 }
 
 // ============================================================================

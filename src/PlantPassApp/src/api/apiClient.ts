@@ -85,13 +85,18 @@ export async function apiRequest<T = unknown>(
       requestHeaders['Authorization'] = `Bearer ${token}`;
     }
     
-    const response = await fetch(`${API_URL}${endpoint}`, {
+    const fetchOptions: RequestInit = {
       method,
       headers: requestHeaders,
-      ...(body && { body: JSON.stringify(body) }),
       signal: controller.signal,
       ...rest
-    });
+    };
+
+    if (body) {
+      fetchOptions.body = JSON.stringify(body);
+    }
+
+    const response = await fetch(`${API_URL}${endpoint}`, fetchOptions);
 
     clearTimeout(timeoutId);
 
