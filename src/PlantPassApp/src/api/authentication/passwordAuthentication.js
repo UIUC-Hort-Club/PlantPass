@@ -16,7 +16,12 @@ export async function authenticateAdmin(password) {
   const data = await response.json();
   const { token } = data;
 
+  // Store admin token (not the boolean flag)
   localStorage.setItem("admin_token", token);
+  
+  // Remove old boolean flags - they're no longer used for authentication
+  localStorage.removeItem("admin_auth");
+  localStorage.removeItem("plantpass_auth");
 
   return token;
 }

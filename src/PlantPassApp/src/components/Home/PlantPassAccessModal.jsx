@@ -28,10 +28,16 @@ export default function PlantPassAccessModal({ open, onClose, onSuccess }) {
     setError("");
 
     try {
-      await apiRequest("/plantpass-access/verify", {
+      const response = await apiRequest("/plantpass-access/verify", {
         method: "POST",
         body: { passphrase },
       });
+      
+      // Store the staff token returned from verification
+      if (response.token) {
+        localStorage.setItem("staff_token", response.token);
+      }
+      
       setPassphrase("");
       setError("");
       onSuccess();

@@ -37,6 +37,7 @@ jobs:
       - name: Package Transaction Lambda
         run: |
           cd src/lambda/TransactionHandler
+          cp ../shared/auth_middleware.py .
           zip -r ../../../terraform/transactions_handler_lambda_package.zip .
 
       - name: Package Admin Lambda
@@ -47,16 +48,19 @@ jobs:
       - name: Package Products Lambda
         run: |
           cd src/lambda/ProductsHandler
+          cp ../shared/auth_middleware.py .
           zip -r ../../../terraform/products_handler_lambda_package.zip .
 
       - name: Package Discounts Lambda
         run: |
           cd src/lambda/DiscountsHandler
+          cp ../shared/auth_middleware.py .
           zip -r ../../../terraform/discounts_handler_lambda_package.zip .
 
       - name: Package Payment Methods Lambda
         run: |
           cd src/lambda/PaymentMethodsHandler
+          cp ../shared/auth_middleware.py .
           zip -r ../../../terraform/payment_methods_handler_lambda_package.zip .
 
       - name: Package WebSocket Lambda
@@ -72,16 +76,19 @@ jobs:
       - name: Package Lock Lambda
         run: |
           cd src/lambda/LockHandler
+          cp ../shared/auth_middleware.py .
           zip -r ../../../terraform/lockhandler_lambda_package.zip .
 
       - name: Package Feature Toggles Lambda
         run: |
           cd src/lambda/FeatureTogglesHandler
+          cp ../shared/auth_middleware.py .
           zip -r ../../../terraform/featuretoggleshandler_lambda_package.zip .
 
       - name: Package PlantPass Access Lambda
         run: |
           cd src/lambda/PlantPassAccessHandler
+          cp ../shared/auth_middleware.py .
           zip -r ../../../terraform/plantpassaccess_lambda_package.zip .
 
       - name: Upload Lambda ZIPs
