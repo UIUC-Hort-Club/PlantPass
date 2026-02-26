@@ -130,7 +130,36 @@ def delete_transaction(transaction_id):
         raise Exception(f"Failed to delete transaction: {e}")
 
 def get_recent_unpaid_transactions(limit=5):
+    """
+    Get recent unpaid transactions using GSI for optimal performance.
+    Falls back to scan if GSI is not available.
+    """
     try:
+        # Try to use GSI for better performance
+        try:
+            response = table.query(
+                IndexName='PaymentStatusTimestampIndex',
+                KeyConditionExpression='payment_status = :status',
+                ExpressionAttributeValues={
+                    ':status': 'unpaid'
+                },
+                ScanIndexForward=False,  # Sort descending (newest first)
+                Limit=limit
+            )
+            
+            transactions = response['Items']
+            result = decimal_to_float(transactions)
+            logger.info(f"Retrieved {len(result)} unpaid transactions using GSI")
+            return result
+            
+        except ClientError as gsi_error:
+            # GSI might not exist yet, fall back to scan
+            if gsi_error.response['Error']['Code'] == 'ValidationException':
+                logger.warning("GSI not found, falling back to table scan")
+            else:
+                raise
+        
+        # Fallback: Use table scan (original implementation)
         response = table.scan()
         transactions = response['Items']
         
@@ -150,6 +179,7 @@ def get_recent_unpaid_transactions(limit=5):
         
         limited_transactions = unpaid_transactions[:limit]
         result = decimal_to_float(limited_transactions)
+        logger.info(f"Retrieved {len(result)} unpaid transactions using table scan")
         return result
         
     except ClientError as e:

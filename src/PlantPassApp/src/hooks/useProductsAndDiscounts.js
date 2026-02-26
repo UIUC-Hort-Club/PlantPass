@@ -1,68 +1,72 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getAllProducts } from '../api/products_interface/getAllProducts';
 import { getAllDiscounts } from '../api/discounts_interface/getAllDiscounts';
 import { transformProductsData } from '../utils/productTransformer';
 
-export const useProductsAndDiscounts = () => {
+/**
+ * Custom hook to preload and cache products and discounts
+ * Optimizes performance by loading data once and sharing across components
+ */
+export function useProductsAndDiscounts() {
   const [products, setProducts] = useState([]);
   const [discounts, setDiscounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lastFetched, setLastFetched] = useState(null);
 
-  const loadProducts = async () => {
-    try {
-      const productsData = await getAllProducts();
-      const transformedProducts = transformProductsData(productsData);
-      setProducts(transformedProducts);
-      return transformedProducts;
-    } catch (error) {
-      console.error("Error loading products:", error);
-      setError("Failed to load products");
-      throw error;
+  const loadData = useCallback(async (forceRefresh = false) => {
+    // Use cached data if available and not forcing refresh
+    if (!forceRefresh && products.length > 0 && discounts.length > 0) {
+      // Check if data is less than 5 minutes old
+      if (lastFetched && Date.now() - lastFetched < 5 * 60 * 1000) {
+        return;
+      }
     }
-  };
 
-  const loadDiscounts = async () => {
-    try {
-      const discountsData = await getAllDiscounts();
-      setDiscounts(discountsData);
-      return discountsData;
-    } catch (error) {
-      console.error("Error loading discounts:", error);
-      setError("Failed to load discounts");
-      setDiscounts([]);
-      throw error;
-    }
-  };
-
-  const loadAll = async () => {
     try {
       setLoading(true);
       setError(null);
+
+      // Load products and discounts in parallel for speed
       const [productsData, discountsData] = await Promise.all([
-        loadProducts(),
-        loadDiscounts()
+        getAllProducts(),
+        getAllDiscounts()
       ]);
-      return { products: productsData, discounts: discountsData };
-    } catch (error) {
-      setError("Failed to load data");
-      throw error;
+
+      const transformedProducts = transformProductsData(productsData);
+      setProducts(transformedProducts);
+      setDiscounts(discountsData);
+      setLastFetched(Date.now());
+    } catch (err) {
+      console.error('Error loading products and discounts:', err);
+      setError(err.message || 'Failed to load data');
+      
+      // Keep existing data if refresh fails
+      if (products.length === 0) {
+        setProducts([]);
+      }
+      if (discounts.length === 0) {
+        setDiscounts([]);
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [products.length, discounts.length, lastFetched]);
 
   useEffect(() => {
-    loadAll();
+    loadData();
   }, []);
+
+  const refresh = useCallback(() => {
+    return loadData(true);
+  }, [loadData]);
 
   return {
     products,
     discounts,
     loading,
     error,
-    loadProducts,
-    loadDiscounts,
-    loadAll,
+    refresh,
+    lastFetched
   };
-};
+}

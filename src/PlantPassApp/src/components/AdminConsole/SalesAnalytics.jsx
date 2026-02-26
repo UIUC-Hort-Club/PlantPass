@@ -86,7 +86,6 @@ function SalesAnalytics() {
   const rowsPerPage = 20;
   const [orderBy, setOrderBy] = useState('timestamp');
   const [order, setOrder] = useState('desc');
-  const [lastUpdated, setLastUpdated] = useState(null);
   const [showLive, setShowLive] = useState(false);
   const [liveEnabled, setLiveEnabled] = useState(true);
   const disconnectTimeoutRef = useRef(null);
@@ -101,7 +100,6 @@ function SalesAnalytics() {
       const data = await fetchSalesAnalytics();
       
       setAnalytics(data);
-      setLastUpdated(new Date());
       
       if (isRefresh && !isSilent) {
         showSuccess("Analytics refreshed successfully");
@@ -135,7 +133,6 @@ function SalesAnalytics() {
       
       refreshDebounceRef.current = setTimeout(() => {
         loadAnalytics(true, true);
-        setLastUpdated(new Date());
         refreshDebounceRef.current = null;
       }, 2000);
     }
@@ -184,8 +181,7 @@ function SalesAnalytics() {
 
   useEffect(() => {
     loadAnalytics();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loadAnalytics]);
 
   const exportData = async () => {
     try {
