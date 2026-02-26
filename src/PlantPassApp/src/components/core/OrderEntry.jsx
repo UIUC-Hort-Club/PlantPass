@@ -328,7 +328,7 @@ function OrderEntry() {
         <Stack
           direction={{ xs: "column", sm: "row" }}
           spacing={2}
-          justifyContent="space-between"
+          justifyContent={{ xs: "flex-start", sm: features.collectEmailAddresses ? "space-between" : "flex-end" }}
           alignItems={{ xs: "stretch", sm: "center" }}
         >
           {features.collectEmailAddresses && (
