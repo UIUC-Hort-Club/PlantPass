@@ -39,37 +39,66 @@ def set_password_hash(new_hash):
 
 def lambda_handler(event, context):
     try:
+        logger.info(f"=== Lambda Invoked ===")
+        logger.info(f"Event: {json.dumps(event)}")
+        
         body = json.loads(event.get("body", "{}"))
         route_key = event.get("routeKey", "")
+        
+        logger.info(f"Route: {route_key}")
+        logger.info(f"Body keys: {list(body.keys())}")
 
         if route_key == "POST /admin/login":
+            logger.info("=== Admin Login Attempt ===")
             pw_hash = get_password_hash()
             password = body.get("password", "")
             is_temp_password = body.get("is_temp_password", False)
+            
+            logger.info(f"Password length: {len(password)}")
+            logger.info(f"is_temp_password flag: {is_temp_password}")
+            logger.info(f"Password hash from S3 exists: {bool(pw_hash)}")
 
             # Check regular password first
-            if bcrypt.checkpw(password.encode(), pw_hash):
+            logger.info("Checking regular password...")
+            regular_match = bcrypt.checkpw(password.encode(), pw_hash)
+            logger.info(f"Regular password match: {regular_match}")
+            
+            if regular_match:
                 token = jwt.encode(
                     {"exp": datetime.datetime.utcnow() + datetime.timedelta(hours=24)},
                     JWT_SECRET,
                     algorithm="HS256"
                 )
+                logger.info("Regular password authenticated successfully")
                 return create_response(200, {"token": token, "requires_password_change": False})
             
             # If not regular password and temp password flag is set, check temp password
             if is_temp_password:
+                logger.info("Checking temporary password...")
                 temp_hash = get_temp_password_hash()
-                if temp_hash and bcrypt.checkpw(password.encode(), temp_hash.encode()):
-                    # Generate token but require password change
-                    token = jwt.encode(
-                        {"exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1),
-                         "temp": True},
-                        JWT_SECRET,
-                        algorithm="HS256"
-                    )
-                    delete_temp_password()
-                    return create_response(200, {"token": token, "requires_password_change": True})
+                logger.info(f"Temp password hash exists: {bool(temp_hash)}")
+                
+                if temp_hash:
+                    temp_match = bcrypt.checkpw(password.encode(), temp_hash.encode())
+                    logger.info(f"Temp password match: {temp_match}")
+                    
+                    if temp_match:
+                        # Generate token but require password change
+                        token = jwt.encode(
+                            {"exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1),
+                             "temp": True},
+                            JWT_SECRET,
+                            algorithm="HS256"
+                        )
+                        delete_temp_password()
+                        logger.info("Temp password authenticated successfully")
+                        return create_response(200, {"token": token, "requires_password_change": True})
+                else:
+                    logger.warning("No temp password hash found in DynamoDB")
+            else:
+                logger.info("is_temp_password flag not set, skipping temp password check")
             
+            logger.warning("Authentication failed - no password matched")
             return create_response(401, {"error": "Invalid password"})
         
         if route_key == "POST /admin/change-password":
@@ -99,12 +128,17 @@ def lambda_handler(event, context):
             return create_response(200, {"success": True})
 
         if route_key == "POST /admin/forgot-password":
+            logger.info("=== Forgot Password Request ===")
             # Generate temporary password
             temp_password = generate_temp_password()
+            logger.info(f"Generated temp password length: {len(temp_password)}")
+            
             temp_hash = bcrypt.hashpw(temp_password.encode(), bcrypt.gensalt()).decode()
+            logger.info("Temp password hashed successfully")
             
             # Store temp password hash
             store_temp_password(temp_hash)
+            logger.info("Temp password stored in DynamoDB")
             
             # Send email via Email Lambda
             if EMAIL_LAMBDA_ARN:
@@ -120,10 +154,12 @@ def lambda_handler(event, context):
                         Payload=json.dumps(email_payload)
                     )
                     
-                    logger.info("Password reset email triggered")
+                    logger.info("Password reset email triggered successfully")
                 except Exception as e:
                     logger.error(f"Failed to trigger email: {e}")
                     return create_response(500, {"error": "Failed to send email"})
+            else:
+                logger.warning("EMAIL_LAMBDA_ARN not configured")
             
             return create_response(200, {"message": "Temporary password sent to registered email"})
 
