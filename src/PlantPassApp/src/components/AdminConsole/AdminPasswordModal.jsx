@@ -36,8 +36,6 @@ export default function AdminPasswordModal({ open, onClose, onSubmit, error, onF
     try {
       await onSubmit(password);
       setPassword("");
-    } catch (err) {
-      console.error("Admin authentication error:", err);
     } finally {
       setSubmitting(false);
     }

@@ -21,7 +21,6 @@ export async function authenticateAdmin(password) {
 
     return token;
   } catch (error) {
-    console.error("Admin login error:", error);
     throw error;
   }
 }
@@ -53,7 +52,6 @@ export async function changePassword(oldPassword, newPassword) {
 
     return data;
   } catch (error) {
-    console.error("Change password error:", error);
     throw error;
   }
 }
