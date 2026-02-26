@@ -67,7 +67,10 @@ export default function CustomerOrderLookup() {
   return (
     <Box
       sx={{
-        minHeight: "100vh",
+        height: transaction ? "auto" : "100vh",
+        minHeight: transaction ? "100vh" : "auto",
+        display: "flex",
+        flexDirection: "column",
         background: "linear-gradient(180deg, #F8F9FA 0%, #FFFFFF 100%)",
       }}
     >
@@ -102,14 +105,19 @@ export default function CustomerOrderLookup() {
       {/* Content */}
       <Box
         sx={{
+          flex: transaction ? "0 1 auto" : 1,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: transaction ? "flex-start" : "center",
           maxWidth: 800,
+          width: "100%",
           mx: "auto",
           p: { xs: 2, sm: 4 },
         }}
       >
         {/* Search Form */}
-        <Paper sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h5" sx={{ mb: 2, fontWeight: 500 }}>
+        <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3 }}>
+          <Typography variant="h5" sx={{ mb: 2, fontWeight: 500, fontSize: { xs: "1.25rem", sm: "1.5rem" } }}>
             Order Lookup
           </Typography>
           <form onSubmit={handleSubmit}>
@@ -130,7 +138,7 @@ export default function CustomerOrderLookup() {
               <Button
                 type="submit"
                 variant="contained"
-                sx={{ minWidth: 120 }}
+                sx={{ minWidth: { xs: "100%", sm: 120 } }}
                 disabled={loading}
               >
                 Search
@@ -148,7 +156,7 @@ export default function CustomerOrderLookup() {
 
         {/* Receipt */}
         {transaction && !loading && (
-          <Paper sx={{ p: 3 }}>
+          <Paper sx={{ p: { xs: 2, sm: 3 } }}>
             <Receipt transaction={transaction} readOnly />
           </Paper>
         )}
