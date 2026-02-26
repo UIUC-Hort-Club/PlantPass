@@ -158,12 +158,17 @@ resource "aws_lambda_function" "transaction_handler" {
     aws_cloudwatch_log_group.transaction_handler_logs
   ]
 
+  layers = [
+    aws_lambda_layer_version.auth_deps.arn
+  ]
+
   environment {
     variables = {
       TRANSACTIONS_TABLE = aws_dynamodb_table.transactions.name
       CONNECTIONS_TABLE  = aws_dynamodb_table.websocket_connections.name
       WEBSOCKET_ENDPOINT = "https://${aws_apigatewayv2_api.websocket_api.id}.execute-api.${var.aws_region}.amazonaws.com/${aws_apigatewayv2_stage.websocket_stage.name}"
       EMAIL_LAMBDA_ARN   = aws_lambda_function.email_handler.arn
+      JWT_SECRET         = "super-secret-key"
     }
   }
 
@@ -215,9 +220,14 @@ resource "aws_lambda_function" "products_handler" {
     aws_cloudwatch_log_group.products_handler_logs
   ]
 
+  layers = [
+    aws_lambda_layer_version.auth_deps.arn
+  ]
+
   environment {
     variables = {
       PRODUCTS_TABLE = aws_dynamodb_table.products.name
+      JWT_SECRET     = "super-secret-key"
     }
   }
 
@@ -237,9 +247,14 @@ resource "aws_lambda_function" "discounts_handler" {
     aws_cloudwatch_log_group.discounts_handler_logs
   ]
 
+  layers = [
+    aws_lambda_layer_version.auth_deps.arn
+  ]
+
   environment {
     variables = {
       DISCOUNTS_TABLE = aws_dynamodb_table.discounts.name
+      JWT_SECRET      = "super-secret-key"
     }
   }
 
@@ -259,9 +274,14 @@ resource "aws_lambda_function" "payment_methods_handler" {
     aws_cloudwatch_log_group.payment_methods_handler_logs
   ]
 
+  layers = [
+    aws_lambda_layer_version.auth_deps.arn
+  ]
+
   environment {
     variables = {
       PAYMENT_METHODS_TABLE = aws_dynamodb_table.payment_methods.name
+      JWT_SECRET            = "super-secret-key"
     }
   }
 
@@ -281,9 +301,14 @@ resource "aws_lambda_function" "lock_handler" {
     aws_cloudwatch_log_group.lock_handler_logs
   ]
 
+  layers = [
+    aws_lambda_layer_version.auth_deps.arn
+  ]
+
   environment {
     variables = {
       LOCK_TABLE_NAME = aws_dynamodb_table.locks.name
+      JWT_SECRET      = "super-secret-key"
     }
   }
 
@@ -303,9 +328,14 @@ resource "aws_lambda_function" "feature_toggles_handler" {
     aws_cloudwatch_log_group.feature_toggles_handler_logs
   ]
 
+  layers = [
+    aws_lambda_layer_version.auth_deps.arn
+  ]
+
   environment {
     variables = {
       FEATURE_TOGGLES_TABLE_NAME = aws_dynamodb_table.feature_toggles.name
+      JWT_SECRET                 = "super-secret-key"
     }
   }
 
@@ -325,9 +355,14 @@ resource "aws_lambda_function" "plantpass_access_handler" {
     aws_cloudwatch_log_group.plantpass_access_handler_logs
   ]
 
+  layers = [
+    aws_lambda_layer_version.auth_deps.arn
+  ]
+
   environment {
     variables = {
       PLANTPASS_ACCESS_TABLE_NAME = aws_dynamodb_table.plantpass_access.name
+      JWT_SECRET                  = "super-secret-key"
     }
   }
 
