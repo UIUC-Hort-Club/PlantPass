@@ -1,11 +1,16 @@
 import { API_URL } from "../config";
 
+interface ClearTransactionsResponse {
+  message: string;
+  cleared_count: number;
+}
+
 /**
  * Clears all transactions from the database.
  *
- * @returns {object} Response with the number of cleared transactions.
+ * @returns Response with the number of cleared transactions.
  */
-export async function clearAllTransactions() {
+export async function clearAllTransactions(): Promise<ClearTransactionsResponse> {
   try {
     const response = await fetch(`${API_URL}/transactions/clear-all`, {
       method: "DELETE",
@@ -13,13 +18,13 @@ export async function clearAllTransactions() {
     });
 
     if (!response.ok) {
-      const errorBody = await response.json().catch(() => ({}));
+      const errorBody = await response.json().catch(() => ({})) as { message?: string };
       throw new Error(
         `HTTP ${response.status}: ${errorBody.message || "Unknown error"}`,
       );
     }
 
-    const result = await response.json();
+    const result = await response.json() as ClearTransactionsResponse;
     return result;
   } catch (err) {
     console.error("Error clearing transactions:", err);
