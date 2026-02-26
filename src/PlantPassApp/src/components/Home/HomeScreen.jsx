@@ -1,7 +1,8 @@
-import { Box, Card, CardActionArea, Typography, Container } from "@mui/material";
+import { Box, Card, CardActionArea, Typography, Container, IconButton } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import SearchIcon from "@mui/icons-material/Search";
+import SettingsIcon from "@mui/icons-material/Settings";
 
 export default function HomeScreen() {
   const navigate = useNavigate();
@@ -47,6 +48,28 @@ export default function HomeScreen() {
         },
       }}
     >
+      {/* Admin Settings Button - Top Right */}
+      <IconButton
+        onClick={() => navigate("/admin-console")}
+        sx={{
+          position: "absolute",
+          top: 16,
+          right: 16,
+          color: "#2D6A4F",
+          backgroundColor: "rgba(255, 255, 255, 0.9)",
+          "&:hover": {
+            backgroundColor: "#FFFFFF",
+            transform: "scale(1.05)",
+          },
+          transition: "all 0.2s ease",
+          boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)",
+          zIndex: 10,
+        }}
+        aria-label="Admin Settings"
+      >
+        <SettingsIcon />
+      </IconButton>
+
       <Container maxWidth="md" sx={{ position: "relative", zIndex: 1 }}>
         {/* Logo */}
         <Box

@@ -28,25 +28,34 @@ PlantPass is a point-of-sale application developed for the UIUC Horticulture Clu
 
 ## Application Routes
 
-The application has three main routes:
+The application has four main routes:
 
 1. **Home Screen** (`/`)
    - Landing page with role selection
    - "Spring Plant Fair Staff" → navigates to `/plantpass`
    - "Customer" → navigates to `/orders`
+   - Settings icon (top-right) → navigates to `/admin-console`
    - Click logo to return home from any page
 
 2. **PlantPass Staff Interface** (`/plantpass`)
    - Passphrase protection (when enabled via feature toggle)
    - Full checkout station functionality
    - Order entry and completion
-   - Admin console access
    - Transaction management
+   - Admin icon navigates to `/admin-console`
 
 3. **Customer Order Lookup** (`/orders`)
    - Simple order lookup interface
    - Supports direct URL access with order ID: `/orders?id=ABC-DEF`
    - Read-only receipt display
+
+4. **Admin Console** (`/admin-console`)
+   - Password protection (when enabled via feature toggle)
+   - Accessible from home screen or PlantPass interface
+   - Sales analytics and data export
+   - Product, discount, and payment method management
+   - Feature toggles and access control
+   - Password reset functionality
 
 ## Feature Toggles
 
