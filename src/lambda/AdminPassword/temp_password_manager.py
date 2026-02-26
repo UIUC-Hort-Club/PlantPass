@@ -46,8 +46,8 @@ def get_temp_password_hash():
             return None
         
         item = response['Item']
-        expiration = item.get('expiration', 0)
-        current_time = datetime.utcnow().timestamp()
+        expiration = int(item.get('expiration', 0))  # Convert Decimal to int
+        current_time = int(datetime.utcnow().timestamp())  # Convert to int
         
         logger.info(f"Current timestamp: {current_time}")
         logger.info(f"Expiration timestamp: {expiration}")
