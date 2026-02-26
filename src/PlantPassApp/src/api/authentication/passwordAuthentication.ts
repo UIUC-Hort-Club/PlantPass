@@ -1,6 +1,20 @@
 import { API_URL } from "../config";
 
-export async function authenticateAdmin(password) {
+interface AuthResponse {
+  token: string;
+  requires_password_change?: boolean;
+}
+
+interface ChangePasswordResponse {
+  message: string;
+}
+
+interface ApiErrorResponse {
+  error?: string;
+  status?: number;
+}
+
+export async function authenticateAdmin(password: string): Promise<AuthResponse> {
   const response = await fetch(`${API_URL}/admin/login`, {
     method: "POST",
     headers: {
@@ -13,7 +27,7 @@ export async function authenticateAdmin(password) {
     throw new Error("Authentication failed");
   }
 
-  const data = await response.json();
+  const data = await response.json() as AuthResponse;
   const { token, requires_password_change } = data;
 
   // Store admin token (not the boolean flag)
@@ -26,7 +40,10 @@ export async function authenticateAdmin(password) {
   return { token, requires_password_change };
 }
 
-export async function changePassword(oldPassword, newPassword) {
+export async function changePassword(
+  oldPassword: string,
+  newPassword: string
+): Promise<ChangePasswordResponse> {
   const token = localStorage.getItem("admin_token");
   if (!token) throw new Error("Admin not authenticated");
 
@@ -42,10 +59,10 @@ export async function changePassword(oldPassword, newPassword) {
     }),
   });
 
-  const data = await response.json();
+  const data = await response.json() as ChangePasswordResponse & ApiErrorResponse;
 
   if (!response.ok) {
-    const error = new Error(data.error || response.statusText);
+    const error = new Error(data.error || response.statusText) as Error & { status?: number };
     error.status = response.status;
     throw error;
   }
