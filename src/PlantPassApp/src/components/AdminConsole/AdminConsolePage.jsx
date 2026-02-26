@@ -55,6 +55,21 @@ export default function AdminConsolePage() {
     setForgotPasswordOpen(true);
   };
 
+  const handleForgotPasswordClose = () => {
+    // After sending reset email, show login modal again
+    setForgotPasswordOpen(false);
+    setAdminModalOpen(true);
+    setAdminError("");
+  };
+
+  const handleForgotPasswordCancel = () => {
+    // Cancel goes back to homepage
+    setForgotPasswordOpen(false);
+    setAdminModalOpen(false);
+    setAdminError("");
+    navigate("/");
+  };
+
   const handleAdminPasswordSubmit = (password) => {
     return authenticateAdmin(password)
       .then(() => {
@@ -174,7 +189,8 @@ export default function AdminConsolePage() {
       {/* Forgot password dialog */}
       <ForgotPasswordDialog
         open={forgotPasswordOpen}
-        onClose={() => setForgotPasswordOpen(false)}
+        onClose={handleForgotPasswordClose}
+        onCancel={handleForgotPasswordCancel}
       />
     </Box>
   );
