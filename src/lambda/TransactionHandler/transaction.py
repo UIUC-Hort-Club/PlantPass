@@ -32,6 +32,9 @@ class Transaction:
             "paid": False
         }
         
+        # Add payment_status for GSI
+        self.payment_status = "unpaid"
+        
         self._process_discounts()
         self._calculate_receipt()
     
@@ -44,6 +47,9 @@ class Transaction:
         self.customer_email = self.data.get("customer_email", "")
         self.payment = self.data.get("payment", {"method": "", "paid": False})
         self.receipt = self.data.get("receipt", {})
+        
+        # Set payment_status based on payment.paid
+        self.payment_status = "paid" if self.payment.get("paid") else "unpaid"
     
     def _process_discounts(self):
         subtotal = self.get_subtotal()
@@ -148,6 +154,12 @@ class Transaction:
     
     def update_payment(self, payment_info):
         self.payment.update(payment_info)
+        
+        # Update payment_status field for GSI
+        if payment_info.get('paid'):
+            self.payment_status = 'paid'
+        else:
+            self.payment_status = 'unpaid'
     
     def _recalculate_discounts_and_receipt(self):
         subtotal = self.get_subtotal()
@@ -168,6 +180,7 @@ class Transaction:
             "club_voucher": self.club_voucher,
             "customer_email": self.customer_email,
             "payment": self.payment,
+            "payment_status": self.payment_status,  # For GSI
             "receipt": self.receipt
         }
     

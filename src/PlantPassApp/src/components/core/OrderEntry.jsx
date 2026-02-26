@@ -21,6 +21,7 @@ import { transformProductsData, initializeProductQuantities } from "../../utils/
 import { transformDiscountsForOrder } from "../../utils/discountTransformer";
 import LoadingSpinner from "../common/LoadingSpinner";
 import { useFeatureToggles } from "../../contexts/FeatureToggleContext";
+import { validateQuantity, validatePrice, validateEmail, validateTransactionItems } from "../../utils/validation";
 
 function OrderEntry() {
   const { showSuccess, showWarning, showError } = useNotification();
@@ -115,11 +116,8 @@ function OrderEntry() {
       return;
     }
 
-    const numericValue = parseInt(value);
-    
-    if (isNaN(numericValue) || numericValue < 0) {
-      return;
-    }
+    // Use validation utility to ensure safe input
+    const numericValue = validateQuantity(value);
 
     setQuantities((prev) => ({ ...prev, [sku]: numericValue }));
 
@@ -134,28 +132,38 @@ function OrderEntry() {
   const handleEnterOrder = () => {
     const discountsWithSelection = transformDiscountsForOrder(discounts, selectedDiscounts);
 
+    const items = Object.entries(quantities)
+      .map(([sku, quantity]) => {
+        const product = products.find((p) => p.SKU === sku);
+        return {
+          SKU: sku,
+          item: product.Name,
+          quantity: validateQuantity(quantity),
+          price_ea: product.Price,
+        };
+      });
+
+    // Validate transaction before sending
+    const validation = validateTransactionItems(items);
+    if (!validation.valid) {
+      showWarning(validation.errors[0] || "Please add items to your order before submitting.");
+      return;
+    }
+
+    // Validate email if provided
+    if (customerEmail && !validateEmail(customerEmail)) {
+      showWarning("Please enter a valid email address or leave it empty.");
+      return;
+    }
+
     const transaction = {
       timestamp: Math.floor(Date.now() / 1000),
-      items: Object.entries(quantities)
-        .map(([sku, quantity]) => {
-          const product = products.find((p) => p.SKU === sku);
-          return {
-            SKU: sku,
-            item: product.Name,
-            quantity: parseInt(quantity) || 0,
-            price_ea: product.Price,
-          };
-        }),
+      items,
       discounts: discountsWithSelection,
-      voucher: Number(voucher) || 0,
+      voucher: validatePrice(voucher),
       // If email collection is disabled, always send empty string
       email: features.collectEmailAddresses ? (customerEmail || "") : "",
     };
-
-    if (Object.values(quantities).every(qty => !qty || parseInt(qty) === 0)) {
-      showWarning("Please add items to your order before submitting.");
-      return;
-    }
 
     createTransaction(transaction)
       .then((response) => {
@@ -174,7 +182,8 @@ function OrderEntry() {
       })
       .catch((error) => {
         console.error("Error recording transaction:", error);
-        showError("An error occurred while recording the transaction. Please try again.");
+        const errorMessage = error.message || "An error occurred while recording the transaction. Please try again.";
+        showError(errorMessage);
       });
   };
 

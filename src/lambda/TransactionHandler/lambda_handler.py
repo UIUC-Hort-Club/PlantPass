@@ -17,6 +17,16 @@ from csv_export import generate_csv_export
 from websocket_notifier import notify_transaction_update
 from auth_middleware import require_auth, is_public_endpoint
 
+# Import validation from Lambda Layer
+try:
+    from shared_utils.validation import validate_transaction_data, validate_order_id
+except ImportError:
+    # Fallback for local development
+    import sys
+    import os
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../layers/python'))
+    from shared_utils.validation import validate_transaction_data, validate_order_id
+
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
@@ -50,6 +60,15 @@ def lambda_handler(event, context):
         body = json.loads(event.get("body", "{}"))
 
         if route_key == "POST /transactions":
+            # Validate transaction data
+            is_valid, validation_errors = validate_transaction_data(body)
+            if not is_valid:
+                logger.warning(f"Transaction validation failed: {validation_errors}")
+                return create_response(400, {
+                    "message": "Invalid transaction data",
+                    "errors": validation_errors
+                })
+            
             transaction = create_transaction(body)
             
             try:
@@ -63,6 +82,10 @@ def lambda_handler(event, context):
             purchase_id = path_params.get("purchase_id")
             if not purchase_id:
                 return create_response(400, {"message": "purchase_id required"})
+            
+            # Validate order ID format
+            if not validate_order_id(purchase_id):
+                return create_response(400, {"message": "Invalid order ID format. Expected format: ABC-DEF"})
             
             transaction = read_transaction(purchase_id)
             if not transaction:
@@ -81,6 +104,20 @@ def lambda_handler(event, context):
             purchase_id = path_params.get("purchase_id")
             if not purchase_id:
                 return create_response(400, {"message": "purchase_id required"})
+            
+            # Validate order ID format
+            if not validate_order_id(purchase_id):
+                return create_response(400, {"message": "Invalid order ID format. Expected format: ABC-DEF"})
+            
+            # Validate update data (partial validation - only validate provided fields)
+            if 'items' in body or 'discounts' in body or 'voucher' in body:
+                is_valid, validation_errors = validate_transaction_data(body)
+                if not is_valid:
+                    logger.warning(f"Transaction update validation failed: {validation_errors}")
+                    return create_response(400, {
+                        "message": "Invalid transaction data",
+                        "errors": validation_errors
+                    })
             
             updated_transaction = update_transaction(purchase_id, body)
             
