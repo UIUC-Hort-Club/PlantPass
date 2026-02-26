@@ -14,7 +14,7 @@ export default function HomeScreen() {
   return (
     <Box
       sx={{
-        height: "100vh",
+        minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -24,6 +24,7 @@ export default function HomeScreen() {
         py: { xs: 2, sm: 4 },
         position: "relative",
         overflow: "hidden",
+        boxSizing: "border-box",
         "&::before": {
           content: '""',
           position: "absolute",
