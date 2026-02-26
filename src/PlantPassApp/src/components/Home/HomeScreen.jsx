@@ -14,14 +14,14 @@ export default function HomeScreen() {
   return (
     <Box
       sx={{
-        minHeight: "100vh",
+        height: "100vh",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         background: "linear-gradient(135deg, #F8F9FA 0%, #E8F5E9 100%)",
         px: 2,
-        py: 4,
+        py: { xs: 2, sm: 4 },
         position: "relative",
         overflow: "hidden",
         "&::before": {
@@ -76,7 +76,7 @@ export default function HomeScreen() {
           sx={{
             display: "flex",
             justifyContent: "center",
-            mb: 4,
+            mb: { xs: 2, sm: 4 },
           }}
         >
           <Box
@@ -84,7 +84,7 @@ export default function HomeScreen() {
             src="/plantpass_logo_transp.png"
             alt="PlantPass Logo"
             sx={{
-              maxWidth: { xs: 280, sm: 380, md: 450 },
+              maxWidth: { xs: 200, sm: 380, md: 450 },
               width: "100%",
               height: "auto",
               filter: "drop-shadow(0px 4px 12px rgba(45, 106, 79, 0.15))",
@@ -107,14 +107,14 @@ export default function HomeScreen() {
         <Typography
           variant="h4"
           sx={{
-            mb: 5,
+            mb: { xs: 2.5, sm: 5 },
             fontWeight: 700,
             background: "linear-gradient(135deg, #2D6A4F 0%, #52B788 100%)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
             backgroundClip: "text",
             textAlign: "center",
-            fontSize: { xs: "1.75rem", sm: "2.125rem" },
+            fontSize: { xs: "1.5rem", sm: "2.125rem" },
             animation: "fadeInUp 0.6s ease-out 0.2s both",
             "@keyframes fadeInUp": {
               "0%": {
@@ -136,7 +136,7 @@ export default function HomeScreen() {
           sx={{
             display: "grid",
             gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-            gap: 3,
+            gap: { xs: 2, sm: 3 },
             animation: "fadeInUp 0.6s ease-out 0.4s both",
           }}
         >
@@ -157,40 +157,40 @@ export default function HomeScreen() {
             <CardActionArea
               onClick={handleStaffClick}
               sx={{
-                p: { xs: 3, sm: 4 },
+                p: { xs: 2, sm: 4 },
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                minHeight: { xs: 200, sm: 240 },
+                minHeight: { xs: 140, sm: 240 },
                 justifyContent: "center",
               }}
             >
               <Box
                 sx={{
-                  width: 80,
-                  height: 80,
+                  width: { xs: 60, sm: 80 },
+                  height: { xs: 60, sm: 80 },
                   borderRadius: "50%",
                   background: "linear-gradient(135deg, #2D6A4F 0%, #52B788 100%)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  mb: 3,
+                  mb: { xs: 1.5, sm: 3 },
                   transition: "transform 0.3s ease",
                   ".MuiCardActionArea-root:hover &": {
                     transform: "scale(1.1) rotate(5deg)",
                   },
                 }}
               >
-                <StorefrontIcon sx={{ fontSize: 40, color: "#FFFFFF" }} />
+                <StorefrontIcon sx={{ fontSize: { xs: 32, sm: 40 }, color: "#FFFFFF" }} />
               </Box>
               <Typography
                 variant="h5"
                 sx={{
                   fontWeight: 700,
-                  mb: 1,
+                  mb: { xs: 0.5, sm: 1 },
                   textAlign: "center",
                   color: "#212529",
-                  fontSize: { xs: "1.25rem", sm: "1.5rem" },
+                  fontSize: { xs: "1.1rem", sm: "1.5rem" },
                 }}
               >
                 Spring Plant Fair Staff
@@ -201,6 +201,7 @@ export default function HomeScreen() {
                   textAlign: "center",
                   color: "#6C757D",
                   fontWeight: 500,
+                  fontSize: { xs: "0.875rem", sm: "1rem" },
                 }}
               >
                 Checkout Station
@@ -225,40 +226,40 @@ export default function HomeScreen() {
             <CardActionArea
               onClick={() => navigate("/orders")}
               sx={{
-                p: { xs: 3, sm: 4 },
+                p: { xs: 2, sm: 4 },
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                minHeight: { xs: 200, sm: 240 },
+                minHeight: { xs: 140, sm: 240 },
                 justifyContent: "center",
               }}
             >
               <Box
                 sx={{
-                  width: 80,
-                  height: 80,
+                  width: { xs: 60, sm: 80 },
+                  height: { xs: 60, sm: 80 },
                   borderRadius: "50%",
                   background: "linear-gradient(135deg, #F77F00 0%, #FCBF49 100%)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  mb: 3,
+                  mb: { xs: 1.5, sm: 3 },
                   transition: "transform 0.3s ease",
                   ".MuiCardActionArea-root:hover &": {
                     transform: "scale(1.1) rotate(-5deg)",
                   },
                 }}
               >
-                <SearchIcon sx={{ fontSize: 40, color: "#FFFFFF" }} />
+                <SearchIcon sx={{ fontSize: { xs: 32, sm: 40 }, color: "#FFFFFF" }} />
               </Box>
               <Typography
                 variant="h5"
                 sx={{
                   fontWeight: 700,
-                  mb: 1,
+                  mb: { xs: 0.5, sm: 1 },
                   textAlign: "center",
                   color: "#212529",
-                  fontSize: { xs: "1.25rem", sm: "1.5rem" },
+                  fontSize: { xs: "1.1rem", sm: "1.5rem" },
                 }}
               >
                 Customer
@@ -269,6 +270,7 @@ export default function HomeScreen() {
                   textAlign: "center",
                   color: "#6C757D",
                   fontWeight: 500,
+                  fontSize: { xs: "0.875rem", sm: "1rem" },
                 }}
               >
                 Order Lookup
