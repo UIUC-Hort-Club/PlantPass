@@ -9,13 +9,9 @@ import {
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import SupervisorAccountIcon from "@mui/icons-material/SupervisorAccount";
-import PublicIcon from "@mui/icons-material/Public";
 import { useNavigate } from "react-router-dom";
 import OrderEntry from "../core/OrderEntry";
 import OrderLookup from "../core/OrderLookup";
-import AdminConsole from "../AdminConsole/AdminConsole";
-import AdminPasswordModal from "../AdminConsole/AdminPasswordModal";
-import ForgotPasswordDialog from "../AdminConsole/ForgotPasswordDialog";
 import NavigationMenu from "../Navigation/NavigationMenu";
 import PlantPassAccessModal from "../Home/PlantPassAccessModal";
 import { useFeatureToggles } from "../../contexts/FeatureToggleContext";
@@ -49,15 +45,6 @@ export default function PlantPassApp() {
      ========================= */
   const [hasPlantPassAccess, setHasPlantPassAccess] = useState(false);
   const [passphraseModalOpen, setPassphraseModalOpen] = useState(false);
-
-  /* =========================
-     Admin state
-     ========================= */
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [adminTabIndex, setAdminTabIndex] = useState(0);
-  const [adminModalOpen, setAdminModalOpen] = useState(false);
-  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
-  const [adminError, setAdminError] = useState("");
 
   /* =========================
      Check PlantPass access on mount
@@ -96,57 +83,14 @@ export default function PlantPassApp() {
   const handleMenuClose = () => setMenuAnchorEl(null);
 
   const handleMenuItemClick = (index) => {
-    if (isAdmin) {
-      setAdminTabIndex(index);
-    } else {
-      setTabIndex(index);
-    }
+    setTabIndex(index);
   };
 
   /* =========================
      Admin handlers
      ========================= */
   const handleAdminClick = () => {
-    // If password protection is disabled, grant immediate access
-    if (!features.passwordProtectAdmin) {
-      setIsAdmin(true);
-      return;
-    }
-    
-    // Otherwise, show password modal
-    setAdminModalOpen(true);
-  };
-
-  const handleForgotPassword = () => {
-    setAdminModalOpen(false);
-    setForgotPasswordOpen(true);
-  };
-
-  const handleAdminPasswordSubmit = (_password) => {
-    setIsAdmin(true);
-    setAdminModalOpen(false);
-    setAdminError("");
-    
-    // @PASSWORD
-    // @TODO
-    // UNDO in the future
-
-    // return authenticateAdmin(password)
-    //   .then(() => {
-    //     setIsAdmin(true);
-    //     setAdminModalOpen(false);
-    //     setAdminError('');
-    //   })
-    //   .catch((error) => {
-    //     setAdminError('Password incorrect');
-    //     throw error;
-    //   });
-  };
-
-  const handleHomeClick = () => {
-    setIsAdmin(false);
-    setTabIndex(0);
-    setAdminTabIndex(0);
+    navigate("/admin-console");
   };
 
   return (
@@ -205,15 +149,9 @@ export default function PlantPassApp() {
 
           {/* Header actions */}
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            {!isAdmin ? (
-              <IconButton sx={{ color: "#2D6A4F" }} onClick={handleAdminClick}>
-                <SupervisorAccountIcon />
-              </IconButton>
-            ) : (
-              <IconButton sx={{ color: "#2D6A4F" }} onClick={handleHomeClick}>
-                <PublicIcon />
-              </IconButton>
-            )}
+            <IconButton sx={{ color: "#2D6A4F" }} onClick={handleAdminClick}>
+              <SupervisorAccountIcon />
+            </IconButton>
 
             <IconButton edge="end" sx={{ color: "#2D6A4F" }} onClick={handleMenuOpen}>
               <MenuIcon />
@@ -225,7 +163,7 @@ export default function PlantPassApp() {
             anchorEl={menuAnchorEl}
             open={Boolean(menuAnchorEl)}
             onClose={handleMenuClose}
-            isAdmin={isAdmin}
+            isAdmin={false}
             onNavigate={handleMenuItemClick}
           />
         </Toolbar>
@@ -241,42 +179,14 @@ export default function PlantPassApp() {
           transition: "filter 0.3s ease",
         }}
       >
-        {!isAdmin ? (
-          <>
-            <TabPanel value={tabIndex} index={0}>
-              <OrderEntry />
-            </TabPanel>
+        <TabPanel value={tabIndex} index={0}>
+          <OrderEntry />
+        </TabPanel>
 
-            <TabPanel value={tabIndex} index={1}>
-              <OrderLookup />
-            </TabPanel>
-          </>
-        ) : (
-          <AdminConsole tabIndex={adminTabIndex} />
-        )}
+        <TabPanel value={tabIndex} index={1}>
+          <OrderLookup />
+        </TabPanel>
       </Box>
-
-      {/* =========================
-        Admin password modal
-       ========================= */}
-      <AdminPasswordModal
-        open={adminModalOpen}
-        onClose={() => {
-          setAdminModalOpen(false);
-          setAdminError("");
-        }}
-        onSubmit={handleAdminPasswordSubmit}
-        error={adminError}
-        onForgotPassword={handleForgotPassword}
-      />
-      
-      {/* =========================
-        Forgot password dialog
-       ========================= */}
-      <ForgotPasswordDialog
-        open={forgotPasswordOpen}
-        onClose={() => setForgotPasswordOpen(false)}
-      />
 
       {/* =========================
         PlantPass access modal

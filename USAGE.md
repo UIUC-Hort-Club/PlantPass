@@ -11,11 +11,20 @@ Access PlantPass through your web browser at the provided URL. You'll see the Pl
 - **Spring Plant Fair Staff**: Access the checkout station (may require a passphrase)
 - **Customer**: Look up existing orders
 
-Click the PlantPass logo at any time to return to the home screen.
+Click the PlantPass logo at any time to return to the home screen. The settings icon (gear) in the top-right corner provides quick access to the staff interface and admin console.
 
 ### Staff Access
 
-When accessing the PlantPass app, you may be prompted to enter a passphrase. This security feature can be enabled or disabled by administrators. Once you enter the correct passphrase, you won't need to enter it again until you close your browser.
+When accessing the staff checkout station, you may be prompted to enter a passphrase. This security feature can be enabled or disabled by administrators. Once you enter the correct passphrase, you won't need to enter it again until you close your browser.
+
+**If you forget the passphrase:**
+1. Click the settings icon (gear) in the top-right corner of the home screen
+2. This takes you directly to the Admin Console at `/admin-console`
+3. Enter the admin password (if password protection is enabled)
+4. Navigate to "PlantPass Access" to view the current passphrase
+5. Alternatively, disable the "Protect PlantPass Access" feature toggle to remove the passphrase requirement
+
+The Admin Console is accessible from both the home screen and the PlantPass staff interface, ensuring you can always recover access even if the passphrase is forgotten.
 
 ## Main Features
 
@@ -67,7 +76,11 @@ Access different sections using the menu icon (three horizontal lines) in the to
 
 ## Admin Features
 
-Click the person icon in the top right corner to access the Admin Console. You may be prompted to enter the admin password (if password protection is enabled).
+Access the Admin Console by:
+- Clicking the settings icon (gear) in the top-right corner of the home screen
+- Clicking the person icon in the PlantPass staff interface
+
+You may be prompted to enter the admin password (if password protection is enabled). The Admin Console is available at `/admin-console` and can be accessed independently of the PlantPass staff interface.
 
 ### Sales Analytics
 
@@ -164,13 +177,15 @@ Click "Save Changes" after adjusting any toggles. Changes take effect immediatel
 
 ### PlantPass Access
 
-Set the passphrase required to access the PlantPass app (when protection is enabled):
+Set the passphrase required to access the staff checkout station (when protection is enabled):
 
 1. Enter the desired passphrase in the password field
 2. Click the eye icon to show/hide the passphrase as you type
 3. Click "Save Passphrase" to update
 
 This passphrase is separate from the admin password and is used to restrict access to the checkout station.
+
+**Important:** If staff members forget the passphrase, they can click the settings icon on the home screen to access the Admin Console directly at `/admin-console`, where they can view or reset the passphrase without needing to access the PlantPass staff interface first.
 
 ### Reset Password
 
