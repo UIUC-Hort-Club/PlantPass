@@ -20,7 +20,7 @@ export function FeatureToggleProvider({ children }) {
         return JSON.parse(stored);
       }
     } catch (error) {
-      console.error("Error reading from localStorage:", error);
+      // Silently fall back to defaults
     }
     // Default values
     return {
@@ -36,20 +36,15 @@ export function FeatureToggleProvider({ children }) {
   const loadFeatureToggles = async () => {
     try {
       const response = await getFeatureToggles();
-      console.log("Loaded feature toggles from API:", response);
       setFeatures(response);
       // Also cache in localStorage
       localStorage.setItem("featureToggles", JSON.stringify(response));
     } catch (error) {
-      console.error("Error loading feature toggles from API:", error);
       // Fall back to localStorage if API fails
       const stored = localStorage.getItem("featureToggles");
       if (stored) {
         const parsed = JSON.parse(stored);
-        console.log("Loaded feature toggles from localStorage:", parsed);
         setFeatures(parsed);
-      } else {
-        console.log("No feature toggles in localStorage, using defaults");
       }
     } finally {
       setLoading(false);
@@ -72,7 +67,6 @@ export function FeatureToggleProvider({ children }) {
     // Refresh when tab becomes visible (user returns to tab)
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        console.log("Tab became visible, refreshing feature toggles");
         loadFeatureToggles();
       }
     };
