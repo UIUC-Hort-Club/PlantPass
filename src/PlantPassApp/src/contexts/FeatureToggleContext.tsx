@@ -1,9 +1,16 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, ReactElement } from "react";
 import { getFeatureToggles } from "../api/feature_toggles_interface/getFeatureToggles";
+import type { FeatureToggles } from "../types";
 
-const FeatureToggleContext = createContext();
+interface FeatureToggleContextValue {
+  features: FeatureToggles;
+  loading: boolean;
+  refreshFeatureToggles: () => void;
+}
 
-export function useFeatureToggles() {
+const FeatureToggleContext = createContext<FeatureToggleContextValue | undefined>(undefined);
+
+export function useFeatureToggles(): FeatureToggleContextValue {
   const context = useContext(FeatureToggleContext);
   if (!context) {
     throw new Error("useFeatureToggles must be used within a FeatureToggleProvider");
@@ -11,13 +18,17 @@ export function useFeatureToggles() {
   return context;
 }
 
-export function FeatureToggleProvider({ children }) {
+interface FeatureToggleProviderProps {
+  children: ReactNode;
+}
+
+export function FeatureToggleProvider({ children }: FeatureToggleProviderProps): React.ReactElement {
   // Initialize from localStorage first if available
-  const getInitialFeatures = () => {
+  const getInitialFeatures = (): FeatureToggles => {
     try {
       const stored = localStorage.getItem("featureToggles");
       if (stored) {
-        return JSON.parse(stored);
+        return JSON.parse(stored) as FeatureToggles;
       }
     } catch {
       // Silently fall back to defaults
@@ -30,10 +41,10 @@ export function FeatureToggleProvider({ children }) {
     };
   };
 
-  const [features, setFeatures] = useState(getInitialFeatures);
-  const [loading, setLoading] = useState(true);
+  const [features, setFeatures] = useState<FeatureToggles>(getInitialFeatures);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const loadFeatureToggles = async () => {
+  const loadFeatureToggles = async (): Promise<void> => {
     try {
       const response = await getFeatureToggles();
       setFeatures(response);
@@ -43,7 +54,7 @@ export function FeatureToggleProvider({ children }) {
       // Fall back to localStorage if API fails
       const stored = localStorage.getItem("featureToggles");
       if (stored) {
-        const parsed = JSON.parse(stored);
+        const parsed = JSON.parse(stored) as FeatureToggles;
         setFeatures(parsed);
       }
     } finally {
@@ -55,17 +66,17 @@ export function FeatureToggleProvider({ children }) {
     loadFeatureToggles();
     
     // Listen for storage changes (when toggles are saved in other tabs)
-    const handleStorageChange = () => {
+    const handleStorageChange = (): void => {
       loadFeatureToggles();
     };
     
     // Listen for custom events (when toggles are saved in same tab)
-    const handleFeatureTogglesUpdated = () => {
+    const handleFeatureTogglesUpdated = (): void => {
       loadFeatureToggles();
     };
 
     // Refresh when tab becomes visible (user returns to tab)
-    const handleVisibilityChange = () => {
+    const handleVisibilityChange = (): void => {
       if (!document.hidden) {
         loadFeatureToggles();
       }
@@ -82,7 +93,7 @@ export function FeatureToggleProvider({ children }) {
     };
   }, []);
 
-  const refreshFeatureToggles = () => {
+  const refreshFeatureToggles = (): void => {
     loadFeatureToggles();
   };
 
