@@ -171,7 +171,7 @@ export default function FeatureToggles() {
                   <Typography variant="body2" color="text.secondary">
                     When enabled, users must enter a passphrase to access the PlantPass checkout station.
                     When disabled, anyone can access the checkout station from the home screen.
-                    To set or change the passphrase, go to the "PlantPass Access" tab.
+                    To set or change the passphrase, go to the &ldquo;PlantPass Access&rdquo; tab.
                   </Typography>
                 </Box>
               }
