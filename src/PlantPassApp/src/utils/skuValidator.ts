@@ -1,6 +1,10 @@
-export const validateSKUs = (rows) => {
-  const skuCounts = {};
-  const errors = [];
+interface RowWithSKU {
+  sku: string;
+}
+
+export const validateSKUs = (rows: RowWithSKU[]): string[] => {
+  const skuCounts: Record<string, number> = {};
+  const errors: string[] = [];
   
   rows.forEach((row, index) => {
     if (!row.sku.trim()) {

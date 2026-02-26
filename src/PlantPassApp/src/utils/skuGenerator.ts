@@ -1,4 +1,8 @@
-const findNextAvailableNumber = (prefix, existingProducts) => {
+interface ProductWithSKU {
+  sku: string;
+}
+
+const findNextAvailableNumber = (prefix: string, existingProducts: ProductWithSKU[]): string => {
   const existingSKUs = existingProducts
     .map(product => product.sku)
     .filter(sku => sku && sku.startsWith(prefix) && sku.length === 5);
@@ -15,7 +19,7 @@ const findNextAvailableNumber = (prefix, existingProducts) => {
   return `${prefix}${nextNum.toString().padStart(3, '0')}`;
 };
 
-export const generateSKU = (itemName, existingProducts) => {
+export const generateSKU = (itemName: string, existingProducts: ProductWithSKU[]): string => {
   const prefix = itemName.replace(/[^a-zA-Z]/g, '').slice(0, 2).toUpperCase();
   
   if (prefix.length < 2) {

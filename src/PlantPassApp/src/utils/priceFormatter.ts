@@ -1,8 +1,13 @@
-export const formatPrice = (value, options = {}) => {
+interface FormatPriceOptions {
+  onInput?: boolean;
+  onBlur?: boolean;
+}
+
+export const formatPrice = (value: string | number, options: FormatPriceOptions = {}): string => {
   const { onInput = false, onBlur = false } = options;
   
   if (onBlur) {
-    const numValue = parseFloat(value);
+    const numValue = parseFloat(String(value));
     if (isNaN(numValue) || numValue < 0) {
       return '0.00';
     }
@@ -10,7 +15,7 @@ export const formatPrice = (value, options = {}) => {
   }
   
   if (onInput) {
-    let cleaned = value.replace(/[^\d.]/g, '');
+    let cleaned = String(value).replace(/[^\d.]/g, '');
     
     const parts = cleaned.split('.');
     if (parts.length > 2) {
@@ -29,11 +34,11 @@ export const formatPrice = (value, options = {}) => {
     return cleaned;
   }
   
-  const numValue = parseFloat(value);
+  const numValue = parseFloat(String(value));
   if (isNaN(numValue)) return '0.00';
   return numValue.toFixed(2);
 };
 
-export const formatPriceInput = (value) => formatPrice(value, { onInput: true });
-export const formatPriceDisplay = (value) => formatPrice(value);
-export const handlePriceBlur = (value) => formatPrice(value, { onBlur: true });
+export const formatPriceInput = (value: string | number): string => formatPrice(value, { onInput: true });
+export const formatPriceDisplay = (value: string | number): string => formatPrice(value);
+export const handlePriceBlur = (value: string | number): string => formatPrice(value, { onBlur: true });

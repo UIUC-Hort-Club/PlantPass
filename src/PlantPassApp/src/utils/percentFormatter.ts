@@ -1,4 +1,4 @@
-export const formatPercentInput = (value) => {
+export const formatPercentInput = (value: string): string => {
   let cleaned = value.replace(/[^\d.]/g, '');
   
   const parts = cleaned.split('.');
@@ -22,14 +22,14 @@ export const formatPercentInput = (value) => {
   return cleaned;
 };
 
-export const formatPercentDisplay = (value) => {
-  const numValue = parseFloat(value);
+export const formatPercentDisplay = (value: string | number): string => {
+  const numValue = parseFloat(String(value));
   if (isNaN(numValue)) return '0';
   return numValue.toString();
 };
 
-export const handlePercentBlur = (value) => {
-  const numValue = parseFloat(value);
+export const handlePercentBlur = (value: string | number): string => {
+  const numValue = parseFloat(String(value));
   if (isNaN(numValue) || numValue < 0) {
     return '0';
   }

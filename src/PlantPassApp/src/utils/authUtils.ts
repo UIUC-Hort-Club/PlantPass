@@ -5,28 +5,28 @@
 /**
  * Check if user has any valid authentication token
  */
-export function isAuthenticated() {
+export function isAuthenticated(): boolean {
   return !!(localStorage.getItem('admin_token') || localStorage.getItem('staff_token'));
 }
 
 /**
  * Check if user has admin token
  */
-export function isAdmin() {
+export function isAdmin(): boolean {
   return !!localStorage.getItem('admin_token');
 }
 
 /**
  * Check if user has staff token (but not admin)
  */
-export function isStaff() {
+export function isStaff(): boolean {
   return !!localStorage.getItem('staff_token') && !localStorage.getItem('admin_token');
 }
 
 /**
  * Logout user by clearing all tokens and auth state
  */
-export function logout() {
+export function logout(): void {
   localStorage.removeItem('admin_token');
   localStorage.removeItem('staff_token');
   localStorage.removeItem('admin_auth');
@@ -36,6 +36,6 @@ export function logout() {
 /**
  * Get the current auth token (admin takes precedence)
  */
-export function getAuthToken() {
+export function getAuthToken(): string | null {
   return localStorage.getItem('admin_token') || localStorage.getItem('staff_token');
 }

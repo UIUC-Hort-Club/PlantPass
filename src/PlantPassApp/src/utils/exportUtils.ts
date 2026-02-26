@@ -1,4 +1,4 @@
-export const downloadJSON = (data, filename) => {
+export const downloadJSON = (data: unknown, filename: string): void => {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -10,7 +10,7 @@ export const downloadJSON = (data, filename) => {
   URL.revokeObjectURL(url);
 };
 
-export const downloadCSV = (data, filename) => {
+export const downloadCSV = (data: Record<string, unknown>[], filename: string): void => {
   if (!data || data.length === 0) return;
   
   const headers = Object.keys(data[0]);

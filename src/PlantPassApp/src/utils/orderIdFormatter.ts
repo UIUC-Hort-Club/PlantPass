@@ -1,4 +1,4 @@
-export const formatOrderId = (orderId) => {
+export const formatOrderId = (orderId: string | undefined): string => {
   if (!orderId) return '';
   
   const cleanId = orderId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
