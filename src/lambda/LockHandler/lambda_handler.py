@@ -3,6 +3,7 @@ import os
 import logging
 from dynamodb_client import get_dynamodb_client
 from response_utils import create_response
+from auth_middleware import extract_token, verify_token, AuthError
 
 LOCK_TABLE_NAME = os.environ.get('LOCK_TABLE_NAME', 'PlantPass-Locks')
 
@@ -14,6 +15,18 @@ def lambda_handler(event, context):
     Handle lock state operations for admin resources
     """
     try:
+        # All lock operations require admin authentication
+        try:
+            token = extract_token(event)
+            decoded = verify_token(token)
+            
+            if decoded.get("role") != "admin":
+                return create_response(403, {"message": "Admin access required"})
+                
+            event["auth"] = decoded
+        except AuthError as e:
+            return create_response(e.status_code, {"error": e.message})
+        
         route_key = event.get('routeKey', '')
         path_parameters = event.get('pathParameters', {})
         resource_type = path_parameters.get('resourceType', '')

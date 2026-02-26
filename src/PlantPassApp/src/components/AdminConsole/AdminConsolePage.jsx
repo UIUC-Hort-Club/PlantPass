@@ -27,16 +27,17 @@ export default function AdminConsolePage() {
   const [adminError, setAdminError] = useState("");
 
   useEffect(() => {
-    // Check if user has already authenticated
-    const isAdminAuthenticated = localStorage.getItem("admin_auth") === "true";
+    // Check if user has a valid admin token
+    const adminToken = localStorage.getItem("admin_token");
     
-    if (isAdminAuthenticated) {
+    if (adminToken) {
+      // Token exists, user is authenticated
       setIsAuthenticated(true);
       setAdminModalOpen(false);
     } else if (!features.passwordProtectAdmin) {
-      // If password protection is disabled, grant immediate access
-      setIsAuthenticated(true);
-      setAdminModalOpen(false);
+      // If password protection is disabled, still require token but show modal
+      // This ensures backend security is always enforced
+      setAdminModalOpen(true);
     } else {
       // Show password modal
       setAdminModalOpen(true);
@@ -73,9 +74,7 @@ export default function AdminConsolePage() {
   const handleAdminPasswordSubmit = (password) => {
     return authenticateAdmin(password)
       .then(() => {
-        localStorage.setItem("admin_auth", "true");
-        // Auto-authenticate for PlantPass when admin logs in
-        localStorage.setItem("plantpass_auth", "true");
+        // Token is now stored by authenticateAdmin
         setIsAuthenticated(true);
         setAdminModalOpen(false);
         setAdminError('');
@@ -87,8 +86,7 @@ export default function AdminConsolePage() {
   };
 
   const handlePlantPassClick = () => {
-    // Auto-authenticate for PlantPass when coming from admin
-    localStorage.setItem("plantpass_auth", "true");
+    // Admin token grants staff access too
     navigate("/plantpass");
   };
 

@@ -3,6 +3,7 @@ import os
 import logging
 from dynamodb_client import get_dynamodb_client
 from response_utils import create_response
+from auth_middleware import is_public_endpoint, extract_token, verify_token, AuthError
 
 FEATURE_TOGGLES_TABLE_NAME = os.environ.get('FEATURE_TOGGLES_TABLE_NAME', 'PlantPass-FeatureToggles')
 
@@ -24,6 +25,20 @@ def lambda_handler(event, context):
         route_key = event.get('routeKey', '')
         
         logger.info(f"Route Key: {route_key}")
+        
+        # Check if endpoint requires authentication
+        if not is_public_endpoint(route_key):
+            try:
+                token = extract_token(event)
+                decoded = verify_token(token)
+                event["auth"] = decoded
+                
+                # PUT /feature-toggles requires admin role
+                if route_key == "PUT /feature-toggles" and decoded.get("role") != "admin":
+                    return create_response(403, {"message": "Admin access required"})
+                    
+            except AuthError as e:
+                return create_response(e.status_code, {"error": e.message})
         
         if route_key == 'GET /feature-toggles':
             return get_feature_toggles()

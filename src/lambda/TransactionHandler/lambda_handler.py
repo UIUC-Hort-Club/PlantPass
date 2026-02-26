@@ -15,6 +15,7 @@ from sales_analytics import (
 )
 from csv_export import generate_csv_export
 from websocket_notifier import notify_transaction_update
+from auth_middleware import require_auth, is_public_endpoint
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -22,6 +23,29 @@ logger.setLevel(logging.INFO)
 def lambda_handler(event, context):
     try:
         route_key = event.get("routeKey", "")
+        
+        # Check if endpoint requires authentication
+        if not is_public_endpoint(route_key):
+            # Apply authentication check
+            from auth_middleware import extract_token, verify_token, AuthError
+            try:
+                token = extract_token(event)
+                decoded = verify_token(token)
+                event["auth"] = decoded
+                
+                # Check role-based permissions for admin-only operations
+                admin_only_routes = [
+                    "DELETE /transactions/clear-all",
+                    "GET /transactions/export-data",
+                ]
+                
+                if route_key in admin_only_routes:
+                    if decoded.get("role") != "admin":
+                        return create_response(403, {"message": "Admin access required"})
+                        
+            except AuthError as e:
+                return create_response(e.status_code, {"error": e.message})
+        
         path_params = event.get("pathParameters") or {}
         body = json.loads(event.get("body", "{}"))
 
@@ -94,7 +118,7 @@ def lambda_handler(event, context):
                 "headers": {
                     "Access-Control-Allow-Origin": "*",
                     "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-                    "Access-Control-Allow-Headers": "Content-Type",
+                    "Access-Control-Allow-Headers": "Content-Type,Authorization",
                     "Content-Type": "application/json"
                 },
                 "body": json.dumps({

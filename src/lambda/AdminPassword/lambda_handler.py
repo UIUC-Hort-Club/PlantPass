@@ -63,7 +63,11 @@ def lambda_handler(event, context):
             
             if regular_match:
                 token = jwt.encode(
-                    {"exp": datetime.datetime.utcnow() + datetime.timedelta(hours=24)},
+                    {
+                        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=24),
+                        "role": "admin",
+                        "iat": datetime.datetime.utcnow()
+                    },
                     JWT_SECRET,
                     algorithm="HS256"
                 )
@@ -82,8 +86,12 @@ def lambda_handler(event, context):
                 if temp_match:
                     # Generate token but require password change
                     token = jwt.encode(
-                        {"exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1),
-                         "temp": True},
+                        {
+                            "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1),
+                            "temp": True,
+                            "role": "admin",
+                            "iat": datetime.datetime.utcnow()
+                        },
                         JWT_SECRET,
                         algorithm="HS256"
                     )

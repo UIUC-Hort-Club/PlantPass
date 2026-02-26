@@ -1,10 +1,13 @@
 import json
 import os
 import logging
+import jwt
+import datetime
 from dynamodb_client import get_dynamodb_client
 from response_utils import create_response
 
 PLANTPASS_ACCESS_TABLE_NAME = os.environ.get('PLANTPASS_ACCESS_TABLE_NAME', 'PlantPass-Access')
+JWT_SECRET = os.environ.get("JWT_SECRET")
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -17,6 +20,20 @@ def lambda_handler(event, context):
         route_key = event.get('routeKey', '')
         
         logger.info(f"Route Key: {route_key}")
+        
+        # GET and PUT require admin authentication
+        if route_key in ['GET /plantpass-access', 'PUT /plantpass-access']:
+            from auth_middleware import extract_token, verify_token, AuthError
+            try:
+                token = extract_token(event)
+                decoded = verify_token(token)
+                
+                if decoded.get("role") != "admin":
+                    return create_response(403, {"message": "Admin access required"})
+                    
+                event["auth"] = decoded
+            except AuthError as e:
+                return create_response(e.status_code, {"error": e.message})
         
         if route_key == 'GET /plantpass-access':
             return get_passphrase()
@@ -90,7 +107,8 @@ def set_passphrase(body):
 
 def verify_passphrase(body):
     """
-    Verify the provided passphrase against the stored one
+    Verify the provided passphrase against the stored one.
+    Returns a JWT token with 'staff' role on success.
     """
     try:
         provided_passphrase = body.get('passphrase')
@@ -109,7 +127,25 @@ def verify_passphrase(body):
         stored_passphrase = item.get('passphrase', '')
         
         if provided_passphrase == stored_passphrase:
-            return create_response(200, {'message': 'Passphrase verified'})
+            # Generate JWT token with staff role
+            if not JWT_SECRET:
+                logger.error("JWT_SECRET not configured")
+                return create_response(500, {'message': 'Server configuration error'})
+            
+            token = jwt.encode(
+                {
+                    "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=24),
+                    "role": "staff",
+                    "iat": datetime.datetime.utcnow()
+                },
+                JWT_SECRET,
+                algorithm="HS256"
+            )
+            
+            return create_response(200, {
+                'message': 'Passphrase verified',
+                'token': token
+            })
         else:
             return create_response(401, {'message': 'Incorrect passphrase'})
         
