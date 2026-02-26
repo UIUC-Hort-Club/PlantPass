@@ -6,6 +6,7 @@ import {
   IconButton,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
+import StorefrontIcon from "@mui/icons-material/Storefront";
 import { useNavigate } from "react-router-dom";
 import AdminConsole from "./AdminConsole";
 import AdminPasswordModal from "./AdminPasswordModal";
@@ -58,6 +59,8 @@ export default function AdminConsolePage() {
     return authenticateAdmin(password)
       .then(() => {
         localStorage.setItem("admin_auth", "true");
+        // Auto-authenticate for PlantPass when admin logs in
+        localStorage.setItem("plantpass_auth", "true");
         setIsAuthenticated(true);
         setAdminModalOpen(false);
         setAdminError('');
@@ -66,6 +69,12 @@ export default function AdminConsolePage() {
         setAdminError('Password incorrect');
         throw error;
       });
+  };
+
+  const handlePlantPassClick = () => {
+    // Auto-authenticate for PlantPass when coming from admin
+    localStorage.setItem("plantpass_auth", "true");
+    navigate("/plantpass");
   };
 
   const handleModalClose = () => {
@@ -128,6 +137,10 @@ export default function AdminConsolePage() {
 
           {/* Header actions */}
           <Box sx={{ display: "flex", alignItems: "center" }}>
+            <IconButton sx={{ color: "#2D6A4F" }} onClick={handlePlantPassClick}>
+              <StorefrontIcon />
+            </IconButton>
+
             <IconButton edge="end" sx={{ color: "#2D6A4F" }} onClick={handleMenuOpen}>
               <MenuIcon />
             </IconButton>
