@@ -6,12 +6,14 @@ import {
   IconButton,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
+import StorefrontIcon from "@mui/icons-material/Storefront";
 import { useNavigate } from "react-router-dom";
 import AdminConsole from "./AdminConsole";
 import AdminPasswordModal from "./AdminPasswordModal";
 import ForgotPasswordDialog from "./ForgotPasswordDialog";
 import NavigationMenu from "../Navigation/NavigationMenu";
 import { useFeatureToggles } from "../../contexts/FeatureToggleContext";
+import { authenticateAdmin } from "../../api/authentication/passwordAuthentication";
 
 export default function AdminConsolePage() {
   const navigate = useNavigate();
@@ -53,28 +55,41 @@ export default function AdminConsolePage() {
     setForgotPasswordOpen(true);
   };
 
-  const handleAdminPasswordSubmit = (_password) => {
-    // Store authentication in localStorage
-    localStorage.setItem("admin_auth", "true");
-    setIsAuthenticated(true);
+  const handleForgotPasswordClose = () => {
+    // After sending reset email, show login modal again
+    setForgotPasswordOpen(false);
+    setAdminModalOpen(true);
+    setAdminError("");
+  };
+
+  const handleForgotPasswordCancel = () => {
+    // Cancel goes back to homepage
+    setForgotPasswordOpen(false);
     setAdminModalOpen(false);
     setAdminError("");
-    
-    // @PASSWORD
-    // @TODO
-    // UNDO in the future
+    navigate("/");
+  };
 
-    // return authenticateAdmin(password)
-    //   .then(() => {
-    //     localStorage.setItem("admin_auth", "true");
-    //     setIsAuthenticated(true);
-    //     setAdminModalOpen(false);
-    //     setAdminError('');
-    //   })
-    //   .catch((error) => {
-    //     setAdminError('Password incorrect');
-    //     throw error;
-    //   });
+  const handleAdminPasswordSubmit = (password) => {
+    return authenticateAdmin(password)
+      .then(() => {
+        localStorage.setItem("admin_auth", "true");
+        // Auto-authenticate for PlantPass when admin logs in
+        localStorage.setItem("plantpass_auth", "true");
+        setIsAuthenticated(true);
+        setAdminModalOpen(false);
+        setAdminError('');
+      })
+      .catch((error) => {
+        setAdminError('Password incorrect');
+        throw error;
+      });
+  };
+
+  const handlePlantPassClick = () => {
+    // Auto-authenticate for PlantPass when coming from admin
+    localStorage.setItem("plantpass_auth", "true");
+    navigate("/plantpass");
   };
 
   const handleModalClose = () => {
@@ -137,6 +152,10 @@ export default function AdminConsolePage() {
 
           {/* Header actions */}
           <Box sx={{ display: "flex", alignItems: "center" }}>
+            <IconButton sx={{ color: "#2D6A4F" }} onClick={handlePlantPassClick}>
+              <StorefrontIcon />
+            </IconButton>
+
             <IconButton edge="end" sx={{ color: "#2D6A4F" }} onClick={handleMenuOpen}>
               <MenuIcon />
             </IconButton>
@@ -170,7 +189,8 @@ export default function AdminConsolePage() {
       {/* Forgot password dialog */}
       <ForgotPasswordDialog
         open={forgotPasswordOpen}
-        onClose={() => setForgotPasswordOpen(false)}
+        onClose={handleForgotPasswordClose}
+        onCancel={handleForgotPasswordCancel}
       />
     </Box>
   );

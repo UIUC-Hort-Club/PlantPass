@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import { requestPasswordReset } from "../../api/authentication/forgotPassword";
 
-function ForgotPasswordDialog({ open, onClose }) {
+function ForgotPasswordDialog({ open, onClose, onCancel }) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
@@ -34,7 +34,13 @@ function ForgotPasswordDialog({ open, onClose }) {
   const handleClose = () => {
     setSuccess(false);
     setError("");
-    onClose();
+    // If password was sent successfully, go back to login modal
+    // Otherwise, cancel goes to homepage
+    if (success) {
+      onClose();
+    } else {
+      onCancel();
+    }
   };
 
   return (
