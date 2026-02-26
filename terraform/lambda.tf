@@ -159,7 +159,8 @@ resource "aws_lambda_function" "transaction_handler" {
   ]
 
   layers = [
-    aws_lambda_layer_version.auth_deps.arn
+    aws_lambda_layer_version.auth_deps.arn,
+    aws_lambda_layer_version.shared_utils.arn
   ]
 
   environment {
@@ -187,7 +188,8 @@ resource "aws_lambda_function" "admin" {
   source_code_hash = filebase64sha256(var.admin_lambda_zip_path)
 
   layers = [
-    aws_lambda_layer_version.auth_deps.arn
+    aws_lambda_layer_version.auth_deps.arn,
+    aws_lambda_layer_version.shared_utils.arn
   ]
 
   environment {
@@ -221,7 +223,8 @@ resource "aws_lambda_function" "products_handler" {
   ]
 
   layers = [
-    aws_lambda_layer_version.auth_deps.arn
+    aws_lambda_layer_version.auth_deps.arn,
+    aws_lambda_layer_version.shared_utils.arn
   ]
 
   environment {
@@ -248,7 +251,8 @@ resource "aws_lambda_function" "discounts_handler" {
   ]
 
   layers = [
-    aws_lambda_layer_version.auth_deps.arn
+    aws_lambda_layer_version.auth_deps.arn,
+    aws_lambda_layer_version.shared_utils.arn
   ]
 
   environment {
@@ -275,7 +279,8 @@ resource "aws_lambda_function" "payment_methods_handler" {
   ]
 
   layers = [
-    aws_lambda_layer_version.auth_deps.arn
+    aws_lambda_layer_version.auth_deps.arn,
+    aws_lambda_layer_version.shared_utils.arn
   ]
 
   environment {
@@ -302,7 +307,8 @@ resource "aws_lambda_function" "lock_handler" {
   ]
 
   layers = [
-    aws_lambda_layer_version.auth_deps.arn
+    aws_lambda_layer_version.auth_deps.arn,
+    aws_lambda_layer_version.shared_utils.arn
   ]
 
   environment {
@@ -329,7 +335,8 @@ resource "aws_lambda_function" "feature_toggles_handler" {
   ]
 
   layers = [
-    aws_lambda_layer_version.auth_deps.arn
+    aws_lambda_layer_version.auth_deps.arn,
+    aws_lambda_layer_version.shared_utils.arn
   ]
 
   environment {
@@ -356,7 +363,8 @@ resource "aws_lambda_function" "plantpass_access_handler" {
   ]
 
   layers = [
-    aws_lambda_layer_version.auth_deps.arn
+    aws_lambda_layer_version.auth_deps.arn,
+    aws_lambda_layer_version.shared_utils.arn
   ]
 
   environment {
@@ -439,6 +447,13 @@ resource "aws_lambda_layer_version" "auth_deps" {
   layer_name          = "plantpass-auth-deps"
   filename            = var.auth_layer_zip_path
   compatible_runtimes = ["python3.11"]
+}
+
+resource "aws_lambda_layer_version" "shared_utils" {
+  layer_name          = "plantpass-shared-utils"
+  filename            = var.shared_utils_layer_zip_path
+  compatible_runtimes = ["python3.11"]
+  description         = "Shared utilities for validation, auth, and common functions"
 }
 
 # -------------------------

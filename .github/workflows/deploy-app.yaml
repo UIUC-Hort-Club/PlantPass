@@ -34,11 +34,20 @@ jobs:
           cd layers/auth-deps
           zip -r ../../terraform/auth_layer.zip python
 
+      - name: Build shared utils Lambda Layer
+        run: |
+          mkdir -p layers/shared-utils/python
+          cp -r src/lambda/layers/python/shared_utils layers/shared-utils/python/
+
+      - name: Package shared utils Lambda Layer
+        run: |
+          cd layers/shared-utils
+          zip -r ../../terraform/shared_utils_layer.zip python
+
       - name: Package Transaction Lambda
         run: |
           cd src/lambda/TransactionHandler
-          cp ../shared/auth_middleware.py .
-          zip -r ../../../terraform/transactions_handler_lambda_package.zip .
+          zip -r ../../../terraform/transactions_handler_lambda_package.zip *.py
 
       - name: Package Admin Lambda
         run: |
@@ -48,48 +57,42 @@ jobs:
       - name: Package Products Lambda
         run: |
           cd src/lambda/ProductsHandler
-          cp ../shared/auth_middleware.py .
-          zip -r ../../../terraform/products_handler_lambda_package.zip .
+          zip -r ../../../terraform/products_handler_lambda_package.zip *.py
 
       - name: Package Discounts Lambda
         run: |
           cd src/lambda/DiscountsHandler
-          cp ../shared/auth_middleware.py .
-          zip -r ../../../terraform/discounts_handler_lambda_package.zip .
+          zip -r ../../../terraform/discounts_handler_lambda_package.zip *.py
 
       - name: Package Payment Methods Lambda
         run: |
           cd src/lambda/PaymentMethodsHandler
-          cp ../shared/auth_middleware.py .
-          zip -r ../../../terraform/payment_methods_handler_lambda_package.zip .
+          zip -r ../../../terraform/payment_methods_handler_lambda_package.zip *.py
 
       - name: Package WebSocket Lambda
         run: |
           cd src/lambda/WebSocketHandler
-          zip -r ../../../terraform/websocket_handler_lambda_package.zip .
+          zip -r ../../../terraform/websocket_handler_lambda_package.zip *.py
 
       - name: Package Email Lambda
         run: |
           cd src/lambda/EmailHandler
-          zip -r ../../../terraform/emailhandler_lambda_package.zip .
+          zip -r ../../../terraform/emailhandler_lambda_package.zip *.py
 
       - name: Package Lock Lambda
         run: |
           cd src/lambda/LockHandler
-          cp ../shared/auth_middleware.py .
-          zip -r ../../../terraform/lockhandler_lambda_package.zip .
+          zip -r ../../../terraform/lockhandler_lambda_package.zip *.py
 
       - name: Package Feature Toggles Lambda
         run: |
           cd src/lambda/FeatureTogglesHandler
-          cp ../shared/auth_middleware.py .
-          zip -r ../../../terraform/featuretoggleshandler_lambda_package.zip .
+          zip -r ../../../terraform/featuretoggleshandler_lambda_package.zip *.py
 
       - name: Package PlantPass Access Lambda
         run: |
           cd src/lambda/PlantPassAccessHandler
-          cp ../shared/auth_middleware.py .
-          zip -r ../../../terraform/plantpassaccess_lambda_package.zip .
+          zip -r ../../../terraform/plantpassaccess_lambda_package.zip *.py
 
       - name: Upload Lambda ZIPs
         uses: actions/upload-artifact@v4
@@ -107,6 +110,7 @@ jobs:
             terraform/featuretoggleshandler_lambda_package.zip
             terraform/plantpassaccess_lambda_package.zip
             terraform/auth_layer.zip
+            terraform/shared_utils_layer.zip
 
   deploy-infra:
     runs-on: ubuntu-latest
@@ -153,6 +157,7 @@ jobs:
             -var "feature_toggles_lambda_zip_path=featuretoggleshandler_lambda_package.zip" \
             -var "plantpass_access_lambda_zip_path=plantpassaccess_lambda_package.zip" \
             -var "auth_layer_zip_path=auth_layer.zip" \
+            -var "shared_utils_layer_zip_path=shared_utils_layer.zip" \
             -var "reset_token_hash=${{ secrets.RESET_TOKEN_HASH }}" \
             -var "sender_email=${{ secrets.SENDER_EMAIL }}" \
             -var "uiuc_hort_club_email=${{ secrets.UIUC_HORT_CLUB_EMAIL }}"

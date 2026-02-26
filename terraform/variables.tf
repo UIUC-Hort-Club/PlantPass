@@ -66,6 +66,11 @@ variable "auth_layer_zip_path" {
   type = string
 }
 
+variable "shared_utils_layer_zip_path" {
+  type    = string
+  default = "shared_utils_layer.zip"
+}
+
 variable "websocket_lambda_zip_path" {
   type        = string
   description = "Path to WebSocketHandler Lambda ZIP relative to Terraform working directory"

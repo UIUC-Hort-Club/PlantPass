@@ -138,7 +138,7 @@ def get_recent_unpaid_transactions(limit=5):
         # Try to use GSI for better performance
         try:
             response = table.query(
-                IndexName='PaymentStatusTimestampIndex',
+                IndexName='payment-status-timestamp-index',
                 KeyConditionExpression='payment_status = :status',
                 ExpressionAttributeValues={
                     ':status': 'unpaid'
