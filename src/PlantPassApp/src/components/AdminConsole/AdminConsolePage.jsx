@@ -12,6 +12,7 @@ import AdminPasswordModal from "./AdminPasswordModal";
 import ForgotPasswordDialog from "./ForgotPasswordDialog";
 import NavigationMenu from "../Navigation/NavigationMenu";
 import { useFeatureToggles } from "../../contexts/FeatureToggleContext";
+import { authenticateAdmin } from "../../api/authentication/passwordAuthentication";
 
 export default function AdminConsolePage() {
   const navigate = useNavigate();
@@ -53,28 +54,18 @@ export default function AdminConsolePage() {
     setForgotPasswordOpen(true);
   };
 
-  const handleAdminPasswordSubmit = (_password) => {
-    // Store authentication in localStorage
-    localStorage.setItem("admin_auth", "true");
-    setIsAuthenticated(true);
-    setAdminModalOpen(false);
-    setAdminError("");
-    
-    // @PASSWORD
-    // @TODO
-    // UNDO in the future
-
-    // return authenticateAdmin(password)
-    //   .then(() => {
-    //     localStorage.setItem("admin_auth", "true");
-    //     setIsAuthenticated(true);
-    //     setAdminModalOpen(false);
-    //     setAdminError('');
-    //   })
-    //   .catch((error) => {
-    //     setAdminError('Password incorrect');
-    //     throw error;
-    //   });
+  const handleAdminPasswordSubmit = (password) => {
+    return authenticateAdmin(password)
+      .then(() => {
+        localStorage.setItem("admin_auth", "true");
+        setIsAuthenticated(true);
+        setAdminModalOpen(false);
+        setAdminError('');
+      })
+      .catch((error) => {
+        setAdminError('Password incorrect');
+        throw error;
+      });
   };
 
   const handleModalClose = () => {
