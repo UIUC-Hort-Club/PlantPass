@@ -271,7 +271,7 @@ function SalesAnalytics() {
         },
         ticks: {
           callback: function(value) {
-            return '$' + value.toFixed(2);
+            return '$' + Number(value).toFixed(2);
           }
         }
       }
@@ -494,9 +494,9 @@ function SalesAnalytics() {
               .map((transaction: Record<string, unknown>) => (
                 <TableRow key={transaction.purchase_id as string}>
                   <TableCell>{transaction.purchase_id as string}</TableCell>
-                  <TableCell>{formatTimestamp(transaction.timestamp as string)}</TableCell>
+                  <TableCell>{formatTimestamp(transaction.timestamp as number)}</TableCell>
                   <TableCell>{transaction.total_quantity as number}</TableCell>
-                  <TableCell>${(transaction.grand_total as number).toFixed(2)}</TableCell>
+                  <TableCell>${Number(transaction.grand_total).toFixed(2)}</TableCell>
                   <TableCell>{transaction.paid === true || transaction.paid === 'true' ? 'Yes' : 'No'}</TableCell>
                 </TableRow>
               ))}
