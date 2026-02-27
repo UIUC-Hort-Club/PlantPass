@@ -20,7 +20,7 @@ export default function CustomerOrderLookup() {
   const [orderId, setOrderId] = useState("");
   const [transaction, setTransaction] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [warning, setWarning] = useState("");
 
   useEffect(() => {
     if (orderIdFromUrl) {
@@ -31,12 +31,12 @@ export default function CustomerOrderLookup() {
 
   const handleLookup = async (id = orderId) => {
     if (!id.trim()) {
-      setError("Please enter an order ID");
+      setWarning("Please enter an order ID");
       return;
     }
 
     setLoading(true);
-    setError("");
+    setWarning("");
     setTransaction(null);
 
     try {
@@ -44,10 +44,10 @@ export default function CustomerOrderLookup() {
       if (result) {
         setTransaction(result);
       } else {
-        setError("Order not found");
+        setWarning("Order ID not found. Please check the order ID and try again.");
       }
     } catch {
-      setError("Failed to load order. Please check the order ID and try again.");
+      setWarning("Unable to load order. Please check the order ID and try again.");
     } finally {
       setLoading(false);
     }
@@ -127,8 +127,10 @@ export default function CustomerOrderLookup() {
                 value={orderId}
                 onChange={handleOrderIdChange}
                 placeholder="ABC-DEF"
-                error={!!error && !loading}
-                helperText={error && !loading ? error : ""}
+                helperText={warning && !loading ? warning : ""}
+                FormHelperTextProps={{
+                  sx: { color: 'warning.main' }
+                }}
                 inputProps={{
                   maxLength: 7,
                   style: { textTransform: 'uppercase' }
