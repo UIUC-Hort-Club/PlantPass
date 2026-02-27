@@ -22,7 +22,7 @@ import { transformDiscountsForOrder } from "../../utils/discountTransformer";
 import LoadingSpinner from "../common/LoadingSpinner";
 import { useFeatureToggles } from "../../contexts/FeatureToggleContext";
 import { validateQuantity, validatePrice, validateEmail, validateTransactionItems } from "../../utils/validation";
-import { Product, DiscountWithSelection, ReceiptData, ProductQuantities, ProductSubtotals } from "../../types";
+import { Product, Discount, ReceiptData, ProductQuantities, ProductSubtotals } from "../../types";
 
 function OrderEntry() {
   const { showSuccess, showWarning, showError } = useNotification();
@@ -30,10 +30,10 @@ function OrderEntry() {
   const receiptRef = useRef<HTMLDivElement>(null);
   
   const [products, setProducts] = useState<Product[]>([]);
-  const [discounts, setDiscounts] = useState<DiscountWithSelection[]>([]);
+  const [discounts, setDiscounts] = useState<Discount[]>([]);
   const [quantities, setQuantities] = useState<ProductQuantities>({});
   const [subtotals, setSubtotals] = useState<ProductSubtotals>({});
-  const [selectedDiscounts, setSelectedDiscounts] = useState<DiscountWithSelection[]>([]);
+  const [selectedDiscounts, setSelectedDiscounts] = useState<string[]>([]);
   const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
   const [voucher, setVoucher] = useState<string>("");
   const [customerEmail, setCustomerEmail] = useState("");
@@ -94,8 +94,7 @@ function OrderEntry() {
   const loadDiscounts = async () => {
     try {
       const discountsData = await getAllDiscounts();
-      const discountsWithSelection = transformDiscountsForOrder(discountsData, []);
-      setDiscounts(discountsWithSelection);
+      setDiscounts(discountsData);
     } catch (error) {
       console.error("Error loading discounts:", error);
       showError("Failed to load discounts. Using empty discount list.");
@@ -128,14 +127,11 @@ function OrderEntry() {
   };
 
   const handleDiscountToggle = (selectedDiscountNames: string[]) => {
-    setSelectedDiscounts(discounts.map(d => ({
-      ...d,
-      selected: selectedDiscountNames.includes(d.name)
-    })));
+    setSelectedDiscounts(selectedDiscountNames);
   };
 
   const handleEnterOrder = () => {
-    const discountsWithSelection = selectedDiscounts;
+    const discountsWithSelection = transformDiscountsForOrder(discounts, selectedDiscounts);
 
     const items = Object.entries(quantities)
       .map(([sku, quantity]) => {
@@ -197,7 +193,7 @@ function OrderEntry() {
       return;
     }
 
-    const discountsWithSelection = selectedDiscounts;
+    const discountsWithSelection = transformDiscountsForOrder(discounts, selectedDiscounts);
 
     const updateData = {
       items: Object.entries(quantities)
