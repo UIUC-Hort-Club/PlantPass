@@ -3,15 +3,22 @@ Tests for authentication middleware
 """
 import pytest
 import os
+import sys
 from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta
+
+# Mock AWS dependencies before importing
+sys.modules['boto3'] = MagicMock()
+sys.modules['botocore'] = MagicMock()
+sys.modules['botocore.exceptions'] = MagicMock()
+
+# Add handler to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../TransactionHandler'))
 
 
 @pytest.fixture
 def auth_middleware():
     """Import and return auth middleware"""
-    import sys
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../TransactionHandler'))
     from auth_middleware import (
         extract_token,
         verify_token,
@@ -88,7 +95,7 @@ class TestVerifyToken:
     def test_verify_valid_token(self, auth_middleware, jwt_secret):
         """Test verification of valid token"""
         # Mock jwt.decode to return a valid payload
-        with patch('auth_middleware.os.environ.get', return_value=jwt_secret), \
+        with patch('auth_middleware.JWT_SECRET', jwt_secret), \
              patch('auth_middleware.jwt.decode') as mock_decode:
             mock_decode.return_value = {'user_id': 'test-user', 'role': 'staff'}
             
@@ -102,7 +109,7 @@ class TestVerifyToken:
         """Test verification fails for expired token"""
         import jwt as jwt_lib
         
-        with patch('auth_middleware.os.environ.get', return_value=jwt_secret), \
+        with patch('auth_middleware.JWT_SECRET', jwt_secret), \
              patch('auth_middleware.jwt.decode') as mock_decode:
             mock_decode.side_effect = jwt_lib.ExpiredSignatureError()
             
@@ -116,7 +123,7 @@ class TestVerifyToken:
         """Test verification fails for invalid token"""
         import jwt as jwt_lib
         
-        with patch('auth_middleware.os.environ.get', return_value=jwt_secret), \
+        with patch('auth_middleware.JWT_SECRET', jwt_secret), \
              patch('auth_middleware.jwt.decode') as mock_decode:
             mock_decode.side_effect = jwt_lib.InvalidTokenError()
             
@@ -128,7 +135,7 @@ class TestVerifyToken:
     
     def test_verify_token_no_secret_configured(self, auth_middleware):
         """Test verification fails when JWT_SECRET not configured"""
-        with patch('auth_middleware.os.environ.get', return_value=None):
+        with patch('auth_middleware.JWT_SECRET', None):
             with pytest.raises(auth_middleware['AuthError']) as exc_info:
                 auth_middleware['verify_token']('any-token')
             
@@ -143,7 +150,7 @@ class TestRequireAuth:
         def test_handler(event, context):
             return {'statusCode': 200, 'body': 'Success'}
         
-        with patch('auth_middleware.os.environ.get', return_value=jwt_secret), \
+        with patch('auth_middleware.JWT_SECRET', jwt_secret), \
              patch('auth_middleware.jwt.decode') as mock_decode:
             mock_decode.return_value = {'user_id': 'test-user', 'role': 'staff'}
             
@@ -173,7 +180,7 @@ class TestRequireAuth:
         def test_handler(event, context):
             return {'statusCode': 200}
         
-        with patch('auth_middleware.os.environ.get', return_value=jwt_secret), \
+        with patch('auth_middleware.JWT_SECRET', jwt_secret), \
              patch('auth_middleware.jwt.decode') as mock_decode:
             mock_decode.return_value = {'user_id': 'admin-user', 'role': 'admin'}
             
@@ -190,7 +197,7 @@ class TestRequireAuth:
         def test_handler(event, context):
             return {'statusCode': 200}
         
-        with patch('auth_middleware.os.environ.get', return_value=jwt_secret), \
+        with patch('auth_middleware.JWT_SECRET', jwt_secret), \
              patch('auth_middleware.jwt.decode') as mock_decode:
             mock_decode.return_value = {'user_id': 'test-user', 'role': 'staff'}
             

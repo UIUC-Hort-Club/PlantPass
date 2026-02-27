@@ -7,10 +7,8 @@ import os
 from decimal import Decimal
 from typing import Dict, Any
 
-# Add Lambda directories to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../TransactionHandler'))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../ProductsHandler'))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../DiscountsHandler'))
+# Add shared directories to path (but NOT handler-specific directories)
+# Each test file will add its own handler directory to avoid conflicts
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../shared'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../layers/python'))
 

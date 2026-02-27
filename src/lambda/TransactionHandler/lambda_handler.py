@@ -57,7 +57,7 @@ def lambda_handler(event, context):
                 return create_response(e.status_code, {"error": e.message})
         
         path_params = event.get("pathParameters") or {}
-        body = json.loads(event.get("body", "{}"))
+        body = json.loads(event.get("body") or "{}")
 
         if route_key == "POST /transactions":
             # Validate transaction data
