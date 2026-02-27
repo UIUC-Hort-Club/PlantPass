@@ -3,15 +3,22 @@ Tests for ProductsHandler Lambda
 """
 import pytest
 import json
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
+import sys
+import os
+
+# Add handler to path before importing
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../ProductsHandler'))
 
 
 @pytest.fixture
 def products_handler():
-    """Import and return the products handler"""
-    import sys
-    import os
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../ProductsHandler'))
+    """Import and return the products handler with mocked dependencies"""
+    # Mock boto3 and botocore before importing
+    sys.modules['boto3'] = MagicMock()
+    sys.modules['botocore'] = MagicMock()
+    sys.modules['botocore.exceptions'] = MagicMock()
+    
     from lambda_handler import lambda_handler
     return lambda_handler
 
@@ -112,12 +119,17 @@ class TestReplaceProducts:
 class TestErrorHandling:
     def test_route_not_found(self, products_handler, api_gateway_event):
         """Test handling of unknown routes"""
-        event = api_gateway_event.copy()
-        event['routeKey'] = 'DELETE /products'
-        
-        response = products_handler(event, {})
-        
-        assert response['statusCode'] == 404
+        with patch('lambda_handler.extract_token') as mock_extract, \
+             patch('lambda_handler.verify_token') as mock_verify:
+            mock_verify.return_value = {'role': 'admin', 'user_id': 'test'}
+            
+            event = api_gateway_event.copy()
+            event['routeKey'] = 'DELETE /products'
+            event['headers']['Authorization'] = 'Bearer token'
+            
+            response = products_handler(event, {})
+            
+            assert response['statusCode'] == 404
     
     def test_database_error(self, products_handler, mock_database, api_gateway_event):
         """Test handling of database errors"""

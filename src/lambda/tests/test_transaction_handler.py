@@ -5,14 +5,19 @@ import pytest
 import json
 from unittest.mock import patch, MagicMock
 from decimal import Decimal
+import sys
+import os
+
+# Add handler to path and mock AWS dependencies before importing
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../TransactionHandler'))
+sys.modules['boto3'] = MagicMock()
+sys.modules['botocore'] = MagicMock()
+sys.modules['botocore.exceptions'] = MagicMock()
 
 
 @pytest.fixture
 def transaction_handler():
     """Import and return the transaction handler"""
-    import sys
-    import os
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../TransactionHandler'))
     from lambda_handler import lambda_handler
     return lambda_handler
 
