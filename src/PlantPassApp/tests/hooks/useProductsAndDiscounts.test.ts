@@ -6,6 +6,13 @@ import * as discountsApi from '../../src/api/discounts_interface/getAllDiscounts
 
 vi.mock('../../src/api/products_interface/getAllProducts');
 vi.mock('../../src/api/discounts_interface/getAllDiscounts');
+vi.mock('../../src/utils/productTransformer', () => ({
+  transformProductsData: (products: any[]) => products.map((p: any) => ({
+    SKU: p.SKU,
+    Name: p.item,
+    Price: p.price_ea,
+  })),
+}));
 
 describe('useProductsAndDiscounts', () => {
   beforeEach(() => {
@@ -31,7 +38,10 @@ describe('useProductsAndDiscounts', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    expect(result.current.products).toEqual(mockProducts);
+    // Products are transformed
+    expect(result.current.products).toEqual([
+      { SKU: 'PLANT-001', Name: 'Succulent', Price: 5.99 },
+    ]);
     expect(result.current.discounts).toEqual(mockDiscounts);
     expect(result.current.error).toBeNull();
   });
@@ -72,7 +82,7 @@ describe('useProductsAndDiscounts', () => {
     expect(getDiscountsSpy).toHaveBeenCalledTimes(1);
 
     // Call refresh
-    result.current.refresh();
+    await result.current.refresh();
 
     await waitFor(() => {
       expect(getProductsSpy).toHaveBeenCalledTimes(2);

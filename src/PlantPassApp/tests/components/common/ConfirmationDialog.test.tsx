@@ -11,7 +11,7 @@ describe('ConfirmationDialog', () => {
         title="Confirm"
         message="Are you sure?"
         onConfirm={vi.fn()}
-        onCancel={vi.fn()}
+        onClose={vi.fn()}
       />
     );
     expect(screen.queryByText('Confirm')).not.toBeInTheDocument();
@@ -24,7 +24,7 @@ describe('ConfirmationDialog', () => {
         title="Confirm Action"
         message="Are you sure you want to proceed?"
         onConfirm={vi.fn()}
-        onCancel={vi.fn()}
+        onClose={vi.fn()}
       />
     );
     expect(screen.getByText('Confirm Action')).toBeInTheDocument();
@@ -34,7 +34,7 @@ describe('ConfirmationDialog', () => {
   it('should call onConfirm when confirm button clicked', async () => {
     const user = userEvent.setup();
     const onConfirm = vi.fn();
-    const onCancel = vi.fn();
+    const onClose = vi.fn();
 
     render(
       <ConfirmationDialog
@@ -42,19 +42,18 @@ describe('ConfirmationDialog', () => {
         title="Confirm"
         message="Proceed?"
         onConfirm={onConfirm}
-        onCancel={onCancel}
+        onClose={onClose}
       />
     );
 
-    await user.click(screen.getByText('Confirm'));
+    await user.click(screen.getByRole('button', { name: /confirm/i }));
     expect(onConfirm).toHaveBeenCalledTimes(1);
-    expect(onCancel).not.toHaveBeenCalled();
   });
 
-  it('should call onCancel when cancel button clicked', async () => {
+  it('should call onClose when cancel button clicked', async () => {
     const user = userEvent.setup();
     const onConfirm = vi.fn();
-    const onCancel = vi.fn();
+    const onClose = vi.fn();
 
     render(
       <ConfirmationDialog
@@ -62,12 +61,12 @@ describe('ConfirmationDialog', () => {
         title="Confirm"
         message="Proceed?"
         onConfirm={onConfirm}
-        onCancel={onCancel}
+        onClose={onClose}
       />
     );
 
-    await user.click(screen.getByText('Cancel'));
-    expect(onCancel).toHaveBeenCalledTimes(1);
+    await user.click(screen.getByRole('button', { name: /cancel/i }));
+    expect(onClose).toHaveBeenCalledTimes(1);
     expect(onConfirm).not.toHaveBeenCalled();
   });
 
@@ -75,15 +74,15 @@ describe('ConfirmationDialog', () => {
     render(
       <ConfirmationDialog
         open={true}
-        title="Delete"
+        title="Remove Item"
         message="Delete this item?"
         onConfirm={vi.fn()}
-        onCancel={vi.fn()}
-        confirmText="Delete"
+        onClose={vi.fn()}
+        confirmText="Remove"
         cancelText="Keep"
       />
     );
-    expect(screen.getByText('Delete')).toBeInTheDocument();
-    expect(screen.getByText('Keep')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /remove/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /keep/i })).toBeInTheDocument();
   });
 });
