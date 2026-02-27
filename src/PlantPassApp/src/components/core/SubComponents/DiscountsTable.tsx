@@ -137,7 +137,7 @@ export default function DiscountsTable({
                   <TableCell>
                     <Chip
                       label={(() => {
-                        const value = discount.value || discount.value_off || discount.percent_off || 0;
+                        const value = discount.value || 0;
                         
                         if (discount.type === 'dollar') {
                           return `-$${Number(value).toFixed(2)}`;
