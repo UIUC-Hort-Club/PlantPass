@@ -75,8 +75,8 @@ function OrderLookup() {
     try {
       const methods = await getAllPaymentMethods();
       setPaymentMethods(methods);
-    } catch (err) {
-      console.error("Error loading payment methods:", err);
+    } catch {
+      // Failed to load payment methods
     }
   };
 
@@ -85,8 +85,8 @@ function OrderLookup() {
     try {
       const orders = await getRecentUnpaidTransactions(recentOrdersLimit);
       setRecentOrders(orders);
-    } catch (err) {
-      console.error("Error fetching recent orders:", err);
+    } catch {
+      // Failed to fetch recent orders
     } finally {
       setLoadingRecentOrders(false);
     }
@@ -171,8 +171,7 @@ function OrderLookup() {
 
       loadTransaction(transaction);
 
-    } catch (err) {
-      console.error("Error looking up transaction:", err);
+    } catch {
       setError("Transaction not found!");
       setTransactionLoaded(false);
     }
@@ -194,8 +193,7 @@ function OrderLookup() {
 
       loadTransaction(transaction);
 
-    } catch (err) {
-      console.error("Error loading transaction:", err);
+    } catch {
       setError("Transaction not found!");
       setTransactionLoaded(false);
     }
@@ -304,8 +302,7 @@ function OrderLookup() {
       showSuccess(`Order ${currentTransactionID} has been updated!`);
       setError("");
       
-    } catch (err) {
-      console.error("Error updating transaction:", err);
+    } catch {
       setError("Failed to update transaction. Please try again.");
     }
   };
@@ -321,8 +318,7 @@ function OrderLookup() {
       resetToInitialState();
       showSuccess("Transaction successfully deleted!");
       
-    } catch (err) {
-      console.error("Error deleting transaction:", err);
+    } catch {
       setError("Failed to delete transaction. Please try again.");
     }
   };
@@ -356,8 +352,7 @@ function OrderLookup() {
       
       resetToInitialState();
       
-    } catch (err) {
-      console.error("Error completing order:", err);
+    } catch {
       setError("Failed to complete order. Please try again.");
     }
   };

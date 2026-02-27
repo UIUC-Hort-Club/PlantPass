@@ -86,9 +86,8 @@ export default function DiscountsTable({
             </TableRow>
           </TableHead>
           <TableBody>
-            {safeDiscounts.map((discount, index) => {
+            {safeDiscounts.map((discount, _index) => {
               if (!discount || !discount.name) {
-                console.warn(`Invalid discount at index ${index}:`, discount);
                 return null;
               }
               

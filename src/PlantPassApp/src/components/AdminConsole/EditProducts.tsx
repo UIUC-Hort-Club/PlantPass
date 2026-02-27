@@ -67,8 +67,7 @@ export default function ProductTable() {
       setRows(formattedRows);
       setOriginalRows(JSON.parse(JSON.stringify(formattedRows)));
       setDeletedRows([]);
-    } catch (error) {
-      console.error("Error loading products:", error);
+    } catch {
       showError("Error loading products");
     } finally {
       setLoading(false);
@@ -79,8 +78,8 @@ export default function ProductTable() {
     try {
       const response = await getLockState('products');
       setIsLocked(response.isLocked || false);
-    } catch (error) {
-      console.error("Error checking lock state:", error);
+    } catch {
+      // Lock state check failed, continue with default
     }
   };
 
@@ -91,8 +90,7 @@ export default function ProductTable() {
       await setLockState('products', newLockState);
       setIsLocked(newLockState);
       showSuccess(newLockState ? "Products locked" : "Products unlocked");
-    } catch (error) {
-      console.error("Error toggling lock:", error);
+    } catch {
       showError("Error updating lock state");
     } finally {
       setLockLoading(false);
@@ -219,8 +217,7 @@ export default function ProductTable() {
         await checkLockState();
         return;
       }
-    } catch (error) {
-      console.error("Error checking lock state:", error);
+    } catch {
       showError("Error verifying lock state");
       return;
     }
@@ -270,8 +267,7 @@ export default function ProductTable() {
 
       await loadProducts();
       showSuccess(`Products saved successfully (${validProducts.length} products)`);
-    } catch (error) {
-      console.error("Error saving products:", error);
+    } catch {
       showError("Error saving products");
     } finally {
       setSaving(false);

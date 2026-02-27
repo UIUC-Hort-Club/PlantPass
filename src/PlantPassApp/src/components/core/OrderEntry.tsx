@@ -75,7 +75,7 @@ function OrderEntry() {
       setSubtotals(initialSubtotals);
       setVoucher("");
     } catch (error) {
-      console.error("Error loading products from database:", error);
+      console.error("Error loading products:", error);
       try {
         const data = [];
         setProducts(data);
@@ -83,8 +83,8 @@ function OrderEntry() {
         setQuantities(initialQuantities);
         setSubtotals(initialSubtotals);
         setVoucher("");
-      } catch (fallbackError) {
-        console.error("Error loading fallback products:", fallbackError);
+      } catch {
+        // Failed to load products
       }
     } finally {
       setLoading(false);
@@ -97,7 +97,7 @@ function OrderEntry() {
       const discountsWithSelection = transformDiscountsForOrder(discountsData, []);
       setDiscounts(discountsWithSelection);
     } catch (error) {
-      console.error("Error loading discounts from database:", error);
+      console.error("Error loading discounts:", error);
       showError("Failed to load discounts. Using empty discount list.");
       setDiscounts([]);
     }
@@ -185,9 +185,8 @@ function OrderEntry() {
         showSuccess("Your order has been successfully recorded.");
         setTransactionIDDialogOpen(true);
       })
-      .catch((error) => {
-        console.error("Error recording transaction:", error);
-        const errorMessage = error.message || "An error occurred while recording the transaction. Please try again.";
+      .catch((_error) => {
+        const errorMessage = _error.message || "An error occurred while recording the transaction. Please try again.";
         showError(errorMessage);
       });
   };
@@ -233,8 +232,7 @@ function OrderEntry() {
         });
         showSuccess(`Order ${currentTransactionID} has been updated!`);
       })
-      .catch((error) => {
-        console.error("Error updating transaction:", error);
+      .catch((_error) => {
         showError("An error occurred while updating the transaction. Please try again.");
       });
   };

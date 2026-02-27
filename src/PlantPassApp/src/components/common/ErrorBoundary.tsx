@@ -33,9 +33,6 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // Log error to console for debugging
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
-    
     this.setState(prevState => ({
       error,
       errorInfo,

@@ -223,8 +223,7 @@ function SalesAnalytics() {
       await loadAnalytics();
       
       showSuccess(`Successfully cleared ${result.cleared_count} transaction records`);
-    } catch (error) {
-      console.error("Error clearing records:", error);
+    } catch {
       showError("Failed to clear transaction records");
     } finally {
       setClearing(false);
@@ -302,7 +301,7 @@ function SalesAnalytics() {
     setOrderBy(property);
   };
 
-  const sortedTransactions = [...(analytics.transactions || [])].sort((a: any, b: any) => {
+  const sortedTransactions = [...(analytics.transactions || [])].sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
     let aValue, bValue;
     
     switch (orderBy) {
@@ -492,12 +491,12 @@ function SalesAnalytics() {
           <TableBody>
             {sortedTransactions
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((transaction: any) => (
-                <TableRow key={transaction.purchase_id}>
-                  <TableCell>{transaction.purchase_id}</TableCell>
-                  <TableCell>{formatTimestamp(transaction.timestamp)}</TableCell>
-                  <TableCell>{transaction.total_quantity}</TableCell>
-                  <TableCell>${transaction.grand_total.toFixed(2)}</TableCell>
+              .map((transaction: Record<string, unknown>) => (
+                <TableRow key={transaction.purchase_id as string}>
+                  <TableCell>{transaction.purchase_id as string}</TableCell>
+                  <TableCell>{formatTimestamp(transaction.timestamp as string)}</TableCell>
+                  <TableCell>{transaction.total_quantity as number}</TableCell>
+                  <TableCell>${(transaction.grand_total as number).toFixed(2)}</TableCell>
                   <TableCell>{transaction.paid === true || transaction.paid === 'true' ? 'Yes' : 'No'}</TableCell>
                 </TableRow>
               ))}

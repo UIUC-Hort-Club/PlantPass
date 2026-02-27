@@ -34,8 +34,8 @@ export default function ConfirmationDialog({
       setLoading(true);
       await onConfirm();
       handleClose();
-    } catch (error) {
-      console.error("Confirmation action failed:", error);
+    } catch {
+      // Confirmation action failed
     } finally {
       setLoading(false);
     }

@@ -20,7 +20,6 @@ export async function requestPasswordReset(): Promise<PasswordResetResponse> {
     const data = await response.json() as PasswordResetResponse;
     return data;
   } catch (error) {
-    console.error("Password reset request error:", error);
     throw error;
   }
 }

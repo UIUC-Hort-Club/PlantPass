@@ -62,8 +62,8 @@ export default function FeatureToggles() {
       
       try {
         await saveFeatureToggles(features);
-      } catch (apiError) {
-        console.warn("API save failed, using localStorage only:", apiError);
+      } catch {
+        // API save failed, using localStorage only
       }
       
       // Always save to localStorage as backup

@@ -56,8 +56,7 @@ export default function EditPaymentMethods() {
       setRows(formattedRows);
       setOriginalRows(JSON.parse(JSON.stringify(formattedRows)));
       setDeletedRows([]);
-    } catch (error) {
-      console.error("Error loading payment methods:", error);
+    } catch {
       showError("Error loading payment methods");
     } finally {
       setLoading(false);
@@ -68,8 +67,8 @@ export default function EditPaymentMethods() {
     try {
       const response = await getLockState('payment_methods');
       setIsLocked(response.isLocked || false);
-    } catch (error) {
-      console.error("Error checking lock state:", error);
+    } catch {
+      // Lock state check failed, continue with default
     }
   };
 
@@ -80,8 +79,7 @@ export default function EditPaymentMethods() {
       await setLockState('payment_methods', newLockState);
       setIsLocked(newLockState);
       showSuccess(newLockState ? "Payment methods locked" : "Payment methods unlocked");
-    } catch (error) {
-      console.error("Error toggling lock:", error);
+    } catch {
       showError("Error updating lock state");
     } finally {
       setLockLoading(false);
@@ -170,8 +168,7 @@ export default function EditPaymentMethods() {
         await checkLockState();
         return;
       }
-    } catch (error) {
-      console.error("Error checking lock state:", error);
+    } catch {
       showError("Error verifying lock state");
       return;
     }
@@ -190,8 +187,7 @@ export default function EditPaymentMethods() {
 
       await loadPaymentMethods();
       showSuccess(`Payment methods saved successfully (${validMethods.length} methods)`);
-    } catch (error) {
-      console.error("Error saving payment methods:", error);
+    } catch {
       showError("Error saving payment methods");
     } finally {
       setSaving(false);

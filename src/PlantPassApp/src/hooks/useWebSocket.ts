@@ -112,8 +112,8 @@ export function useWebSocket(
           if (onMessageRef.current) {
             onMessageRef.current(data);
           }
-        } catch (error) {
-          console.error('WebSocket: Failed to parse message', error);
+        } catch {
+          // Failed to parse WebSocket message
         }
       };
 
@@ -144,7 +144,7 @@ export function useWebSocket(
 
       wsRef.current = ws;
     } catch (error) {
-      console.error('WebSocket: Failed to create connection', error);
+      console.error('WebSocket connection error:', error);
       setConnectionError(error instanceof Error ? error.message : 'Unknown error');
     }
   }, [url, enabled, reconnectInterval, maxReconnectAttempts]);
@@ -154,8 +154,7 @@ export function useWebSocket(
       try {
         wsRef.current.send(JSON.stringify(data));
         return true;
-      } catch (error) {
-        console.error('WebSocket: Failed to send message', error);
+      } catch {
         return false;
       }
     }

@@ -48,7 +48,6 @@ export function useProductsAndDiscounts(): UseProductsAndDiscountsReturn {
       setDiscounts(discountsData);
       setLastFetched(Date.now());
     } catch (err) {
-      console.error('Error loading products and discounts:', err);
       setError(err instanceof Error ? err.message : 'Failed to load data');
       
       // Keep existing data if refresh fails

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode, ReactElement } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { getFeatureToggles } from "../api/feature_toggles_interface/getFeatureToggles";
 import type { FeatureToggles } from "../types";
 

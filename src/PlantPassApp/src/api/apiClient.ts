@@ -151,7 +151,6 @@ export async function apiRequest<T = unknown>(
     // Otherwise, parse and create friendly error
     const error = err instanceof Error ? err : new Error('Unknown error');
     const friendlyMessage = parseErrorMessage(error, undefined);
-    console.error(`API request failed: ${method} ${endpoint}`, err);
     throw new Error(friendlyMessage);
   }
 }
@@ -189,8 +188,6 @@ export async function apiRequestWithRetry<T = unknown>(
       // Exponential backoff: 1s, 2s, 4s
       const delay = Math.pow(2, attempt) * 1000;
       await new Promise(resolve => setTimeout(resolve, delay));
-      
-      console.log(`Retrying request (attempt ${attempt + 2}/${maxRetries})...`);
     }
   }
   

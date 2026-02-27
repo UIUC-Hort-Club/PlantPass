@@ -76,8 +76,7 @@ export default function DiscountTable() {
       setRows(formattedRows);
       setOriginalRows(JSON.parse(JSON.stringify(formattedRows)));
       setDeletedRows([]);
-    } catch (error) {
-      console.error("Error loading discounts:", error);
+    } catch {
       showError("Error loading discounts");
     } finally {
       setLoading(false);
@@ -88,8 +87,8 @@ export default function DiscountTable() {
     try {
       const response = await getLockState('discounts');
       setIsLocked(response.locked || response.isLocked || false);
-    } catch (error) {
-      console.error("Error checking lock state:", error);
+    } catch {
+      // Lock state check failed, continue with default
     }
   };
 
@@ -100,8 +99,7 @@ export default function DiscountTable() {
       await setLockState('discounts', newLockState);
       setIsLocked(newLockState);
       showSuccess(newLockState ? "Discounts locked" : "Discounts unlocked");
-    } catch (error) {
-      console.error("Error toggling lock:", error);
+    } catch {
       showError("Error updating lock state");
     } finally {
       setLockLoading(false);
@@ -239,8 +237,7 @@ export default function DiscountTable() {
         await checkLockState();
         return;
       }
-    } catch (error) {
-      console.error("Error checking lock state:", error);
+    } catch {
       showError("Error verifying lock state");
       return;
     }
@@ -263,8 +260,7 @@ export default function DiscountTable() {
 
       await loadDiscounts();
       showNotification(`Discounts saved successfully (${validDiscounts.length} discounts)`);
-    } catch (error) {
-      console.error("Error saving discounts:", error);
+    } catch {
       showNotification("Error saving discounts", "error");
     } finally {
       setSaving(false);

@@ -27,7 +27,6 @@ export async function clearAllTransactions(): Promise<ClearTransactionsResponse>
     const result = await response.json() as ClearTransactionsResponse;
     return result;
   } catch (err) {
-    console.error("Error clearing transactions:", err);
     throw err;
   }
 }
