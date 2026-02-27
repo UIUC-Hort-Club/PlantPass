@@ -29,7 +29,7 @@ import { getAllPaymentMethods } from "../../api/payment_methods_interface/getAll
 import { useNotification } from "../../contexts/NotificationContext";
 import { formatOrderId } from "../../utils/orderIdFormatter";
 import { useFeatureToggles } from "../../contexts/FeatureToggleContext";
-import { Transaction, PaymentMethod, DiscountWithSelection, ReceiptData, ProductQuantities, ProductSubtotals, Product } from "../../types";
+import { Transaction, PaymentMethod, Discount, ReceiptData, ProductQuantities, ProductSubtotals, Product } from "../../types";
 
 function OrderLookup() {
   const { showSuccess } = useNotification();
@@ -37,7 +37,7 @@ function OrderLookup() {
   
   const [orderId, setOrderId] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
-  const [discounts, setDiscounts] = useState<DiscountWithSelection[]>([]);
+  const [discounts, setDiscounts] = useState<Discount[]>([]);
   const [quantities, setQuantities] = useState<ProductQuantities>({});
   const [subtotals, setSubtotals] = useState<ProductSubtotals>({});
   const [selectedDiscounts, setSelectedDiscounts] = useState<string[]>([]);
