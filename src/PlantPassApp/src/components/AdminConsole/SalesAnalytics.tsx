@@ -109,11 +109,12 @@ function SalesAnalytics() {
       console.error("Error loading analytics:", error);
       let errorMessage = "Failed to load analytics data";
       
-      if (error.message.includes("500")) {
+      const err = error as Error;
+      if (err.message?.includes("500")) {
         errorMessage = "Server error - please try again later";
-      } else if (error.message.includes("404")) {
+      } else if (err.message?.includes("404")) {
         errorMessage = "Analytics endpoint not found";
-      } else if (error.message.includes("Failed to fetch")) {
+      } else if (err.message?.includes("Failed to fetch")) {
         errorMessage = "Network error - check your connection";
       }
       
