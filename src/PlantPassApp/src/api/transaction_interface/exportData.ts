@@ -1,4 +1,4 @@
-import { API_URL } from '../config';
+import { apiRequest } from '../apiClient';
 
 interface ExportDataResponse {
   filename: string;
@@ -11,13 +11,10 @@ interface ExportDataResponse {
  * @returns Object with filename, content (base64), and content_type
  */
 export const exportData = async (): Promise<ExportDataResponse> => {
-  const response = await fetch(`${API_URL}/transactions/export-data`);
+  const data = await apiRequest<{ filename: string; content: string; content_type: string }>(
+    '/transactions/export-data'
+  );
   
-  if (!response.ok) {
-    throw new Error('Export failed');
-  }
-  
-  const data = await response.json() as { filename: string; content: string; content_type: string };
   return {
     filename: data.filename,
     content: data.content,
