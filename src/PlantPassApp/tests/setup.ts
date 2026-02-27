@@ -37,10 +37,15 @@ global.IntersectionObserver = class IntersectionObserver {
     return [];
   }
   unobserve() {}
-} as any;
+} as unknown as typeof IntersectionObserver;
 
 // Mock window.APP_CONFIG
-(window as any).APP_CONFIG = {
+interface AppConfig {
+  API_ENDPOINT: string;
+  WEBSOCKET_URL: string;
+}
+
+(window as typeof window & { APP_CONFIG: AppConfig }).APP_CONFIG = {
   API_ENDPOINT: 'http://localhost:3000',
   WEBSOCKET_URL: 'ws://localhost:3001',
 };

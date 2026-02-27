@@ -7,11 +7,12 @@ import * as discountsApi from '../../src/api/discounts_interface/getAllDiscounts
 vi.mock('../../src/api/products_interface/getAllProducts');
 vi.mock('../../src/api/discounts_interface/getAllDiscounts');
 vi.mock('../../src/utils/productTransformer', () => ({
-  transformProductsData: (products: any[]) => products.map((p: any) => ({
-    SKU: p.SKU,
-    Name: p.item,
-    Price: p.price_ea,
-  })),
+  transformProductsData: (products: Array<{ SKU: string; item: string; price_ea: number }>) => 
+    products.map((p) => ({
+      SKU: p.SKU,
+      Name: p.item,
+      Price: p.price_ea,
+    })),
 }));
 
 describe('useProductsAndDiscounts', () => {

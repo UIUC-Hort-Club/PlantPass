@@ -37,7 +37,7 @@ describe('Transaction API', () => {
         },
       };
 
-      (apiRequest as any).mockResolvedValueOnce(mockResponse);
+      vi.mocked(apiRequest).mockResolvedValueOnce(mockResponse);
 
       const result = await createTransaction(mockRequest);
 
@@ -82,7 +82,7 @@ describe('Transaction API', () => {
         },
       };
 
-      (apiRequest as any).mockResolvedValueOnce(mockResponse);
+      vi.mocked(apiRequest).mockResolvedValueOnce(mockResponse);
 
       const result = await createTransaction(mockRequest);
 
@@ -116,7 +116,7 @@ describe('Transaction API', () => {
         },
       };
 
-      (apiRequest as any).mockResolvedValueOnce(mockResponse);
+      vi.mocked(apiRequest).mockResolvedValueOnce(mockResponse);
 
       await createTransaction(mockRequest);
 
@@ -138,7 +138,7 @@ describe('Transaction API', () => {
         voucher: 0,
       };
 
-      (apiRequest as any).mockRejectedValueOnce(new Error('Validation failed'));
+      vi.mocked(apiRequest).mockRejectedValueOnce(new Error('Validation failed'));
 
       await expect(createTransaction(mockRequest)).rejects.toThrow('Validation failed');
     });

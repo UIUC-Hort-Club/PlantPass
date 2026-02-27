@@ -16,7 +16,7 @@ describe('Discounts API', () => {
         { name: '$5 Off', type: 'dollar' as const, value: 5, sort_order: 2 },
       ];
 
-      (apiRequest as any).mockResolvedValueOnce(mockDiscounts);
+      vi.mocked(apiRequest).mockResolvedValueOnce(mockDiscounts);
 
       const result = await getAllDiscounts();
 
@@ -25,7 +25,7 @@ describe('Discounts API', () => {
     });
 
     it('should handle empty discount list', async () => {
-      (apiRequest as any).mockResolvedValueOnce([]);
+      vi.mocked(apiRequest).mockResolvedValueOnce([]);
 
       const result = await getAllDiscounts();
 
@@ -33,7 +33,7 @@ describe('Discounts API', () => {
     });
 
     it('should propagate API errors', async () => {
-      (apiRequest as any).mockRejectedValueOnce(new Error('Failed to fetch'));
+      vi.mocked(apiRequest).mockRejectedValueOnce(new Error('Failed to fetch'));
 
       await expect(getAllDiscounts()).rejects.toThrow('Failed to fetch');
     });

@@ -49,7 +49,7 @@ describe('Transaction Flow Integration', () => {
       },
     };
 
-    (apiRequest as any).mockResolvedValueOnce(createResponse);
+    vi.mocked(apiRequest).mockResolvedValueOnce(createResponse);
     const created = await createTransaction(createRequest);
     
     expect(created.purchase_id).toBe('ABC-DEF');
@@ -66,7 +66,7 @@ describe('Transaction Flow Integration', () => {
       receipt: createResponse.transaction.receipt,
     };
 
-    (apiRequest as any).mockResolvedValueOnce(readResponse);
+    vi.mocked(apiRequest).mockResolvedValueOnce(readResponse);
     const retrieved = await readTransaction('ABC-DEF');
     
     expect(retrieved.purchase_id).toBe('ABC-DEF');
@@ -87,7 +87,7 @@ describe('Transaction Flow Integration', () => {
       },
     };
 
-    (apiRequest as any).mockResolvedValueOnce(updateResponse);
+    vi.mocked(apiRequest).mockResolvedValueOnce(updateResponse);
     const updated = await updateTransaction('ABC-DEF', updateRequest);
     
     expect(updated.purchase_id).toBe('ABC-DEF');
@@ -102,7 +102,7 @@ describe('Transaction Flow Integration', () => {
     );
 
     // 4. Delete transaction
-    (apiRequest as any).mockResolvedValueOnce(true);
+    vi.mocked(apiRequest).mockResolvedValueOnce(true);
     const deleted = await deleteTransaction('ABC-DEF');
     
     expect(deleted).toBe(true);
@@ -138,7 +138,7 @@ describe('Transaction Flow Integration', () => {
       },
     };
 
-    (apiRequest as any).mockResolvedValueOnce(createResponse);
+    vi.mocked(apiRequest).mockResolvedValueOnce(createResponse);
     const created = await createTransaction(createRequest);
     
     expect(created.receipt.subtotal).toBe(46.97);
@@ -167,7 +167,7 @@ describe('Transaction Flow Integration', () => {
       },
     };
 
-    (apiRequest as any).mockResolvedValueOnce(createResponse);
+    vi.mocked(apiRequest).mockResolvedValueOnce(createResponse);
     const created = await createTransaction(createRequest);
     
     expect(created.purchase_id).toBe('ABC-DEF');
@@ -187,7 +187,7 @@ describe('Transaction Flow Integration', () => {
       voucher: 0,
     };
 
-    (apiRequest as any).mockRejectedValueOnce(
+    vi.mocked(apiRequest).mockRejectedValueOnce(
       new Error('Invalid transaction data\nAt least one item is required')
     );
 
@@ -206,7 +206,7 @@ describe('Transaction Flow Integration', () => {
       voucher: 0,
     };
 
-    (apiRequest as any).mockRejectedValueOnce(
+    vi.mocked(apiRequest).mockRejectedValueOnce(
       new Error('Network error. Please check your internet connection and try again.')
     );
 

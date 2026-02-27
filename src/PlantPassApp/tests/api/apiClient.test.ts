@@ -1,20 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { apiRequest, apiRequestWithRetry, clearAuth } from '../../src/api/apiClient';
 
-// Add waitFor helper
-const waitFor = async (callback: () => void, timeout = 1000) => {
-  const startTime = Date.now();
-  while (Date.now() - startTime < timeout) {
-    try {
-      callback();
-      return;
-    } catch {
-      await new Promise(resolve => setTimeout(resolve, 50));
-    }
-  }
-  callback(); // Final attempt
-};
-
 describe('apiClient', () => {
   beforeEach(() => {
     global.fetch = vi.fn();
@@ -28,7 +14,7 @@ describe('apiClient', () => {
   describe('apiRequest', () => {
     it('should make successful GET request', async () => {
       const mockData = { data: 'test' };
-      (global.fetch as any).mockResolvedValueOnce({
+      vi.mocked(global.fetch).mockResolvedValueOnce({
         ok: true,
         status: 200,
         json: async () => mockData,
@@ -44,7 +30,7 @@ describe('apiClient', () => {
 
     it('should include auth token when available', async () => {
       localStorage.setItem('admin_token', 'test-token');
-      (global.fetch as any).mockResolvedValueOnce({
+      vi.mocked(global.fetch).mockResolvedValueOnce({
         ok: true,
         status: 200,
         json: async () => ({}),
@@ -63,7 +49,7 @@ describe('apiClient', () => {
 
     it('should handle POST request with body', async () => {
       const body = { name: 'test' };
-      (global.fetch as any).mockResolvedValueOnce({
+      vi.mocked(global.fetch).mockResolvedValueOnce({
         ok: true,
         status: 201,
         json: async () => ({ success: true }),
@@ -80,10 +66,10 @@ describe('apiClient', () => {
     });
 
     it('should handle 204 No Content', async () => {
-      (global.fetch as any).mockResolvedValueOnce({
+      vi.mocked(global.fetch).mockResolvedValueOnce({
         ok: true,
         status: 204,
-      });
+      } as Response);
 
       const result = await apiRequest('/test', { method: 'DELETE' });
       expect(result).toBe(true);
@@ -92,14 +78,14 @@ describe('apiClient', () => {
     it('should handle 401 and clear auth', async () => {
       localStorage.setItem('admin_token', 'test-token');
       const originalLocation = window.location;
-      delete (window as any).location;
-      window.location = { ...originalLocation, href: '' } as any;
+      delete (window as Record<string, unknown>).location;
+      (window as Record<string, unknown>).location = { ...originalLocation, href: '' };
 
-      (global.fetch as any).mockResolvedValueOnce({
+      vi.mocked(global.fetch).mockResolvedValueOnce({
         ok: false,
         status: 401,
         json: async () => ({ error: 'Unauthorized' }),
-      });
+      } as Response);
 
       await expect(apiRequest('/test')).rejects.toThrow();
       expect(localStorage.getItem('admin_token')).toBeNull();
@@ -108,30 +94,30 @@ describe('apiClient', () => {
     });
 
     it('should handle 403 Forbidden', async () => {
-      (global.fetch as any).mockResolvedValueOnce({
+      vi.mocked(global.fetch).mockResolvedValueOnce({
         ok: false,
         status: 403,
         json: async () => ({ message: 'Access denied' }),
-      });
+      } as Response);
 
       await expect(apiRequest('/test')).rejects.toThrow('Access denied');
     });
 
     it('should handle 400 with validation errors', async () => {
-      (global.fetch as any).mockResolvedValueOnce({
+      vi.mocked(global.fetch).mockResolvedValueOnce({
         ok: false,
         status: 400,
         json: async () => ({
           message: 'Validation failed',
           errors: ['Field is required', 'Invalid format'],
         }),
-      });
+      } as Response);
 
       await expect(apiRequest('/test')).rejects.toThrow('Validation failed');
     });
 
     it('should handle network errors', async () => {
-      (global.fetch as any).mockRejectedValueOnce(new Error('Failed to fetch'));
+      vi.mocked(global.fetch).mockRejectedValueOnce(new Error('Failed to fetch'));
 
       await expect(apiRequest('/test')).rejects.toThrow('Failed to fetch');
     });
@@ -145,18 +131,18 @@ describe('apiClient', () => {
 
   describe('apiRequestWithRetry', () => {
     it('should exist and be callable', async () => {
-      (global.fetch as any).mockResolvedValueOnce({
+      vi.mocked(global.fetch).mockResolvedValueOnce({
         ok: true,
         status: 200,
         json: async () => ({ success: true }),
-      });
+      } as Response);
 
       const result = await apiRequestWithRetry('/test');
       expect(result).toEqual({ success: true });
     });
 
     it('should handle errors', async () => {
-      (global.fetch as any).mockRejectedValue(new Error('Server error'));
+      vi.mocked(global.fetch).mockRejectedValue(new Error('Server error'));
 
       await expect(apiRequestWithRetry('/test', {}, 1)).rejects.toThrow();
     });

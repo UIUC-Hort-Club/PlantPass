@@ -16,7 +16,7 @@ describe('Products API', () => {
         { SKU: 'PLANT-002', item: 'Cactus', price_ea: 8.50, sort_order: 2 },
       ];
 
-      (apiRequest as any).mockResolvedValueOnce(mockProducts);
+      vi.mocked(apiRequest).mockResolvedValueOnce(mockProducts);
 
       const result = await getAllProducts();
 
@@ -25,7 +25,7 @@ describe('Products API', () => {
     });
 
     it('should handle empty product list', async () => {
-      (apiRequest as any).mockResolvedValueOnce([]);
+      vi.mocked(apiRequest).mockResolvedValueOnce([]);
 
       const result = await getAllProducts();
 
@@ -33,7 +33,7 @@ describe('Products API', () => {
     });
 
     it('should propagate API errors', async () => {
-      (apiRequest as any).mockRejectedValueOnce(new Error('Network error'));
+      vi.mocked(apiRequest).mockRejectedValueOnce(new Error('Network error'));
 
       await expect(getAllProducts()).rejects.toThrow('Network error');
     });
