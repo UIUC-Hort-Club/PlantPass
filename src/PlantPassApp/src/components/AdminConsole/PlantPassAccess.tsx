@@ -25,7 +25,7 @@ export default function PlantPassAccess() {
   const loadPassphrase = async () => {
     try {
       setLoading(true);
-      const data = await apiRequest("/plantpass-access");
+      const data = await apiRequest("/plantpass-access") as { passphrase?: string };
       setPassphrase(data.passphrase || "");
     } catch (error) {
       console.error("Error loading passphrase:", error);

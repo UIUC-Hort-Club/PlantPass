@@ -28,15 +28,27 @@ import { replaceAllDiscounts } from "../../api/discounts_interface/replaceAllDis
 import { getLockState } from "../../api/lock_interface/getLockState";
 import { setLockState } from "../../api/lock_interface/setLockState";
 import { useNotification } from "../../contexts/NotificationContext";
+import { DiscountType } from "../../types";
 import { formatPriceInput, handlePriceBlur } from "../../utils/priceFormatter";
 import LoadingSpinner from "../common/LoadingSpinner";
+
+interface DiscountRow {
+  id: string;
+  name: string;
+  type: string;
+  percent: string;
+  value: string;
+  sortOrder: number;
+  isNew: boolean;
+  originalName?: string;
+}
 
 export default function DiscountTable() {
   const { showSuccess, showError, showInfo } = useNotification();
   
-  const [rows, setRows] = useState([]);
-  const [originalRows, setOriginalRows] = useState([]);
-  const [deletedRows, setDeletedRows] = useState([]);
+  const [rows, setRows] = useState<DiscountRow[]>([]);
+  const [originalRows, setOriginalRows] = useState<DiscountRow[]>([]);
+  const [deletedRows, setDeletedRows] = useState<DiscountRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
@@ -75,7 +87,7 @@ export default function DiscountTable() {
   const checkLockState = async () => {
     try {
       const response = await getLockState('discounts');
-      setIsLocked(response.isLocked || false);
+      setIsLocked(response.locked || response.isLocked || false);
     } catch (error) {
       console.error("Error checking lock state:", error);
     }
@@ -239,7 +251,7 @@ export default function DiscountTable() {
         .filter(row => row.name && row.name.trim() !== '')
         .map(row => ({
           name: row.name,
-          type: row.type,
+          type: row.type as DiscountType,
           value:
             row.type === "percent"
               ? parseInt(row.percent, 10) || 0

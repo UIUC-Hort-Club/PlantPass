@@ -31,7 +31,7 @@ export default function PlantPassAccessModal({ open, onClose, onSuccess }) {
       const response = await apiRequest("/plantpass-access/verify", {
         method: "POST",
         body: { passphrase },
-      });
+      }) as { token?: string };
       
       // Store the staff token returned from verification
       if (response.token) {

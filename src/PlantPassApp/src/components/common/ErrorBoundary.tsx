@@ -1,13 +1,24 @@
-import { Component } from 'react';
+import { Component, ReactNode, ErrorInfo } from 'react';
 import { Box, Button, Typography, Paper, Alert } from '@mui/material';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+
+interface ErrorBoundaryProps {
+  children: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+  errorInfo: ErrorInfo | null;
+  errorCount: number;
+}
 
 /**
  * Error Boundary to catch and handle React errors gracefully
  * Prevents the entire app from crashing due to component errors
  */
-class ErrorBoundary extends Component {
-  constructor(props) {
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = {
       hasError: false,
@@ -17,11 +28,11 @@ class ErrorBoundary extends Component {
     };
   }
 
-  static getDerivedStateFromError() {
+  static getDerivedStateFromError(): Partial<ErrorBoundaryState> {
     return { hasError: true };
   }
 
-  componentDidCatch(error, errorInfo) {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // Log error to console for debugging
     console.error('ErrorBoundary caught an error:', error, errorInfo);
     
@@ -35,7 +46,7 @@ class ErrorBoundary extends Component {
     // Example: Sentry.captureException(error, { extra: errorInfo });
   }
 
-  handleReset = () => {
+  handleReset = (): void => {
     this.setState({
       hasError: false,
       error: null,
@@ -48,7 +59,7 @@ class ErrorBoundary extends Component {
     }
   };
 
-  render() {
+  render(): ReactNode {
     if (this.state.hasError) {
       return (
         <Box

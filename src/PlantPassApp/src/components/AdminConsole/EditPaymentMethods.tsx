@@ -182,6 +182,7 @@ export default function EditPaymentMethods() {
         .filter(row => row.name && row.name.trim() !== '')
         .map(row => ({
           name: row.name.trim(),
+          enabled: true,
           sort_order: row.sortOrder
         }));
 

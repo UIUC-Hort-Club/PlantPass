@@ -9,6 +9,7 @@ export interface ProductDTO {
   SKU: string;
   item: string;
   price_ea: number;
+  sort_order?: number;
 }
 
 /**
@@ -23,7 +24,7 @@ export interface Product {
 /**
  * Discount types supported by the system
  */
-export type DiscountType = 'percentage' | 'fixed';
+export type DiscountType = 'percentage' | 'fixed' | 'percent' | 'dollar';
 
 /**
  * Discount configuration
@@ -32,6 +33,7 @@ export interface Discount {
   name: string;
   type: DiscountType;
   value: number;
+  sort_order?: number;
 }
 
 /**
@@ -39,6 +41,7 @@ export interface Discount {
  */
 export interface DiscountWithSelection extends Discount {
   selected: boolean;
+  amount_off?: number;
 }
 
 /**
@@ -47,6 +50,7 @@ export interface DiscountWithSelection extends Discount {
 export interface PaymentMethod {
   name: string;
   enabled: boolean;
+  sort_order?: number;
 }
 
 /**
@@ -64,7 +68,7 @@ export interface TransactionItem {
  */
 export interface ReceiptTotals {
   subtotal: number;
-  discount: number;
+  discount?: number;
   grandTotal: number;
 }
 
@@ -83,9 +87,14 @@ export interface CreateTransactionRequest {
  * Transaction data for updating an existing transaction
  */
 export interface UpdateTransactionRequest {
-  items: TransactionItem[];
-  discounts: DiscountWithSelection[];
-  voucher: number;
+  items?: TransactionItem[];
+  discounts?: DiscountWithSelection[];
+  voucher?: number;
+  payment?: {
+    method: string;
+    paid: boolean;
+  };
+  email?: string;
 }
 
 /**
@@ -146,6 +155,7 @@ export type TokenType = 'admin_token' | 'staff_token';
  */
 export interface LockState {
   locked: boolean;
+  isLocked?: boolean; // Legacy support
 }
 
 /**
@@ -188,24 +198,32 @@ export interface ResetPasswordRequest {
  * Sales analytics data
  */
 export interface SalesAnalytics {
-  totalRevenue: number;
-  totalTransactions: number;
-  averageOrderValue: number;
-  topProducts: Array<{
+  totalRevenue?: number;
+  totalTransactions?: number;
+  averageOrderValue?: number;
+  topProducts?: Array<{
     SKU: string;
     name: string;
     quantity: number;
     revenue: number;
   }>;
-  revenueByDay: Array<{
+  revenueByDay?: Array<{
     date: string;
     revenue: number;
   }>;
-  discountUsage: Array<{
+  discountUsage?: Array<{
     name: string;
     timesUsed: number;
     totalDiscount: number;
   }>;
+  // Legacy field names from backend
+  total_sales?: number;
+  total_orders?: number;
+  total_units_sold?: number;
+  average_items_per_order?: number;
+  average_order_value?: number;
+  sales_over_time?: Record<string, unknown>;
+  transactions?: unknown[];
 }
 
 // ============================================================================
@@ -274,6 +292,18 @@ export interface ReceiptData {
   totals: ReceiptTotals;
   discounts: DiscountWithSelection[];
   voucher: number;
+}
+
+/**
+ * Receipt component props
+ */
+export interface ReceiptProps {
+  totals?: ReceiptTotals;
+  transactionId?: string;
+  discounts?: DiscountWithSelection[];
+  voucher?: number;
+  transaction?: Transaction;
+  readOnly?: boolean;
 }
 
 // ============================================================================

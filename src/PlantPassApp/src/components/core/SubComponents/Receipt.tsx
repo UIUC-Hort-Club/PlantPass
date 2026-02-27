@@ -13,8 +13,9 @@ import {
   Stack,
   Alert,
 } from "@mui/material";
+import { ReceiptProps } from "../../../types";
 
-function Receipt({ totals, transactionId, discounts = [], voucher = 0, transaction, readOnly = false }) {
+function Receipt({ totals, transactionId, discounts = [], voucher = 0, transaction, readOnly = false }: ReceiptProps) {
   // If transaction object is provided, extract data from it
   let displayTransactionId = transactionId;
   let displayDiscounts = discounts;

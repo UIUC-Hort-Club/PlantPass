@@ -18,6 +18,15 @@ export default function PasswordField({
   fullWidth = true,
   variant = "outlined",
   ...props
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  size?: "small" | "medium";
+  fullWidth?: boolean;
+  variant?: "outlined" | "filled" | "standard";
+  [key: string]: unknown;
 }) {
   const [showPassword, setShowPassword] = useState(false);
 

@@ -29,35 +29,36 @@ import { getAllPaymentMethods } from "../../api/payment_methods_interface/getAll
 import { useNotification } from "../../contexts/NotificationContext";
 import { formatOrderId } from "../../utils/orderIdFormatter";
 import { useFeatureToggles } from "../../contexts/FeatureToggleContext";
+import { Transaction, PaymentMethod, DiscountWithSelection, ReceiptData, ProductQuantities, ProductSubtotals, Product } from "../../types";
 
 function OrderLookup() {
   const { showSuccess } = useNotification();
   const { features } = useFeatureToggles();
   
   const [orderId, setOrderId] = useState("");
-  const [products, setProducts] = useState([]);
-  const [discounts, setDiscounts] = useState([]);
-  const [quantities, setQuantities] = useState({});
-  const [subtotals, setSubtotals] = useState({});
-  const [selectedDiscounts, setSelectedDiscounts] = useState([]);
-  const [receiptData, setReceiptData] = useState(null);
-  const [voucher, setVoucher] = useState("");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [discounts, setDiscounts] = useState<DiscountWithSelection[]>([]);
+  const [quantities, setQuantities] = useState<ProductQuantities>({});
+  const [subtotals, setSubtotals] = useState<ProductSubtotals>({});
+  const [selectedDiscounts, setSelectedDiscounts] = useState<string[]>([]);
+  const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
+  const [voucher, setVoucher] = useState<number>(0);
   const [currentTransactionID, setCurrentTransactionID] = useState("");
   const [error, setError] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
-  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [customerEmail, setCustomerEmail] = useState("");
   const [transactionLoaded, setTransactionLoaded] = useState(false);
   const [isOrderCompleted, setIsOrderCompleted] = useState(false);
   
-  const [recentOrders, setRecentOrders] = useState([]);
+  const [recentOrders, setRecentOrders] = useState<Transaction[]>([]);
   const [showRecentOrders, setShowRecentOrders] = useState(true);
   const [recentOrdersLimit, setRecentOrdersLimit] = useState(() => {
     const saved = sessionStorage.getItem("recentOrdersLimit");
     return saved ? parseInt(saved, 10) : 5;
   });
   const [showSettings, setShowSettings] = useState(false);
-  const [tempLimit, setTempLimit] = useState(recentOrdersLimit);
+  const [tempLimit, setTempLimit] = useState<number | "">(recentOrdersLimit);
   const [loadingRecentOrders, setLoadingRecentOrders] = useState(true);
   
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -92,7 +93,7 @@ function OrderLookup() {
   };
 
   const handleLimitChange = () => {
-    const newLimit = Math.max(0, Math.min(20, tempLimit === '' ? 0 : tempLimit));
+    const newLimit = Math.max(0, Math.min(20, tempLimit === '' ? 0 : Number(tempLimit)));
     setRecentOrdersLimit(newLimit);
     sessionStorage.setItem("recentOrdersLimit", newLimit.toString());
     setShowSettings(false);
@@ -108,7 +109,7 @@ function OrderLookup() {
     setQuantities({});
     setSubtotals({});
     setSelectedDiscounts([]);
-    setVoucher("");
+    setVoucher(0);
     setPaymentMethod("");
     setCustomerEmail("");
     setOrderId("");
@@ -542,7 +543,7 @@ function OrderLookup() {
                 if (isOrderCompleted) return;
                 const value = e.target.value;
                 if (value === "") {
-                  setVoucher("");
+                  setVoucher(0);
                   return;
                 }
                 const numeric = Math.max(0, Math.floor(Number(value)));

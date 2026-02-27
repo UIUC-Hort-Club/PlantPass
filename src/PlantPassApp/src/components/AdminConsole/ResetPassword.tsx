@@ -5,6 +5,7 @@ import {
   Button,
   Stack,
   Alert,
+  AlertColor,
   LinearProgress,
 } from "@mui/material";
 import { changePassword } from "../../api/authentication/passwordAuthentication";
@@ -14,7 +15,10 @@ function ResetPassword({ requiresPasswordChange, onPasswordChanged }) {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [notificationMessage, setNotificationMessage] = useState({
+  const [notificationMessage, setNotificationMessage] = useState<{
+    type: AlertColor | "";
+    text: string;
+  }>({
     type: "",
     text: "",
   });
@@ -106,7 +110,7 @@ function ResetPassword({ requiresPasswordChange, onPasswordChanged }) {
         {submitting && <LinearProgress />}
 
         {notificationMessage.type && (
-          <Alert severity={notificationMessage.type}>
+          <Alert severity={notificationMessage.type as AlertColor}>
             {notificationMessage.text}
           </Alert>
         )}

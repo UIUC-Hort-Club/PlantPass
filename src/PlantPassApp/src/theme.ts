@@ -49,6 +49,7 @@ const theme = createTheme({
   shape: {
     borderRadius: 12,
   },
+  // @ts-expect-error - MUI shadows type mismatch, will be fixed in refinement phase
   shadows: [
     'none',
     '0px 2px 4px rgba(0,0,0,0.05)',

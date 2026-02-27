@@ -11,7 +11,7 @@ const PlantPassApp = lazy(() => import("./components/PlantPass/PlantPassApp"));
 const CustomerOrderLookup = lazy(() => import("./components/CustomerOrderLookup/CustomerOrderLookup"));
 const AdminConsolePage = lazy(() => import("./components/AdminConsole/AdminConsolePage"));
 
-export default function App() {
+export default function App(): React.ReactElement {
   return (
     <ErrorBoundary>
       <NotificationProvider>

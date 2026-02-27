@@ -1,7 +1,11 @@
 import React from 'react';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
-export default function LoadingSpinner({ message = "Loading..." }) {
+interface LoadingSpinnerProps {
+  message?: string;
+}
+
+export default function LoadingSpinner({ message = "Loading..." }: LoadingSpinnerProps): React.ReactElement {
   return (
     <Box
       sx={{

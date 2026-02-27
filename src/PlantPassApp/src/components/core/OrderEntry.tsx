@@ -22,26 +22,27 @@ import { transformDiscountsForOrder } from "../../utils/discountTransformer";
 import LoadingSpinner from "../common/LoadingSpinner";
 import { useFeatureToggles } from "../../contexts/FeatureToggleContext";
 import { validateQuantity, validatePrice, validateEmail, validateTransactionItems } from "../../utils/validation";
+import { Product, DiscountWithSelection, ReceiptData, ProductQuantities, ProductSubtotals } from "../../types";
 
 function OrderEntry() {
   const { showSuccess, showWarning, showError } = useNotification();
   const { features } = useFeatureToggles();
-  const receiptRef = useRef(null);
+  const receiptRef = useRef<HTMLDivElement>(null);
   
-  const [products, setProducts] = useState([]);
-  const [discounts, setDiscounts] = useState([]);
-  const [quantities, setQuantities] = useState({});
-  const [subtotals, setSubtotals] = useState({});
-  const [selectedDiscounts, setSelectedDiscounts] = useState([]);
-  const [receiptData, setReceiptData] = useState(null);
-  const [voucher, setVoucher] = useState("");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [discounts, setDiscounts] = useState<DiscountWithSelection[]>([]);
+  const [quantities, setQuantities] = useState<ProductQuantities>({});
+  const [subtotals, setSubtotals] = useState<ProductSubtotals>({});
+  const [selectedDiscounts, setSelectedDiscounts] = useState<DiscountWithSelection[]>([]);
+  const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
+  const [voucher, setVoucher] = useState<string>("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [currentTransactionID, setCurrentTransactionID] = useState("");
   const [transactionIDDialogOpen, setTransactionIDDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const computedSubtotal = Object.values(subtotals)
-    .reduce((sum, val) => sum + (parseFloat(val) || 0), 0)
+    .reduce((sum, val) => sum + (parseFloat(val as string) || 0), 0)
     .toFixed(2);
 
   const handleNewOrder = () => {
@@ -93,7 +94,8 @@ function OrderEntry() {
   const loadDiscounts = async () => {
     try {
       const discountsData = await getAllDiscounts();
-      setDiscounts(discountsData);
+      const discountsWithSelection = transformDiscountsForOrder(discountsData, []);
+      setDiscounts(discountsWithSelection);
     } catch (error) {
       console.error("Error loading discounts from database:", error);
       showError("Failed to load discounts. Using empty discount list.");
@@ -125,12 +127,15 @@ function OrderEntry() {
     setSubtotals((prev) => ({ ...prev, [sku]: subtotal }));
   };
 
-  const handleDiscountToggle = (selectedDiscountNames) => {
-    setSelectedDiscounts(selectedDiscountNames);
+  const handleDiscountToggle = (selectedDiscountNames: string[]) => {
+    setSelectedDiscounts(discounts.map(d => ({
+      ...d,
+      selected: selectedDiscountNames.includes(d.name)
+    })));
   };
 
   const handleEnterOrder = () => {
-    const discountsWithSelection = transformDiscountsForOrder(discounts, selectedDiscounts);
+    const discountsWithSelection = selectedDiscounts;
 
     const items = Object.entries(quantities)
       .map(([sku, quantity]) => {
@@ -193,12 +198,7 @@ function OrderEntry() {
       return;
     }
 
-    const discountsWithSelection = discounts.map(discount => ({
-      name: discount.name,
-      type: discount.type,
-      value: discount.value || 0,
-      selected: selectedDiscounts.includes(discount.name)
-    }));
+    const discountsWithSelection = selectedDiscounts;
 
     const updateData = {
       items: Object.entries(quantities)
@@ -285,7 +285,7 @@ function OrderEntry() {
 
               const numeric = Math.max(0, Math.floor(Number(value)));
               if (!Number.isNaN(numeric)) {
-                setVoucher(numeric);
+                setVoucher(String(numeric));
               }
             }}
             InputProps={{

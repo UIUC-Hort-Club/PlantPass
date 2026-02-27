@@ -48,6 +48,7 @@ import { clearAllTransactions } from "../../api/transaction_interface/clearAllTr
 import { exportData as exportDataAPI } from "../../api/transaction_interface/exportData";
 import { useNotification } from "../../contexts/NotificationContext";
 import { useWebSocket } from "../../hooks/useWebSocket";
+import { SalesAnalytics as SalesAnalyticsType } from "../../types";
 import { WEBSOCKET_URL } from "../../api/config";
 import LoadingSpinner from "../common/LoadingSpinner";
 import MetricCard from "./MetricCard";
@@ -68,7 +69,7 @@ ChartJS.register(
 function SalesAnalytics() {
   const { showSuccess, showError } = useNotification();
   
-  const [analytics, setAnalytics] = useState({
+  const [analytics, setAnalytics] = useState<SalesAnalyticsType>({
     total_sales: 0,
     total_orders: 0,
     total_units_sold: 0,
@@ -81,15 +82,15 @@ function SalesAnalytics() {
   const [clearing, setClearing] = useState(false);
   const [showClearDialog, setShowClearDialog] = useState(false);
   const [showExportInfoDialog, setShowExportInfoDialog] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const rowsPerPage = 20;
   const [orderBy, setOrderBy] = useState('timestamp');
-  const [order, setOrder] = useState('desc');
+  const [order, setOrder] = useState<'asc' | 'desc'>('desc');
   const [showLive, setShowLive] = useState(false);
   const [liveEnabled, setLiveEnabled] = useState(true);
-  const disconnectTimeoutRef = useRef(null);
-  const refreshDebounceRef = useRef(null);
+  const disconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const refreshDebounceRef = useRef<NodeJS.Timeout | null>(null);
   
   const loadAnalytics = useCallback(async (isRefresh = false, isSilent = false) => {
     try {
@@ -252,7 +253,7 @@ function SalesAnalytics() {
     maintainAspectRatio: false,
     interaction: {
       intersect: false,
-      mode: 'index',
+      mode: 'index' as const,
     },
     scales: {
       x: {
@@ -279,7 +280,7 @@ function SalesAnalytics() {
     plugins: {
       legend: {
         display: true,
-        position: 'top',
+        position: 'top' as const,
       },
       tooltip: {
         callbacks: {
@@ -301,7 +302,7 @@ function SalesAnalytics() {
     setOrderBy(property);
   };
 
-  const sortedTransactions = [...analytics.transactions].sort((a, b) => {
+  const sortedTransactions = [...(analytics.transactions || [])].sort((a: any, b: any) => {
     let aValue, bValue;
     
     switch (orderBy) {
@@ -352,7 +353,7 @@ function SalesAnalytics() {
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
         </Alert>
-        <Button variant="contained" onClick={loadAnalytics}>
+        <Button variant="contained" onClick={() => loadAnalytics()}>
           Retry
         </Button>
       </Container>
@@ -491,7 +492,7 @@ function SalesAnalytics() {
           <TableBody>
             {sortedTransactions
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((transaction) => (
+              .map((transaction: any) => (
                 <TableRow key={transaction.purchase_id}>
                   <TableCell>{transaction.purchase_id}</TableCell>
                   <TableCell>{formatTimestamp(transaction.timestamp)}</TableCell>
@@ -500,7 +501,7 @@ function SalesAnalytics() {
                   <TableCell>{transaction.paid === true || transaction.paid === 'true' ? 'Yes' : 'No'}</TableCell>
                 </TableRow>
               ))}
-            {analytics.transactions.length === 0 && (
+            {(analytics.transactions || []).length === 0 && (
               <TableRow>
                 <TableCell colSpan={5} align="center">
                   <Typography variant="body2" color="text.secondary">
