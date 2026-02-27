@@ -13,13 +13,21 @@ import {
   Chip,
 } from "@mui/material";
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import type { Discount } from '../../../types';
+
+interface DiscountsTableProps {
+  discounts?: Discount[];
+  selectedDiscounts?: string[];
+  onDiscountToggle?: (selectedDiscounts: string[]) => void;
+  readOnly?: boolean;
+}
 
 export default function DiscountsTable({
   discounts = [],
   selectedDiscounts = [],
   onDiscountToggle,
   readOnly = false,
-}) {
+}: DiscountsTableProps) {
   const safeDiscounts = Array.isArray(discounts) ? discounts : [];
   const safeSelectedDiscounts = Array.isArray(selectedDiscounts) ? selectedDiscounts : [];
 
