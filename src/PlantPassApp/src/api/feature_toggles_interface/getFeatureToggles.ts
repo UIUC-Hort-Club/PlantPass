@@ -1,0 +1,6 @@
+import { apiRequest } from "../apiClient";
+import type { FeatureToggles } from "../../types";
+
+export async function getFeatureToggles(): Promise<FeatureToggles> {
+  return await apiRequest<FeatureToggles>("/feature-toggles");
+}
