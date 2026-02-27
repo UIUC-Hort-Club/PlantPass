@@ -6,10 +6,32 @@ PlantPass is a point-of-sale application developed for the UIUC Horticulture Clu
 
 ## Architecture
 
-- Frontend: React application deployed on AWS CloudFront
+- Frontend: React + TypeScript application deployed on AWS CloudFront
 - Backend: AWS Lambda functions with DynamoDB database
 - Infrastructure: Terraform-managed AWS resources
 - Real-time updates: WebSocket connections for live transaction updates
+- Build tooling: Vite for fast development and optimized production builds
+
+## Technology Stack
+
+**Frontend:**
+- React 19 with TypeScript
+- Material-UI (MUI) for component library
+- React Router for navigation
+- Chart.js for analytics visualization
+- Vite for build tooling
+- ESLint + Prettier for code quality
+
+**Backend:**
+- AWS Lambda (serverless functions)
+- Amazon DynamoDB (NoSQL database)
+- Amazon API Gateway (REST + WebSocket APIs)
+- Amazon CloudFront (CDN)
+- Amazon SES (email delivery)
+
+**Infrastructure:**
+- Terraform for infrastructure as code
+- GitHub Actions for CI/CD
 
 ## Features
 
@@ -76,7 +98,23 @@ npm install
 npm run dev
 ```
 
-The development server will start and automatically connect to the backend API.
+The development server will start at `http://localhost:5173` and automatically connect to the backend API.
+
+### Build for Production
+
+```bash
+npm run build
+```
+
+This compiles TypeScript and builds optimized production assets in the `dist/` directory.
+
+### Linting
+
+```bash
+npm run lint
+```
+
+Runs ESLint to check code quality and TypeScript types.
 
 ## Infrastructure
 
@@ -86,10 +124,10 @@ Infrastructure is managed via Terraform in the `./terraform` directory. Deployme
 
 ```
 src/
-├── PlantPassApp/          # React frontend application
+├── PlantPassApp/          # React + TypeScript frontend application
 │   ├── src/
-│   │   ├── api/           # API integration layer
-│   │   ├── components/    # React components
+│   │   ├── api/           # API integration layer (TypeScript)
+│   │   ├── components/    # React components (TSX)
 │   │   │   ├── Home/      # Home screen with role selection
 │   │   │   ├── PlantPass/ # Staff checkout interface
 │   │   │   ├── CustomerOrderLookup/ # Customer order lookup
@@ -99,7 +137,8 @@ src/
 │   │   │   └── common/    # Shared components
 │   │   ├── contexts/      # React contexts (notifications, feature toggles)
 │   │   ├── hooks/         # Custom React hooks (WebSocket, data fetching)
-│   │   └── utils/         # Utility functions
+│   │   ├── types/         # TypeScript type definitions
+│   │   └── utils/         # Utility functions (TypeScript)
 │   └── public/            # Static assets
 └── lambda/                # AWS Lambda functions
     ├── AdminPassword/     # Admin authentication & password reset
