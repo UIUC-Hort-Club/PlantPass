@@ -37,14 +37,6 @@ jobs:
           cd src/lambda
           pytest --cov --cov-report=xml --cov-report=term --cov-report=html
 
-      - name: Upload backend coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./src/lambda/coverage.xml
-          flags: backend
-          name: backend-coverage
-          fail_ci_if_error: true
-
       - name: Upload backend coverage artifacts
         uses: actions/upload-artifact@v4
         if: always()
@@ -85,14 +77,6 @@ jobs:
         run: |
           cd src/PlantPassApp
           npm run test
-
-      - name: Upload frontend coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./src/PlantPassApp/coverage/coverage-final.json
-          flags: frontend
-          name: frontend-coverage
-          fail_ci_if_error: true
 
       - name: Upload frontend coverage artifacts
         uses: actions/upload-artifact@v4
