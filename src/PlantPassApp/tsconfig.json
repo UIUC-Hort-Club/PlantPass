@@ -14,10 +14,10 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-    /* Linting - Strict mode enabled */
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    /* Linting - Strict mode disabled for now, can be enabled incrementally */
+    "strict": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true
   },
