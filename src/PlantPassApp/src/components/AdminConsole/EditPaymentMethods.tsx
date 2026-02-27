@@ -36,6 +36,7 @@ export default function EditPaymentMethods() {
   const [saving, setSaving] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [lockLoading, setLockLoading] = useState(false);
+  const [lockStateLoading, setLockStateLoading] = useState(true);
 
   useEffect(() => {
     loadPaymentMethods();
@@ -65,10 +66,13 @@ export default function EditPaymentMethods() {
 
   const checkLockState = async () => {
     try {
+      setLockStateLoading(true);
       const response = await getLockState('payment_methods');
       setIsLocked(response.isLocked || false);
     } catch {
       // Lock state check failed, continue with default
+    } finally {
+      setLockStateLoading(false);
     }
   };
 
@@ -194,7 +198,7 @@ export default function EditPaymentMethods() {
     }
   };
 
-  if (loading) {
+  if (loading || lockStateLoading) {
     return (
       <Paper sx={{ p: 2 }}>
         <LoadingSpinner message="Loading payment methods..." />

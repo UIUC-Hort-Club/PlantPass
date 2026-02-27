@@ -40,6 +40,7 @@ export default function ProductTable() {
   const [duplicateSKUs, setDuplicateSKUs] = useState([]);
   const [isLocked, setIsLocked] = useState(false);
   const [lockLoading, setLockLoading] = useState(false);
+  const [lockStateLoading, setLockStateLoading] = useState(true);
 
   useEffect(() => {
     loadProducts();
@@ -76,10 +77,13 @@ export default function ProductTable() {
 
   const checkLockState = async () => {
     try {
+      setLockStateLoading(true);
       const response = await getLockState('products');
       setIsLocked(response.isLocked || false);
     } catch {
       // Lock state check failed, continue with default
+    } finally {
+      setLockStateLoading(false);
     }
   };
 
@@ -274,7 +278,7 @@ export default function ProductTable() {
     }
   };
 
-  if (loading) {
+  if (loading || lockStateLoading) {
     return (
       <Paper sx={{ p: 2 }}>
         <LoadingSpinner message="Loading products..." />

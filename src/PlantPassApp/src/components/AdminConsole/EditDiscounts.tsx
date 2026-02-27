@@ -53,6 +53,7 @@ export default function DiscountTable() {
   const [saving, setSaving] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [lockLoading, setLockLoading] = useState(false);
+  const [lockStateLoading, setLockStateLoading] = useState(true);
 
   useEffect(() => {
     loadDiscounts();
@@ -85,10 +86,13 @@ export default function DiscountTable() {
 
   const checkLockState = async () => {
     try {
+      setLockStateLoading(true);
       const response = await getLockState('discounts');
       setIsLocked(response.locked || response.isLocked || false);
     } catch {
       // Lock state check failed, continue with default
+    } finally {
+      setLockStateLoading(false);
     }
   };
 
@@ -267,7 +271,7 @@ export default function DiscountTable() {
     }
   };
 
-  if (loading) {
+  if (loading || lockStateLoading) {
     return (
       <Paper sx={{ p: 2 }}>
         <LoadingSpinner message="Loading discounts..." />
