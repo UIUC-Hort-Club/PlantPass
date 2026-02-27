@@ -82,16 +82,24 @@ describe('Transaction Flow Integration', () => {
 
     const updateResponse = {
       transaction: {
-        ...readResponse,
-        payment: updateRequest.payment,
+        purchase_id: 'ABC-DEF',
+        receipt: createResponse.transaction.receipt,
       },
     };
 
     (apiRequest as any).mockResolvedValueOnce(updateResponse);
     const updated = await updateTransaction('ABC-DEF', updateRequest);
     
-    expect(updated.payment?.paid).toBe(true);
-    expect(updated.payment?.method).toBe('Cash');
+    expect(updated.purchase_id).toBe('ABC-DEF');
+    expect(apiRequest).toHaveBeenCalledWith(
+      '/transactions/ABC-DEF',
+      expect.objectContaining({
+        method: 'PUT',
+        body: expect.objectContaining({
+          payment: { method: 'Cash', paid: true },
+        }),
+      })
+    );
 
     // 4. Delete transaction
     (apiRequest as any).mockResolvedValueOnce(true);
