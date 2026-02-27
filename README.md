@@ -2,6 +2,146 @@
 
 # PlantPass
 
+A comprehensive point-of-sale application for plant sales with real-time inventory management, transaction tracking, and sales analytics.
+
+## Features
+
+- 🛒 Order entry and management
+- 📊 Sales analytics and reporting
+- 💳 Multiple payment methods
+- 🎫 Discount and voucher support
+- 📧 Email receipt collection
+- 🔒 Role-based access control (Admin/Staff)
+- 🔄 Real-time updates via WebSocket
+- 📱 Responsive design
+
+## Architecture
+
+- **Frontend**: React + TypeScript + Vite + Material-UI
+- **Backend**: Python AWS Lambda functions
+- **API**: AWS API Gateway
+- **Database**: DynamoDB
+- **Infrastructure**: Terraform
+- **CI/CD**: GitHub Actions
+
+## Testing
+
+PlantPass has a comprehensive testing suite with 100% code coverage requirements.
+
+### Quick Start
+
+```bash
+# Frontend tests
+cd src/PlantPassApp
+npm install
+npm test
+
+# Backend tests
+cd src/lambda
+pip install -r requirements-test.txt
+pytest
+```
+
+### Coverage Reports
+
+- Frontend: `src/PlantPassApp/coverage/index.html`
+- Backend: `src/lambda/htmlcov/index.html`
+
+For detailed testing documentation, see [TESTING.md](./TESTING.md).
+
+## Development
+
+### Prerequisites
+
+- Node.js 20+
+- Python 3.11+
+- AWS CLI configured
+- Terraform 1.6+
+
+### Local Development
+
+```bash
+# Frontend
+cd src/PlantPassApp
+npm install
+npm run dev
+
+# Backend (requires AWS credentials)
+cd src/lambda
+pip install -r requirements-test.txt
+# Run tests to validate changes
+pytest
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test --workspace=src/PlantPassApp
+cd src/lambda && pytest
+
+# Watch mode (frontend only)
+cd src/PlantPassApp && npm run test:watch
+
+# With UI (frontend only)
+cd src/PlantPassApp && npm run test:ui
+```
+
+## Deployment
+
+Deployment is automated via GitHub Actions. All tests must pass before deployment.
+
+```
+Push to master → Tests → Build → Deploy
+```
+
+See [.github/workflows/deploy-app.yaml](.github/workflows/deploy-app.yaml) for details.
+
+## Project Structure
+
+```
+PlantPass/
+├── src/
+│   ├── PlantPassApp/          # React frontend
+│   │   ├── src/
+│   │   │   ├── api/           # API client
+│   │   │   ├── components/    # React components
+│   │   │   ├── contexts/      # React contexts
+│   │   │   ├── hooks/         # Custom hooks
+│   │   │   ├── types/         # TypeScript types
+│   │   │   └── utils/         # Utilities
+│   │   └── tests/             # Frontend tests
+│   └── lambda/                # Python Lambda functions
+│       ├── TransactionHandler/
+│       ├── ProductsHandler/
+│       ├── DiscountsHandler/
+│       ├── shared/            # Shared utilities
+│       ├── layers/            # Lambda layers
+│       └── tests/             # Backend tests
+├── terraform/                 # Infrastructure as code
+├── .github/workflows/         # CI/CD pipelines
+├── TESTING.md                 # Testing documentation
+└── README.md                  # This file
+```
+
+## Contributing
+
+1. Create a feature branch
+2. Write tests for new functionality
+3. Ensure all tests pass: `npm test && pytest`
+4. Ensure coverage remains at 100%
+5. Submit a pull request
+
+All PRs must pass CI checks before merging.
+
+## License
+
+Proprietary - All rights reserved
+
+## Support
+
+For issues or questions, please contact the development team.
+
 PlantPass is a point-of-sale application developed for the UIUC Horticulture Club to streamline checkout processes at their Spring Plant Fair. The system provides order entry, transaction management, sales analytics, and access control capabilities.
 
 ## Architecture
