@@ -178,7 +178,6 @@ function OrderEntry() {
           discounts: response.discounts || [],
           voucher: response.club_voucher || 0
         });
-        showSuccess("Your order has been successfully recorded.");
         setTransactionIDDialogOpen(true);
       })
       .catch((_error) => {
