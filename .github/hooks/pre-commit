@@ -1,0 +1,88 @@
+#!/bin/bash
+
+# PlantPass Pre-Commit Hook
+# Runs tests before allowing commit
+# 
+# To install: cp .github/hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+
+echo "🔍 Running pre-commit checks..."
+echo ""
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+# Track results
+FRONTEND_OK=0
+BACKEND_OK=0
+
+# Check if we're in the right directory
+if [ ! -f "package.json" ] && [ ! -d "src/PlantPassApp" ]; then
+    echo -e "${RED}❌ Not in PlantPass root directory${NC}"
+    exit 1
+fi
+
+# Frontend checks
+if git diff --cached --name-only | grep -q "^src/PlantPassApp/"; then
+    echo "📦 Frontend files changed, running tests..."
+    cd src/PlantPassApp
+    
+    # Run linter
+    if ! npm run lint --silent; then
+        echo -e "${RED}❌ Frontend linting failed${NC}"
+        cd ../..
+        exit 1
+    fi
+    
+    # Run tests
+    if ! npm test --silent; then
+        echo -e "${RED}❌ Frontend tests failed${NC}"
+        cd ../..
+        exit 1
+    fi
+    
+    echo -e "${GREEN}✅ Frontend checks passed${NC}"
+    FRONTEND_OK=1
+    cd ../..
+else
+    echo "⏭️  No frontend changes detected"
+    FRONTEND_OK=1
+fi
+
+echo ""
+
+# Backend checks
+if git diff --cached --name-only | grep -q "^src/lambda/"; then
+    echo "🐍 Backend files changed, running tests..."
+    cd src/lambda
+    
+    # Run tests
+    if ! pytest --quiet; then
+        echo -e "${RED}❌ Backend tests failed${NC}"
+        cd ../..
+        exit 1
+    fi
+    
+    echo -e "${GREEN}✅ Backend checks passed${NC}"
+    BACKEND_OK=1
+    cd ../..
+else
+    echo "⏭️  No backend changes detected"
+    BACKEND_OK=1
+fi
+
+echo ""
+
+# Summary
+if [ $FRONTEND_OK -eq 1 ] && [ $BACKEND_OK -eq 1 ]; then
+    echo -e "${GREEN}✅ All pre-commit checks passed!${NC}"
+    echo ""
+    exit 0
+else
+    echo -e "${RED}❌ Pre-commit checks failed!${NC}"
+    echo ""
+    echo "Fix the issues above and try again."
+    exit 1
+fi
